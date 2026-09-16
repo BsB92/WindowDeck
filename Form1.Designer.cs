@@ -4,7 +4,9 @@ namespace WindowDeck
     {
         private System.ComponentModel.IContainer components = null!;
         private ListView windowListView = null!;
-        private ColumnHeader titleColumn = null!;
+        private ColumnHeader displayTitleColumn = null!;
+        private ColumnHeader applicationColumn = null!;
+        private ColumnHeader originalTitleColumn = null!;
         private ColumnHeader handleColumn = null!;
         private ColumnHeader processIdColumn = null!;
         private Button refreshButton = null!;
@@ -24,7 +26,9 @@ namespace WindowDeck
         private void InitializeComponent()
         {
             windowListView = new ListView();
-            titleColumn = new ColumnHeader();
+            displayTitleColumn = new ColumnHeader();
+            applicationColumn = new ColumnHeader();
+            originalTitleColumn = new ColumnHeader();
             handleColumn = new ColumnHeader();
             processIdColumn = new ColumnHeader();
             refreshButton = new Button();
@@ -34,7 +38,7 @@ namespace WindowDeck
             // windowListView
             //
             windowListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            windowListView.Columns.AddRange(new ColumnHeader[] { titleColumn, handleColumn, processIdColumn });
+            windowListView.Columns.AddRange(new ColumnHeader[] { displayTitleColumn, applicationColumn, originalTitleColumn, processIdColumn, handleColumn });
             windowListView.FullRowSelect = true;
             windowListView.Location = new Point(12, 12);
             windowListView.MultiSelect = false;
@@ -44,15 +48,25 @@ namespace WindowDeck
             windowListView.UseCompatibleStateImageBehavior = false;
             windowListView.View = View.Details;
             //
-            // titleColumn
+            // displayTitleColumn
             //
-            titleColumn.Text = "Window title";
-            titleColumn.Width = 530;
+            displayTitleColumn.Text = "Display title";
+            displayTitleColumn.Width = 260;
+            //
+            // applicationColumn
+            //
+            applicationColumn.Text = "Application";
+            applicationColumn.Width = 140;
+            //
+            // originalTitleColumn
+            //
+            originalTitleColumn.Text = "Original title";
+            originalTitleColumn.Width = 260;
             //
             // handleColumn
             //
             handleColumn.Text = "Handle";
-            handleColumn.Width = 130;
+            handleColumn.Width = 120;
             //
             // processIdColumn
             //
