@@ -1,10 +1,60 @@
-namespace WindowDeck
+using System.ComponentModel;
+using WindowDeck.Models;
+using WindowDeck.Services;
+
+namespace WindowDeck;
+
+public partial class Form1 : Form
 {
-    public partial class Form1 : Form
+    private readonly WindowEnumerator windowEnumerator = new();
+
+    public Form1()
     {
-        public Form1()
+        InitializeComponent();
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+        RefreshWindowList();
+    }
+
+    private void RefreshButton_Click(object sender, EventArgs e)
+    {
+        RefreshWindowList();
+    }
+
+    private void RefreshWindowList()
+    {
+        windowListView.BeginUpdate();
+
+        try
         {
-            InitializeComponent();
+            windowListView.Items.Clear();
+
+            foreach (WindowInfo window in windowEnumerator.Enumerate())
+            {
+                ListViewItem item = new(window.DisplayTitle);
+                item.SubItems.Add($"0x{window.Handle:X}");
+                item.SubItems.Add(window.ProcessId.ToString());
+                windowListView.Items.Add(item);
+            }
+
+            statusLabel.Text = $"{windowListView.Items.Count} windows found";
+        }
+        catch (Win32Exception exception)
+        {
+            statusLabel.Text = "Window enumeration failed";
+            MessageBox.Show(
+                this,
+                exception.Message,
+                "WindowDeck",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+        finally
+        {
+            windowListView.EndUpdate();
         }
     }
 }
