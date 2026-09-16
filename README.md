@@ -2,12 +2,13 @@
 
 WindowDeck is a planned lightweight Windows 11 utility for quickly finding and activating the right open window, especially when many documents have similar names.
 
-> **Project status: early development.** The repository currently contains only the Stage 1 WinForms application skeleton. Window discovery, the flyout panel, tray behavior, hotkeys, settings, and the other product features are planned but are **not implemented yet**.
+> **Project status: early development.** Stage 2 adds initial top-level window discovery and filtering. Window activation, the flyout panel, tray behavior, hotkeys, settings, and the other later-stage features are planned but are **not implemented yet**.
 
 ## What is available now
 
 - A .NET 10 Windows Forms project and solution.
-- A minimal temporary startup window that confirms the application launches.
+- Initial discovery of visible, user-facing top-level windows using documented Windows APIs.
+- A temporary window list for validating the Stage 2 discovery results.
 - The complete v1 requirements in [`SPEC.md`](SPEC.md).
 
 ## Planned direction
@@ -38,7 +39,7 @@ dotnet build WindowDeck.sln
 
 ## Run
 
-In Visual Studio, press **F5** or select the green **Start** button. At this stage, a plain temporary window titled **WindowDeck — Stage 1** should appear. Closing it ends the application. This window is only a skeleton and is not the final flyout.
+In Visual Studio, press **F5** or select the green **Start** button. The temporary Stage 2 window lists the user-facing top-level windows found at startup. Use **Refresh** to repeat discovery manually. Closing the form ends the application. This window is only a validation surface and is not the final flyout.
 
 ## Development approach
 

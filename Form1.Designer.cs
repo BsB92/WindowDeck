@@ -1,16 +1,15 @@
-﻿namespace WindowDeck
+namespace WindowDeck
 {
     partial class Form1
     {
-        /// <summary>
-        ///  Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null!;
+        private ListView windowListView = null!;
+        private ColumnHeader titleColumn = null!;
+        private ColumnHeader handleColumn = null!;
+        private ColumnHeader processIdColumn = null!;
+        private Button refreshButton = null!;
+        private Label statusLabel = null!;
 
-        /// <summary>
-        ///  Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -22,16 +21,79 @@
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
+            windowListView = new ListView();
+            titleColumn = new ColumnHeader();
+            handleColumn = new ColumnHeader();
+            processIdColumn = new ColumnHeader();
+            refreshButton = new Button();
+            statusLabel = new Label();
+            SuspendLayout();
+            //
+            // windowListView
+            //
+            windowListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            windowListView.Columns.AddRange(new ColumnHeader[] { titleColumn, handleColumn, processIdColumn });
+            windowListView.FullRowSelect = true;
+            windowListView.Location = new Point(12, 12);
+            windowListView.MultiSelect = false;
+            windowListView.Name = "windowListView";
+            windowListView.Size = new Size(776, 385);
+            windowListView.TabIndex = 0;
+            windowListView.UseCompatibleStateImageBehavior = false;
+            windowListView.View = View.Details;
+            //
+            // titleColumn
+            //
+            titleColumn.Text = "Window title";
+            titleColumn.Width = 530;
+            //
+            // handleColumn
+            //
+            handleColumn.Text = "Handle";
+            handleColumn.Width = 130;
+            //
+            // processIdColumn
+            //
+            processIdColumn.Text = "Process ID";
+            processIdColumn.Width = 90;
+            //
+            // refreshButton
+            //
+            refreshButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            refreshButton.Location = new Point(694, 411);
+            refreshButton.Name = "refreshButton";
+            refreshButton.Size = new Size(94, 29);
+            refreshButton.TabIndex = 1;
+            refreshButton.Text = "Refresh";
+            refreshButton.UseVisualStyleBackColor = true;
+            refreshButton.Click += RefreshButton_Click;
+            //
+            // statusLabel
+            //
+            statusLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            statusLabel.AutoSize = true;
+            statusLabel.Location = new Point(12, 416);
+            statusLabel.Name = "statusLabel";
+            statusLabel.Size = new Size(123, 20);
+            statusLabel.TabIndex = 2;
+            statusLabel.Text = "Finding windows...";
+            //
+            // Form1
+            //
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
-            Text = "WindowDeck — Stage 1";
+            ClientSize = new Size(800, 452);
+            Controls.Add(statusLabel);
+            Controls.Add(refreshButton);
+            Controls.Add(windowListView);
+            MinimumSize = new Size(600, 350);
+            Name = "Form1";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "WindowDeck — Stage 2";
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
