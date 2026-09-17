@@ -17,6 +17,7 @@ internal static class NativeMethods
     internal const int ErrorInsufficientBuffer = 122;
     internal const int GwlExStyle = -20;
     internal const uint MonitorDefaultToNearest = 2;
+    internal const uint MonitorDefaultToNull = 0;
     internal const uint QdcOnlyActivePaths = 2;
     internal const int SwRestore = 9;
     internal const uint GwOwner = 4;
@@ -121,6 +122,13 @@ internal static class NativeMethods
         internal int Bottom;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct NativePoint
+    {
+        internal int X;
+        internal int Y;
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct MonitorInfoEx
     {
@@ -188,6 +196,16 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     internal static extern nint MonitorFromWindow(nint windowHandle, uint flags);
+
+    [DllImport("user32.dll")]
+    internal static extern nint GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetCursorPos(out NativePoint point);
+
+    [DllImport("user32.dll")]
+    internal static extern nint MonitorFromPoint(NativePoint point, uint flags);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

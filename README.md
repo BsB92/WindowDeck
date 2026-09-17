@@ -2,13 +2,15 @@
 
 WindowDeck is a planned lightweight Windows 11 utility for quickly finding and activating the right open window, especially when many documents have similar names.
 
-> **Project status: early development.** Stage 2 adds initial top-level window discovery and filtering. Window activation, the flyout panel, tray behavior, hotkeys, settings, and the other later-stage features are planned but are **not implemented yet**.
+> **Project status: early development.** Stage 6 introduces the first product-like flyout panel. Tray behavior, hotkeys, settings, final organization, and final styling remain planned for later stages.
 
 ## What is available now
 
 - A .NET 10 Windows Forms project and solution.
 - Initial discovery of visible, user-facing top-level windows using documented Windows APIs.
-- A temporary window list for validating the Stage 2 discovery results.
+- A right-aligned, topmost flyout that lists window titles and monitor numbers.
+- Exact-window activation, including restoration of minimized windows.
+- Event-driven list updates when external windows change.
 - The complete v1 requirements in [`SPEC.md`](SPEC.md).
 
 ## Planned direction
@@ -29,7 +31,7 @@ WindowDeck will eventually show current desktop windows in a lightweight Windows
 
 ## Build
 
-In Visual Studio, select **Build > Build Solution**. A successful Stage 1 build should finish with 0 errors.
+In Visual Studio, select **Build > Build Solution**. A successful build should finish with 0 errors.
 
 From a Developer PowerShell or terminal with the .NET 10 SDK installed, run:
 
@@ -39,7 +41,7 @@ dotnet build WindowDeck.sln
 
 ## Run
 
-In Visual Studio, press **F5** or select the green **Start** button. The temporary Stage 2 window lists the user-facing top-level windows found at startup. Use **Refresh** to repeat discovery manually. Closing the form ends the application. This window is only a validation surface and is not the final flyout.
+In Visual Studio, press **F5** or select the green **Start** button. WindowDeck opens on the right side of the monitor containing the current foreground window and updates its list automatically. Click a row to activate that exact window. Press **Esc** or click **X** to hide the flyout. Until the tray and global hotkey arrive in later stages, stop and restart debugging to show a hidden flyout again.
 
 ## Development approach
 
