@@ -6,91 +6,14 @@ namespace WindowDeck.Interop;
 internal static class NativeMethods
 {
     internal const int DwmaCloaked = 14;
-    internal const int ErrorInsufficientBuffer = 122;
     internal const int GwlExStyle = -20;
     internal const uint MonitorDefaultToNearest = 2;
-    internal const uint QdcOnlyActivePaths = 2;
     internal const int SwRestore = 9;
     internal const uint GwOwner = 4;
     internal const long WsExAppWindow = 0x00040000L;
     internal const long WsExToolWindow = 0x00000080L;
 
     internal delegate bool EnumWindowsProc(nint windowHandle, nint parameter);
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct LocallyUniqueIdentifier
-    {
-        internal uint LowPart;
-        internal int HighPart;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct DisplayConfigPathSourceInfo
-    {
-        internal LocallyUniqueIdentifier AdapterId;
-        internal uint Id;
-        internal uint ModeInfoIndex;
-        internal uint StatusFlags;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct DisplayConfigRational
-    {
-        internal uint Numerator;
-        internal uint Denominator;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct DisplayConfigPathTargetInfo
-    {
-        internal LocallyUniqueIdentifier AdapterId;
-        internal uint Id;
-        internal uint ModeInfoIndex;
-        internal uint OutputTechnology;
-        internal uint Rotation;
-        internal uint Scaling;
-        internal DisplayConfigRational RefreshRate;
-        internal uint ScanLineOrdering;
-
-        [MarshalAs(UnmanagedType.Bool)]
-        internal bool TargetAvailable;
-
-        internal uint StatusFlags;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct DisplayConfigPathInfo
-    {
-        internal DisplayConfigPathSourceInfo SourceInfo;
-        internal DisplayConfigPathTargetInfo TargetInfo;
-        internal uint Flags;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct DisplayConfigModeInfo
-    {
-        internal uint InfoType;
-        internal uint Id;
-        internal LocallyUniqueIdentifier AdapterId;
-        internal DisplayConfigModeInfoUnion ModeInfo;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 48)]
-    internal struct DisplayConfigModeInfoUnion
-    {
-    }
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    internal struct DisplayConfigSourceDeviceName
-    {
-        internal uint Type;
-        internal uint Size;
-        internal LocallyUniqueIdentifier AdapterId;
-        internal uint Id;
-
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-        internal string? ViewGdiDeviceName;
-    }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct Rect
@@ -160,25 +83,6 @@ internal static class NativeMethods
     internal static extern bool GetMonitorInfo(
         nint monitorHandle,
         ref MonitorInfoEx monitorInfo);
-
-    [DllImport("user32.dll")]
-    internal static extern int GetDisplayConfigBufferSizes(
-        uint flags,
-        out uint pathCount,
-        out uint modeCount);
-
-    [DllImport("user32.dll")]
-    internal static extern int QueryDisplayConfig(
-        uint flags,
-        ref uint pathCount,
-        [Out] DisplayConfigPathInfo[] paths,
-        ref uint modeCount,
-        [Out] DisplayConfigModeInfo[] modes,
-        nint currentTopologyId);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    internal static extern int DisplayConfigGetDeviceInfo(
-        ref DisplayConfigSourceDeviceName requestPacket);
 
     [DllImport("user32.dll", EntryPoint = "GetWindowLongW")]
     private static extern int GetWindowLong32(nint windowHandle, int index);

@@ -14,7 +14,6 @@ internal sealed class WindowEnumerator
     public IReadOnlyList<WindowInfo> Enumerate()
     {
         List<WindowInfo> windows = [];
-        monitorDetector.RefreshDisplayMapping();
 
         bool succeeded = NativeMethods.EnumWindows((windowHandle, _) =>
             {
