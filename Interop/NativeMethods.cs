@@ -6,6 +6,7 @@ namespace WindowDeck.Interop;
 internal static class NativeMethods
 {
     internal const int DwmaCloaked = 14;
+    internal const int DwmaExtendedFrameBounds = 9;
     internal const uint EventObjectCreate = 0x8000;
     internal const uint EventObjectDestroy = 0x8001;
     internal const uint EventObjectShow = 0x8002;
@@ -129,6 +130,18 @@ internal static class NativeMethods
         internal int Y;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WindowPosition
+    {
+        internal nint WindowHandle;
+        internal nint InsertAfter;
+        internal int X;
+        internal int Y;
+        internal int Width;
+        internal int Height;
+        internal uint Flags;
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct MonitorInfoEx
     {
@@ -243,6 +256,13 @@ internal static class NativeMethods
         nint windowHandle,
         int attribute,
         out int attributeValue,
+        int attributeSize);
+
+    [DllImport("dwmapi.dll")]
+    internal static extern int DwmGetWindowAttribute(
+        nint windowHandle,
+        int attribute,
+        out Rect attributeValue,
         int attributeSize);
 
     internal static nint GetWindowLongPtr(nint windowHandle, int index)

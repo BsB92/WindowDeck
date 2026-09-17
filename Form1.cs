@@ -9,6 +9,14 @@ namespace WindowDeck;
 public partial class Form1 : Form
 {
     private const int DefaultPanelWidth = 680;
+    private const int HtCaption = 2;
+    private const int HtClient = 1;
+    private const int HtLeft = 10;
+    private const int HtBottomRight = 17;
+    private const int WmNcHitTest = 0x0084;
+    private const int WmWindowPositionChanging = 0x0046;
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoMove = 0x0002;
 
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
@@ -16,7 +24,10 @@ public partial class Form1 : Form
     private bool isClosing;
     private bool monitoringStarted;
     private bool allowApplicationExit;
-    private int anchoredRight;
+    private int anchoredOuterRight;
+    private int anchoredOuterTop;
+    private int anchoredOuterHeight;
+    private int maximumPanelWidth;
 
     public Form1()
     {
@@ -99,13 +110,57 @@ public partial class Form1 : Form
     protected override void OnResize(EventArgs e)
     {
         base.OnResize(e);
+        SizeWindowListColumns();
+    }
 
-        if (anchoredRight != 0 && WindowState == FormWindowState.Normal)
+    protected override void SetBoundsCore(
+        int x,
+        int y,
+        int width,
+        int height,
+        BoundsSpecified specified)
+    {
+        if (anchoredOuterRight != 0 && WindowState == FormWindowState.Normal)
         {
-            Left = anchoredRight - Width;
+            int minimumWidth = Math.Min(MinimumSize.Width, maximumPanelWidth);
+            width = Math.Clamp(width, minimumWidth, maximumPanelWidth);
+            x = anchoredOuterRight - width;
+            y = anchoredOuterTop;
+            height = anchoredOuterHeight;
+            specified = BoundsSpecified.All;
         }
 
-        SizeWindowListColumns();
+        base.SetBoundsCore(x, y, width, height, specified);
+    }
+
+    protected override void WndProc(ref Message message)
+    {
+        if (message.Msg == WmWindowPositionChanging && anchoredOuterRight != 0)
+        {
+            NativeMethods.WindowPosition position =
+                Marshal.PtrToStructure<NativeMethods.WindowPosition>(message.LParam);
+            int width = (position.Flags & SwpNoSize) != 0 ? Width : position.Width;
+            int minimumWidth = Math.Min(MinimumSize.Width, maximumPanelWidth);
+            position.Width = Math.Clamp(width, minimumWidth, maximumPanelWidth);
+            position.X = anchoredOuterRight - position.Width;
+            position.Y = anchoredOuterTop;
+            position.Height = anchoredOuterHeight;
+            position.Flags &= ~(SwpNoSize | SwpNoMove);
+            Marshal.StructureToPtr(position, message.LParam, false);
+        }
+
+        base.WndProc(ref message);
+
+        if (message.Msg != WmNcHitTest)
+        {
+            return;
+        }
+
+        int hitTest = (int)message.Result;
+        if (hitTest == HtCaption || (hitTest > HtLeft && hitTest <= HtBottomRight))
+        {
+            message.Result = HtClient;
+        }
     }
 
     private void WindowListView_MouseClick(object sender, MouseEventArgs e)
@@ -201,8 +256,8 @@ public partial class Form1 : Form
                     Tag = window
                 };
                 item.SubItems.Add(window.MonitorNumber is int monitorNumber
-                    ? $"Monitor {monitorNumber}"
-                    : "Monitor ?");
+                    ? $"Screen {monitorNumber}"
+                    : "Screen ?");
                 windowListView.Items.Add(item);
             }
 
@@ -263,12 +318,48 @@ public partial class Form1 : Form
 
         NativeMethods.Rect workArea = monitorInfo.WorkArea;
         int width = Math.Min(Math.Max(requestedWidth, MinimumSize.Width), workArea.Right - workArea.Left);
-        anchoredRight = workArea.Right;
+
+        // Start with the work area so DWM can report the actual visible frame in
+        // relation to the outer Win32 bounds, including invisible resize borders.
+        anchoredOuterRight = 0;
         Bounds = new Rectangle(
             workArea.Right - width,
             workArea.Top,
             width,
             workArea.Bottom - workArea.Top);
+
+        NativeMethods.Rect outerBounds = new()
+        {
+            Left = Left,
+            Top = Top,
+            Right = Right,
+            Bottom = Bottom
+        };
+        int frameResult = NativeMethods.DwmGetWindowAttribute(
+            Handle,
+            NativeMethods.DwmaExtendedFrameBounds,
+            out NativeMethods.Rect visibleFrame,
+            Marshal.SizeOf<NativeMethods.Rect>());
+        if (frameResult != 0)
+        {
+            visibleFrame = outerBounds;
+        }
+
+        int rightInvisibleBorder = outerBounds.Right - visibleFrame.Right;
+        int topInvisibleBorder = visibleFrame.Top - outerBounds.Top;
+        int bottomInvisibleBorder = outerBounds.Bottom - visibleFrame.Bottom;
+
+        anchoredOuterRight = workArea.Right + rightInvisibleBorder;
+        anchoredOuterTop = workArea.Top - topInvisibleBorder;
+        anchoredOuterHeight = workArea.Bottom - workArea.Top
+            + topInvisibleBorder
+            + bottomInvisibleBorder;
+        maximumPanelWidth = workArea.Right - workArea.Left;
+        Bounds = new Rectangle(
+            anchoredOuterRight - width,
+            anchoredOuterTop,
+            width,
+            anchoredOuterHeight);
     }
 
     private void SizeWindowListColumns()

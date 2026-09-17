@@ -53,7 +53,7 @@ namespace WindowDeck
             //
             // monitorColumn
             //
-            monitorColumn.Text = "Monitor";
+            monitorColumn.Text = "Screen";
             monitorColumn.Width = 110;
             //
             // refreshButton
