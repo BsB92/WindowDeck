@@ -8,6 +8,7 @@ namespace WindowDeck;
 public partial class Form1 : Form
 {
     private readonly WindowEnumerator windowEnumerator = new();
+    private readonly WindowActivator windowActivator = new();
 
     public Form1()
     {
@@ -25,6 +26,46 @@ public partial class Form1 : Form
         RefreshWindowList();
     }
 
+    private void ActivateSelectedButton_Click(object sender, EventArgs e)
+    {
+        if (windowListView.SelectedItems.Count != 1
+            || windowListView.SelectedItems[0].Tag is not WindowInfo window)
+        {
+            statusLabel.Text = "Select one window to activate";
+            return;
+        }
+
+        WindowActivationResult result = windowActivator.Activate(window);
+        switch (result)
+        {
+            case WindowActivationResult.Activated:
+                statusLabel.Text = $"Activated: {window.DisplayTitle}";
+                break;
+            case WindowActivationResult.WindowUnavailable:
+                ShowActivationFailure(
+                    "The selected window is no longer available. Refresh the list and try again.");
+                break;
+            case WindowActivationResult.RestorationFailed:
+                ShowActivationFailure("The selected window could not be restored.");
+                break;
+            case WindowActivationResult.ForegroundActivationFailed:
+                ShowActivationFailure(
+                    "Windows did not allow or complete activation of the selected window.");
+                break;
+        }
+    }
+
+    private void ShowActivationFailure(string message)
+    {
+        statusLabel.Text = message;
+        MessageBox.Show(
+            this,
+            message,
+            "WindowDeck",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
+    }
+
     private void RefreshWindowList()
     {
         windowListView.BeginUpdate();
@@ -35,7 +76,10 @@ public partial class Form1 : Form
 
             foreach (WindowInfo window in windowEnumerator.Enumerate())
             {
-                ListViewItem item = new(window.DisplayTitle);
+                ListViewItem item = new(window.DisplayTitle)
+                {
+                    Tag = window
+                };
                 item.SubItems.Add(GetApplicationName(window.ProcessId));
                 item.SubItems.Add(window.OriginalTitle);
                 item.SubItems.Add(window.ProcessId.ToString());
