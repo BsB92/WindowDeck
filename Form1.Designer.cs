@@ -3,9 +3,8 @@ namespace WindowDeck
     partial class Form1
     {
         private System.ComponentModel.IContainer components = null!;
-        private ListView windowListView = null!;
-        private ColumnHeader displayTitleColumn = null!;
-        private ColumnHeader monitorColumn = null!;
+        private TextBox searchTextBox = null!;
+        private FlowLayoutPanel windowListPanel = null!;
         private Button refreshButton = null!;
         private Label statusLabel = null!;
 
@@ -22,39 +21,33 @@ namespace WindowDeck
 
         private void InitializeComponent()
         {
-            windowListView = new ListView();
-            displayTitleColumn = new ColumnHeader();
-            monitorColumn = new ColumnHeader();
+            searchTextBox = new TextBox();
+            windowListPanel = new FlowLayoutPanel();
             refreshButton = new Button();
             statusLabel = new Label();
             SuspendLayout();
             //
-            // windowListView
+            // searchTextBox
             //
-            windowListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            windowListView.BorderStyle = BorderStyle.FixedSingle;
-            windowListView.Columns.AddRange(new ColumnHeader[] { displayTitleColumn, monitorColumn });
-            windowListView.FullRowSelect = true;
-            windowListView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
-            windowListView.HideSelection = false;
-            windowListView.Location = new Point(16, 16);
-            windowListView.MultiSelect = false;
-            windowListView.Name = "windowListView";
-            windowListView.Size = new Size(648, 685);
-            windowListView.TabIndex = 0;
-            windowListView.UseCompatibleStateImageBehavior = false;
-            windowListView.View = View.Details;
-            windowListView.MouseClick += WindowListView_MouseClick;
+            searchTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            searchTextBox.Location = new Point(16, 16);
+            searchTextBox.Name = "searchTextBox";
+            searchTextBox.PlaceholderText = "Search windows";
+            searchTextBox.Size = new Size(648, 27);
+            searchTextBox.TabIndex = 0;
+            searchTextBox.TextChanged += SearchTextBox_TextChanged;
             //
-            // displayTitleColumn
+            // windowListPanel
             //
-            displayTitleColumn.Text = "Display title";
-            displayTitleColumn.Width = 534;
-            //
-            // monitorColumn
-            //
-            monitorColumn.Text = "Screen";
-            monitorColumn.Width = 110;
+            windowListPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            windowListPanel.AutoScroll = true;
+            windowListPanel.BorderStyle = BorderStyle.FixedSingle;
+            windowListPanel.FlowDirection = FlowDirection.TopDown;
+            windowListPanel.Location = new Point(16, 51);
+            windowListPanel.Name = "windowListPanel";
+            windowListPanel.Size = new Size(648, 650);
+            windowListPanel.TabIndex = 1;
+            windowListPanel.WrapContents = false;
             //
             // refreshButton
             //
@@ -84,7 +77,8 @@ namespace WindowDeck
             ClientSize = new Size(680, 754);
             Controls.Add(refreshButton);
             Controls.Add(statusLabel);
-            Controls.Add(windowListView);
+            Controls.Add(windowListPanel);
+            Controls.Add(searchTextBox);
             MaximizeBox = false;
             MinimizeBox = false;
             MinimumSize = new Size(600, 400);
