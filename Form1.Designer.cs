@@ -126,7 +126,7 @@ namespace WindowDeck
             MinimumSize = new Size(600, 350);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "WindowDeck — Stage 4";
+            Text = "WindowDeck — Stage 5";
             ResumeLayout(false);
             PerformLayout();
         }

@@ -9,6 +9,8 @@ public partial class Form1 : Form
 {
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
+    private WindowEventMonitor? windowEventMonitor;
+    private bool isClosing;
 
     public Form1()
     {
@@ -19,11 +21,56 @@ public partial class Form1 : Form
     {
         base.OnShown(e);
         RefreshWindowList();
+
+        if (!WindowEventMonitor.TryStart(
+                RequestAutomaticRefresh,
+                out windowEventMonitor,
+                out string? errorMessage))
+        {
+            statusLabel.Text = "Automatic refresh unavailable; use Refresh";
+            MessageBox.Show(
+                this,
+                errorMessage,
+                "WindowDeck",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+        }
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        isClosing = true;
+        windowEventMonitor?.Dispose();
+        windowEventMonitor = null;
+        base.OnFormClosing(e);
     }
 
     private void RefreshButton_Click(object sender, EventArgs e)
     {
         RefreshWindowList();
+    }
+
+    private void RequestAutomaticRefresh()
+    {
+        if (isClosing || IsDisposed || Disposing || !IsHandleCreated)
+        {
+            return;
+        }
+
+        try
+        {
+            BeginInvoke((Action)(() =>
+            {
+                if (!isClosing && !IsDisposed && !Disposing)
+                {
+                    RefreshWindowList();
+                }
+            }));
+        }
+        catch (InvalidOperationException) when (isClosing || IsDisposed || Disposing)
+        {
+            // The form began shutting down between the state check and BeginInvoke.
+        }
     }
 
     private void ActivateSelectedButton_Click(object sender, EventArgs e)

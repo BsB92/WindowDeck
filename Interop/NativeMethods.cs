@@ -6,6 +6,14 @@ namespace WindowDeck.Interop;
 internal static class NativeMethods
 {
     internal const int DwmaCloaked = 14;
+    internal const uint EventObjectCreate = 0x8000;
+    internal const uint EventObjectDestroy = 0x8001;
+    internal const uint EventObjectShow = 0x8002;
+    internal const uint EventObjectHide = 0x8003;
+    internal const uint EventObjectLocationChange = 0x800B;
+    internal const uint EventObjectNameChange = 0x800C;
+    internal const uint EventSystemMinimizeStart = 0x0016;
+    internal const uint EventSystemMinimizeEnd = 0x0017;
     internal const int ErrorInsufficientBuffer = 122;
     internal const int GwlExStyle = -20;
     internal const uint MonitorDefaultToNearest = 2;
@@ -14,8 +22,20 @@ internal static class NativeMethods
     internal const uint GwOwner = 4;
     internal const long WsExAppWindow = 0x00040000L;
     internal const long WsExToolWindow = 0x00000080L;
+    internal const int ObjidWindow = 0;
+    internal const int ChildidSelf = 0;
+    internal const uint WineventOutofcontext = 0;
+    internal const uint WineventSkipownprocess = 2;
 
     internal delegate bool EnumWindowsProc(nint windowHandle, nint parameter);
+    internal delegate void WinEventProc(
+        nint hookHandle,
+        uint eventType,
+        nint windowHandle,
+        int objectId,
+        int childId,
+        uint eventThreadId,
+        uint eventTime);
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct LocallyUniqueIdentifier
@@ -116,6 +136,20 @@ internal static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool EnumWindows(EnumWindowsProc callback, nint parameter);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern nint SetWinEventHook(
+        uint eventMinimum,
+        uint eventMaximum,
+        nint eventHookModule,
+        WinEventProc callback,
+        uint processId,
+        uint threadId,
+        uint flags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool UnhookWinEvent(nint hookHandle);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
