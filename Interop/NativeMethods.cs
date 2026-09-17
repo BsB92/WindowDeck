@@ -21,6 +21,8 @@ internal static class NativeMethods
     internal const uint MonitorDefaultToNull = 0;
     internal const uint QdcOnlyActivePaths = 2;
     internal const int SwRestore = 9;
+    internal const int SwMinimize = 6;
+    internal const uint WmClose = 0x0010;
     internal const uint GwOwner = 4;
     internal const long WsExAppWindow = 0x00040000L;
     internal const long WsExToolWindow = 0x00000080L;
@@ -187,6 +189,14 @@ internal static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ShowWindowAsync(nint windowHandle, int command);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool PostMessage(
+        nint windowHandle,
+        uint message,
+        nint wParam,
+        nint lParam);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

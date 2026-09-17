@@ -1,0 +1,27 @@
+using WindowDeck.Models;
+
+namespace WindowDeck.Services;
+
+internal static class WindowListPresentation
+{
+    private static readonly StringComparer DisplayComparer = StringComparer.CurrentCultureIgnoreCase;
+
+    public static IReadOnlyList<IGrouping<string, WindowInfo>> Create(
+        IReadOnlyList<WindowInfo> snapshot,
+        string searchText)
+    {
+        string query = searchText.Trim();
+
+        return snapshot
+            .Where(window => query.Length == 0
+                || window.DisplayTitle.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+                || window.ApplicationName.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+            .OrderBy(window => window.ApplicationName, DisplayComparer)
+            .ThenBy(window => window.DisplayTitle, DisplayComparer)
+            .ThenBy(window => window.OriginalTitle, DisplayComparer)
+            .ThenBy(window => window.ProcessId)
+            .ThenBy(window => window.Handle.ToInt64())
+            .GroupBy(window => window.ApplicationName, DisplayComparer)
+            .ToList();
+    }
+}

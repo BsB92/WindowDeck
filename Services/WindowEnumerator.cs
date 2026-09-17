@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using WindowDeck.Interop;
@@ -79,11 +80,45 @@ internal sealed class WindowEnumerator
         window = new WindowInfo(
             windowHandle,
             processId,
+            GetApplicationName(processId),
             title,
             title,
             monitorDeviceName,
             monitorNumber);
         return true;
+    }
+
+    private static string GetApplicationName(uint processId)
+    {
+        try
+        {
+            using Process process = Process.GetProcessById(checked((int)processId));
+            string processName = process.ProcessName;
+            if (processName.Equals("explorer", StringComparison.OrdinalIgnoreCase))
+            {
+                return "File Explorer";
+            }
+
+            return string.IsNullOrEmpty(processName)
+                ? "Unknown application"
+                : char.ToUpperInvariant(processName[0]) + processName[1..].ToLowerInvariant();
+        }
+        catch (ArgumentException)
+        {
+            return "Unknown application";
+        }
+        catch (OverflowException)
+        {
+            return "Unknown application";
+        }
+        catch (InvalidOperationException)
+        {
+            return "Unknown application";
+        }
+        catch (Win32Exception)
+        {
+            return "Unknown application";
+        }
     }
 
     private static string? GetWindowTitle(nint windowHandle)

@@ -17,9 +17,13 @@ public partial class Form1 : Form
     private const int WmWindowPositionChanging = 0x0046;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
+    private const int ActionColumnWidth = 32;
+    private const int ScreenColumnWidth = 56;
 
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
+    private readonly WindowActions windowActions = new();
+    private IReadOnlyList<WindowInfo> currentSnapshot = [];
     private WindowEventMonitor? windowEventMonitor;
     private bool isClosing;
     private bool monitoringStarted;
@@ -51,7 +55,6 @@ public partial class Form1 : Form
                 out windowEventMonitor,
                 out string? errorMessage))
         {
-            statusLabel.Text = "Automatic refresh unavailable; use Refresh";
             MessageBox.Show(
                 this,
                 errorMessage,
@@ -98,19 +101,13 @@ public partial class Form1 : Form
             return true;
         }
 
-        if (keyData == Keys.Enter && windowListView.Focused)
-        {
-            ActivateSelectedWindow();
-            return true;
-        }
-
         return base.ProcessCmdKey(ref msg, keyData);
     }
 
     protected override void OnResize(EventArgs e)
     {
         base.OnResize(e);
-        SizeWindowListColumns();
+        SizeWindowRows();
     }
 
     protected override void SetBoundsCore(
@@ -163,39 +160,21 @@ public partial class Form1 : Form
         }
     }
 
-    private void WindowListView_MouseClick(object sender, MouseEventArgs e)
+    private void SearchTextBox_TextChanged(object sender, EventArgs e)
     {
-        ListViewItem? item = windowListView.GetItemAt(e.X, e.Y);
-        if (e.Button == MouseButtons.Left && item is not null)
-        {
-            item.Selected = true;
-            ActivateSelectedWindow();
-        }
+        RenderWindowList();
     }
 
-    private void RefreshButton_Click(object sender, EventArgs e)
+    private void ActivateWindow(WindowInfo window)
     {
-        RefreshWindowList();
-    }
-
-    private void ActivateSelectedWindow()
-    {
-        if (windowListView.SelectedItems.Count != 1
-            || windowListView.SelectedItems[0].Tag is not WindowInfo window)
-        {
-            statusLabel.Text = "Select one window to activate";
-            return;
-        }
-
         WindowActivationResult result = windowActivator.Activate(window);
         switch (result)
         {
             case WindowActivationResult.Activated:
-                statusLabel.Text = $"Activated {window.DisplayTitle}";
                 break;
             case WindowActivationResult.WindowUnavailable:
                 ShowActivationFailure(
-                    "The selected window is no longer available. Refresh the list and try again.");
+                    "The selected window is no longer available. Try again.");
                 break;
             case WindowActivationResult.RestorationFailed:
                 ShowActivationFailure("The selected window could not be restored.");
@@ -232,7 +211,6 @@ public partial class Form1 : Form
 
     private void ShowActivationFailure(string message)
     {
-        statusLabel.Text = message;
         MessageBox.Show(
             this,
             message,
@@ -243,29 +221,13 @@ public partial class Form1 : Form
 
     private void RefreshWindowList()
     {
-        windowListView.BeginUpdate();
-
         try
         {
-            windowListView.Items.Clear();
-
-            foreach (WindowInfo window in windowEnumerator.Enumerate())
-            {
-                ListViewItem item = new(window.DisplayTitle)
-                {
-                    Tag = window
-                };
-                item.SubItems.Add(window.MonitorNumber is int monitorNumber
-                    ? $"Screen {monitorNumber}"
-                    : "Screen ?");
-                windowListView.Items.Add(item);
-            }
-
-            statusLabel.Text = $"{windowListView.Items.Count} windows found";
+            currentSnapshot = windowEnumerator.Enumerate();
+            RenderWindowList();
         }
         catch (Win32Exception exception)
         {
-            statusLabel.Text = "Window enumeration failed";
             MessageBox.Show(
                 this,
                 exception.Message,
@@ -273,10 +235,209 @@ public partial class Form1 : Form
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }
+    }
+
+    private void RenderWindowList()
+    {
+        IReadOnlyList<IGrouping<string, WindowInfo>> groups =
+            WindowListPresentation.Create(currentSnapshot, searchTextBox.Text);
+        int visibleCount = groups.Sum(group => group.Count());
+
+        windowListPanel.SuspendLayout();
+        try
+        {
+            foreach (Control control in windowListPanel.Controls.Cast<Control>().ToArray())
+            {
+                control.Dispose();
+            }
+
+            windowListPanel.Controls.Clear();
+
+            windowListPanel.Controls.Add(CreateColumnHeader());
+
+            if (visibleCount == 0)
+            {
+                Label emptyLabel = new()
+                {
+                    AutoSize = false,
+                    Height = 44,
+                    Margin = new Padding(8),
+                    Text = searchTextBox.TextLength == 0
+                        ? "No windows found"
+                        : "No matching windows",
+                    TextAlign = ContentAlignment.MiddleCenter
+                };
+                windowListPanel.Controls.Add(emptyLabel);
+            }
+            else
+            {
+                foreach (IGrouping<string, WindowInfo> group in groups)
+                {
+                    windowListPanel.Controls.Add(CreateGroupHeader(group.Key));
+                    foreach (WindowInfo window in group)
+                    {
+                        windowListPanel.Controls.Add(CreateWindowRow(window));
+                    }
+                }
+            }
+
+            SizeWindowRows();
+        }
         finally
         {
-            windowListView.EndUpdate();
+            windowListPanel.ResumeLayout();
         }
+    }
+
+    private static Control CreateColumnHeader()
+    {
+        TableLayoutPanel header = CreateListGrid(24, new Padding(4, 1, 4, 0));
+        Label screenHeader = new()
+        {
+            Dock = DockStyle.Fill,
+            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Regular),
+            ForeColor = SystemColors.GrayText,
+            Margin = Padding.Empty,
+            Text = "Screen",
+            TextAlign = ContentAlignment.MiddleCenter
+        };
+
+        header.Controls.Add(screenHeader, 3, 0);
+        return header;
+    }
+
+    private static Label CreateGroupHeader(string applicationName)
+    {
+        return new Label
+        {
+            AutoEllipsis = true,
+            Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
+            Height = 25,
+            Margin = new Padding(4, 6, 4, 0),
+            Padding = new Padding(5, 0, 0, 0),
+            Text = applicationName,
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+    }
+
+    private Control CreateWindowRow(WindowInfo window)
+    {
+        TableLayoutPanel row = CreateListGrid(32, new Padding(4, 0, 4, 1));
+
+        Button titleButton = new()
+        {
+            AutoEllipsis = true,
+            Dock = DockStyle.Fill,
+            FlatStyle = FlatStyle.Flat,
+            Margin = Padding.Empty,
+            Padding = new Padding(6, 0, 3, 0),
+            Text = window.DisplayTitle,
+            TextAlign = ContentAlignment.MiddleLeft,
+            UseVisualStyleBackColor = true
+        };
+        titleButton.FlatAppearance.BorderSize = 0;
+        titleButton.Click += (_, _) => ActivateWindow(window);
+
+        Button minimizeButton = CreateActionButton(
+            "—",
+            $"Minimize {window.DisplayTitle}",
+            isCloseButton: false);
+        minimizeButton.Click += (_, _) =>
+        {
+            if (!windowActions.Minimize(window))
+            {
+                ShowWindowActionFailure();
+            }
+        };
+
+        Button closeButton = CreateActionButton(
+            "×",
+            $"Close {window.DisplayTitle}",
+            isCloseButton: true);
+        closeButton.Click += (_, _) =>
+        {
+            if (!windowActions.RequestClose(window))
+            {
+                ShowWindowActionFailure();
+            }
+        };
+
+        Label monitorLabel = new()
+        {
+            Dock = DockStyle.Fill,
+            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 10F, FontStyle.Regular),
+            ForeColor = SystemColors.GrayText,
+            Margin = Padding.Empty,
+            Text = window.MonitorNumber is int monitorNumber ? $"[ {monitorNumber} ]" : "[ ? ]",
+            TextAlign = ContentAlignment.MiddleCenter
+        };
+
+        row.Controls.Add(titleButton, 0, 0);
+        row.Controls.Add(minimizeButton, 1, 0);
+        row.Controls.Add(closeButton, 2, 0);
+        row.Controls.Add(monitorLabel, 3, 0);
+        return row;
+    }
+
+    private static TableLayoutPanel CreateListGrid(int height, Padding margin)
+    {
+        TableLayoutPanel grid = new()
+        {
+            ColumnCount = 4,
+            Height = height,
+            Margin = margin,
+            RowCount = 1
+        };
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ScreenColumnWidth));
+        return grid;
+    }
+
+    private static Button CreateActionButton(
+        string text,
+        string accessibleName,
+        bool isCloseButton)
+    {
+        Button button = new()
+        {
+            AccessibleName = accessibleName,
+            BackColor = SystemColors.Control,
+            Dock = DockStyle.Fill,
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Segoe UI Symbol", 10F, FontStyle.Regular),
+            ForeColor = SystemColors.ControlText,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty,
+            Text = text,
+            UseVisualStyleBackColor = false
+        };
+        button.FlatAppearance.BorderSize = 0;
+        button.FlatAppearance.MouseDownBackColor = isCloseButton
+            ? Color.FromArgb(196, 43, 28)
+            : SystemColors.ControlDark;
+        button.FlatAppearance.MouseOverBackColor = isCloseButton
+            ? Color.FromArgb(232, 17, 35)
+            : SystemColors.ControlLight;
+
+        if (isCloseButton)
+        {
+            button.MouseEnter += (_, _) => button.ForeColor = Color.White;
+            button.MouseLeave += (_, _) => button.ForeColor = SystemColors.ControlText;
+        }
+
+        return button;
+    }
+
+    private void ShowWindowActionFailure()
+    {
+        MessageBox.Show(
+            this,
+            "The selected window is no longer available.",
+            "WindowDeck",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
     }
 
     private void PositionOnRelevantMonitor(int requestedWidth)
@@ -362,10 +523,14 @@ public partial class Form1 : Form
             anchoredOuterHeight);
     }
 
-    private void SizeWindowListColumns()
+    private void SizeWindowRows()
     {
-        const int monitorColumnWidth = 110;
-        monitorColumn.Width = monitorColumnWidth;
-        displayTitleColumn.Width = Math.Max(120, windowListView.ClientSize.Width - monitorColumnWidth - 4);
+        int width = Math.Max(
+            120,
+            windowListPanel.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 10);
+        foreach (Control control in windowListPanel.Controls)
+        {
+            control.Width = width;
+        }
     }
 }
