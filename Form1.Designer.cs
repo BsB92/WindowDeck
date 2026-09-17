@@ -10,6 +10,7 @@ namespace WindowDeck
         private ColumnHeader handleColumn = null!;
         private ColumnHeader processIdColumn = null!;
         private Button refreshButton = null!;
+        private Button activateSelectedButton = null!;
         private Label statusLabel = null!;
 
         protected override void Dispose(bool disposing)
@@ -32,6 +33,7 @@ namespace WindowDeck
             handleColumn = new ColumnHeader();
             processIdColumn = new ColumnHeader();
             refreshButton = new Button();
+            activateSelectedButton = new Button();
             statusLabel = new Label();
             SuspendLayout();
             //
@@ -79,10 +81,21 @@ namespace WindowDeck
             refreshButton.Location = new Point(694, 411);
             refreshButton.Name = "refreshButton";
             refreshButton.Size = new Size(94, 29);
-            refreshButton.TabIndex = 1;
+            refreshButton.TabIndex = 2;
             refreshButton.Text = "Refresh";
             refreshButton.UseVisualStyleBackColor = true;
             refreshButton.Click += RefreshButton_Click;
+            //
+            // activateSelectedButton
+            //
+            activateSelectedButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            activateSelectedButton.Location = new Point(541, 411);
+            activateSelectedButton.Name = "activateSelectedButton";
+            activateSelectedButton.Size = new Size(147, 29);
+            activateSelectedButton.TabIndex = 1;
+            activateSelectedButton.Text = "Activate selected";
+            activateSelectedButton.UseVisualStyleBackColor = true;
+            activateSelectedButton.Click += ActivateSelectedButton_Click;
             //
             // statusLabel
             //
@@ -91,7 +104,7 @@ namespace WindowDeck
             statusLabel.Location = new Point(12, 416);
             statusLabel.Name = "statusLabel";
             statusLabel.Size = new Size(123, 20);
-            statusLabel.TabIndex = 2;
+            statusLabel.TabIndex = 3;
             statusLabel.Text = "Finding windows...";
             //
             // Form1
@@ -100,12 +113,13 @@ namespace WindowDeck
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 452);
             Controls.Add(statusLabel);
+            Controls.Add(activateSelectedButton);
             Controls.Add(refreshButton);
             Controls.Add(windowListView);
             MinimumSize = new Size(600, 350);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "WindowDeck — Stage 2";
+            Text = "WindowDeck — Stage 3";
             ResumeLayout(false);
             PerformLayout();
         }

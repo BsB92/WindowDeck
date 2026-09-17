@@ -7,6 +7,7 @@ internal static class NativeMethods
 {
     internal const int DwmaCloaked = 14;
     internal const int GwlExStyle = -20;
+    internal const int SwRestore = 9;
     internal const uint GwOwner = 4;
     internal const long WsExAppWindow = 0x00040000L;
     internal const long WsExToolWindow = 0x00000080L;
@@ -20,6 +21,22 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool IsWindowVisible(nint windowHandle);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool IsWindow(nint windowHandle);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool IsIconic(nint windowHandle);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool ShowWindowAsync(nint windowHandle, int command);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetForegroundWindow(nint windowHandle);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int GetWindowText(nint windowHandle, StringBuilder text, int maximumCount);
