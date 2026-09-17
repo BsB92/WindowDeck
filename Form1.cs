@@ -84,6 +84,7 @@ public partial class Form1 : Form
                 item.SubItems.Add(window.OriginalTitle);
                 item.SubItems.Add(window.ProcessId.ToString());
                 item.SubItems.Add($"0x{window.Handle:X}");
+                item.SubItems.Add(window.MonitorNumber?.ToString() ?? "?");
                 windowListView.Items.Add(item);
             }
 
