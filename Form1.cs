@@ -18,7 +18,7 @@ public partial class Form1 : Form
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
     private const int ActionColumnWidth = 32;
-    private const int ScreenColumnWidth = 52;
+    private const int ScreenColumnWidth = 56;
 
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
@@ -365,8 +365,10 @@ public partial class Form1 : Form
         Label monitorLabel = new()
         {
             Dock = DockStyle.Fill,
+            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 10F, FontStyle.Regular),
+            ForeColor = SystemColors.GrayText,
             Margin = Padding.Empty,
-            Text = window.MonitorNumber is int monitorNumber ? $"[{monitorNumber}]" : "[?]",
+            Text = window.MonitorNumber is int monitorNumber ? $"[ {monitorNumber} ]" : "[ ? ]",
             TextAlign = ContentAlignment.MiddleCenter
         };
 
