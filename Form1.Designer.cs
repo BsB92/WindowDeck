@@ -9,6 +9,7 @@ namespace WindowDeck
         private ColumnHeader originalTitleColumn = null!;
         private ColumnHeader handleColumn = null!;
         private ColumnHeader processIdColumn = null!;
+        private ColumnHeader monitorColumn = null!;
         private Button refreshButton = null!;
         private Button activateSelectedButton = null!;
         private Label statusLabel = null!;
@@ -32,6 +33,7 @@ namespace WindowDeck
             originalTitleColumn = new ColumnHeader();
             handleColumn = new ColumnHeader();
             processIdColumn = new ColumnHeader();
+            monitorColumn = new ColumnHeader();
             refreshButton = new Button();
             activateSelectedButton = new Button();
             statusLabel = new Label();
@@ -40,7 +42,7 @@ namespace WindowDeck
             // windowListView
             //
             windowListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            windowListView.Columns.AddRange(new ColumnHeader[] { displayTitleColumn, applicationColumn, originalTitleColumn, processIdColumn, handleColumn });
+            windowListView.Columns.AddRange(new ColumnHeader[] { displayTitleColumn, applicationColumn, originalTitleColumn, processIdColumn, handleColumn, monitorColumn });
             windowListView.FullRowSelect = true;
             windowListView.Location = new Point(12, 12);
             windowListView.MultiSelect = false;
@@ -74,6 +76,11 @@ namespace WindowDeck
             //
             processIdColumn.Text = "Process ID";
             processIdColumn.Width = 90;
+            //
+            // monitorColumn
+            //
+            monitorColumn.Text = "Monitor";
+            monitorColumn.Width = 80;
             //
             // refreshButton
             //
@@ -119,7 +126,7 @@ namespace WindowDeck
             MinimumSize = new Size(600, 350);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "WindowDeck — Stage 3";
+            Text = "WindowDeck — Stage 4";
             ResumeLayout(false);
             PerformLayout();
         }

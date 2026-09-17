@@ -9,6 +9,7 @@ namespace WindowDeck.Services;
 internal sealed class WindowEnumerator
 {
     private readonly uint currentProcessId = (uint)Environment.ProcessId;
+    private readonly MonitorDetector monitorDetector = new();
 
     public IReadOnlyList<WindowInfo> Enumerate()
     {
@@ -73,7 +74,14 @@ internal sealed class WindowEnumerator
             return false;
         }
 
-        window = new WindowInfo(windowHandle, processId, title, title);
+        monitorDetector.Detect(windowHandle, out string? monitorDeviceName, out int? monitorNumber);
+        window = new WindowInfo(
+            windowHandle,
+            processId,
+            title,
+            title,
+            monitorDeviceName,
+            monitorNumber);
         return true;
     }
 

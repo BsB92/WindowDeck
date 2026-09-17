@@ -4,4 +4,6 @@ internal sealed record WindowInfo(
     nint Handle,
     uint ProcessId,
     string OriginalTitle,
-    string DisplayTitle);
+    string DisplayTitle,
+    string? MonitorDeviceName,
+    int? MonitorNumber);
