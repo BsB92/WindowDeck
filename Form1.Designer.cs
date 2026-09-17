@@ -5,8 +5,6 @@ namespace WindowDeck
         private System.ComponentModel.IContainer components = null!;
         private TextBox searchTextBox = null!;
         private FlowLayoutPanel windowListPanel = null!;
-        private Button refreshButton = null!;
-        private Label statusLabel = null!;
 
         protected override void Dispose(bool disposing)
         {
@@ -23,8 +21,6 @@ namespace WindowDeck
         {
             searchTextBox = new TextBox();
             windowListPanel = new FlowLayoutPanel();
-            refreshButton = new Button();
-            statusLabel = new Label();
             SuspendLayout();
             //
             // searchTextBox
@@ -45,38 +41,15 @@ namespace WindowDeck
             windowListPanel.FlowDirection = FlowDirection.TopDown;
             windowListPanel.Location = new Point(16, 51);
             windowListPanel.Name = "windowListPanel";
-            windowListPanel.Size = new Size(648, 650);
+            windowListPanel.Size = new Size(648, 687);
             windowListPanel.TabIndex = 1;
             windowListPanel.WrapContents = false;
-            //
-            // refreshButton
-            //
-            refreshButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            refreshButton.Location = new Point(570, 713);
-            refreshButton.Name = "refreshButton";
-            refreshButton.Size = new Size(94, 29);
-            refreshButton.TabIndex = 2;
-            refreshButton.Text = "Refresh";
-            refreshButton.UseVisualStyleBackColor = true;
-            refreshButton.Click += RefreshButton_Click;
-            //
-            // statusLabel
-            //
-            statusLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            statusLabel.AutoEllipsis = true;
-            statusLabel.Location = new Point(16, 718);
-            statusLabel.Name = "statusLabel";
-            statusLabel.Size = new Size(540, 20);
-            statusLabel.TabIndex = 3;
-            statusLabel.Text = "Finding windows...";
             //
             // Form1
             //
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(680, 754);
-            Controls.Add(refreshButton);
-            Controls.Add(statusLabel);
             Controls.Add(windowListPanel);
             Controls.Add(searchTextBox);
             MaximizeBox = false;

@@ -17,6 +17,8 @@ public partial class Form1 : Form
     private const int WmWindowPositionChanging = 0x0046;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
+    private const int ActionColumnWidth = 32;
+    private const int ScreenColumnWidth = 56;
 
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
@@ -53,7 +55,6 @@ public partial class Form1 : Form
                 out windowEventMonitor,
                 out string? errorMessage))
         {
-            statusLabel.Text = "Automatic refresh unavailable; use Refresh";
             MessageBox.Show(
                 this,
                 errorMessage,
@@ -164,22 +165,16 @@ public partial class Form1 : Form
         RenderWindowList();
     }
 
-    private void RefreshButton_Click(object sender, EventArgs e)
-    {
-        RefreshWindowList();
-    }
-
     private void ActivateWindow(WindowInfo window)
     {
         WindowActivationResult result = windowActivator.Activate(window);
         switch (result)
         {
             case WindowActivationResult.Activated:
-                statusLabel.Text = $"Activated {window.DisplayTitle}";
                 break;
             case WindowActivationResult.WindowUnavailable:
                 ShowActivationFailure(
-                    "The selected window is no longer available. Refresh the list and try again.");
+                    "The selected window is no longer available. Try again.");
                 break;
             case WindowActivationResult.RestorationFailed:
                 ShowActivationFailure("The selected window could not be restored.");
@@ -216,7 +211,6 @@ public partial class Form1 : Form
 
     private void ShowActivationFailure(string message)
     {
-        statusLabel.Text = message;
         MessageBox.Show(
             this,
             message,
@@ -234,7 +228,6 @@ public partial class Form1 : Form
         }
         catch (Win32Exception exception)
         {
-            statusLabel.Text = "Window enumeration failed";
             MessageBox.Show(
                 this,
                 exception.Message,
@@ -259,6 +252,8 @@ public partial class Form1 : Form
             }
 
             windowListPanel.Controls.Clear();
+
+            windowListPanel.Controls.Add(CreateColumnHeader());
 
             if (visibleCount == 0)
             {
@@ -287,14 +282,28 @@ public partial class Form1 : Form
             }
 
             SizeWindowRows();
-            statusLabel.Text = searchTextBox.TextLength == 0
-                ? $"{visibleCount} windows found"
-                : $"{visibleCount} matching windows";
         }
         finally
         {
             windowListPanel.ResumeLayout();
         }
+    }
+
+    private static Control CreateColumnHeader()
+    {
+        TableLayoutPanel header = CreateListGrid(24, new Padding(4, 1, 4, 0));
+        Label screenHeader = new()
+        {
+            Dock = DockStyle.Fill,
+            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Regular),
+            ForeColor = SystemColors.GrayText,
+            Margin = Padding.Empty,
+            Text = "Screen",
+            TextAlign = ContentAlignment.MiddleCenter
+        };
+
+        header.Controls.Add(screenHeader, 3, 0);
+        return header;
     }
 
     private static Label CreateGroupHeader(string applicationName)
@@ -303,8 +312,8 @@ public partial class Form1 : Form
         {
             AutoEllipsis = true,
             Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
-            Height = 28,
-            Margin = new Padding(4, 8, 4, 0),
+            Height = 25,
+            Margin = new Padding(4, 6, 4, 0),
             Padding = new Padding(5, 0, 0, 0),
             Text = applicationName,
             TextAlign = ContentAlignment.MiddleLeft
@@ -313,17 +322,7 @@ public partial class Form1 : Form
 
     private Control CreateWindowRow(WindowInfo window)
     {
-        TableLayoutPanel row = new()
-        {
-            ColumnCount = 4,
-            Height = 36,
-            Margin = new Padding(4, 0, 4, 2),
-            RowCount = 1
-        };
-        row.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        row.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 36));
-        row.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 36));
-        row.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 48));
+        TableLayoutPanel row = CreateListGrid(32, new Padding(4, 0, 4, 1));
 
         Button titleButton = new()
         {
@@ -339,29 +338,37 @@ public partial class Form1 : Form
         titleButton.FlatAppearance.BorderSize = 0;
         titleButton.Click += (_, _) => ActivateWindow(window);
 
-        Button minimizeButton = CreateActionButton("_", $"Minimize {window.DisplayTitle}");
+        Button minimizeButton = CreateActionButton(
+            "—",
+            $"Minimize {window.DisplayTitle}",
+            isCloseButton: false);
         minimizeButton.Click += (_, _) =>
         {
             if (!windowActions.Minimize(window))
             {
-                statusLabel.Text = "The window is no longer available";
+                ShowWindowActionFailure();
             }
         };
 
-        Button closeButton = CreateActionButton("×", $"Close {window.DisplayTitle}");
+        Button closeButton = CreateActionButton(
+            "×",
+            $"Close {window.DisplayTitle}",
+            isCloseButton: true);
         closeButton.Click += (_, _) =>
         {
             if (!windowActions.RequestClose(window))
             {
-                statusLabel.Text = "The window is no longer available";
+                ShowWindowActionFailure();
             }
         };
 
         Label monitorLabel = new()
         {
             Dock = DockStyle.Fill,
+            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 10F, FontStyle.Regular),
+            ForeColor = SystemColors.GrayText,
             Margin = Padding.Empty,
-            Text = window.MonitorNumber is int monitorNumber ? $"[{monitorNumber}]" : "[?]",
+            Text = window.MonitorNumber is int monitorNumber ? $"[ {monitorNumber} ]" : "[ ? ]",
             TextAlign = ContentAlignment.MiddleCenter
         };
 
@@ -372,18 +379,65 @@ public partial class Form1 : Form
         return row;
     }
 
-    private static Button CreateActionButton(string text, string accessibleName)
+    private static TableLayoutPanel CreateListGrid(int height, Padding margin)
     {
-        return new Button
+        TableLayoutPanel grid = new()
+        {
+            ColumnCount = 4,
+            Height = height,
+            Margin = margin,
+            RowCount = 1
+        };
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ScreenColumnWidth));
+        return grid;
+    }
+
+    private static Button CreateActionButton(
+        string text,
+        string accessibleName,
+        bool isCloseButton)
+    {
+        Button button = new()
         {
             AccessibleName = accessibleName,
+            BackColor = SystemColors.Control,
             Dock = DockStyle.Fill,
-            FlatStyle = FlatStyle.System,
-            Margin = new Padding(1),
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Segoe UI Symbol", 10F, FontStyle.Regular),
+            ForeColor = SystemColors.ControlText,
+            Margin = Padding.Empty,
             Padding = Padding.Empty,
             Text = text,
-            UseVisualStyleBackColor = true
+            UseVisualStyleBackColor = false
         };
+        button.FlatAppearance.BorderSize = 0;
+        button.FlatAppearance.MouseDownBackColor = isCloseButton
+            ? Color.FromArgb(196, 43, 28)
+            : SystemColors.ControlDark;
+        button.FlatAppearance.MouseOverBackColor = isCloseButton
+            ? Color.FromArgb(232, 17, 35)
+            : SystemColors.ControlLight;
+
+        if (isCloseButton)
+        {
+            button.MouseEnter += (_, _) => button.ForeColor = Color.White;
+            button.MouseLeave += (_, _) => button.ForeColor = SystemColors.ControlText;
+        }
+
+        return button;
+    }
+
+    private void ShowWindowActionFailure()
+    {
+        MessageBox.Show(
+            this,
+            "The selected window is no longer available.",
+            "WindowDeck",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
     }
 
     private void PositionOnRelevantMonitor(int requestedWidth)
