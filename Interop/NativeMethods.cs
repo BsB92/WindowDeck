@@ -6,6 +6,7 @@ namespace WindowDeck.Interop;
 internal static class NativeMethods
 {
     internal const int DwmaCloaked = 14;
+    internal const int DwmaExtendedFrameBounds = 9;
     internal const uint EventObjectCreate = 0x8000;
     internal const uint EventObjectDestroy = 0x8001;
     internal const uint EventObjectShow = 0x8002;
@@ -17,6 +18,7 @@ internal static class NativeMethods
     internal const int ErrorInsufficientBuffer = 122;
     internal const int GwlExStyle = -20;
     internal const uint MonitorDefaultToNearest = 2;
+    internal const uint MonitorDefaultToNull = 0;
     internal const uint QdcOnlyActivePaths = 2;
     internal const int SwRestore = 9;
     internal const uint GwOwner = 4;
@@ -121,6 +123,25 @@ internal static class NativeMethods
         internal int Bottom;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct NativePoint
+    {
+        internal int X;
+        internal int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WindowPosition
+    {
+        internal nint WindowHandle;
+        internal nint InsertAfter;
+        internal int X;
+        internal int Y;
+        internal int Width;
+        internal int Height;
+        internal uint Flags;
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct MonitorInfoEx
     {
@@ -189,6 +210,16 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     internal static extern nint MonitorFromWindow(nint windowHandle, uint flags);
 
+    [DllImport("user32.dll")]
+    internal static extern nint GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetCursorPos(out NativePoint point);
+
+    [DllImport("user32.dll")]
+    internal static extern nint MonitorFromPoint(NativePoint point, uint flags);
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool GetMonitorInfo(
@@ -225,6 +256,13 @@ internal static class NativeMethods
         nint windowHandle,
         int attribute,
         out int attributeValue,
+        int attributeSize);
+
+    [DllImport("dwmapi.dll")]
+    internal static extern int DwmGetWindowAttribute(
+        nint windowHandle,
+        int attribute,
+        out Rect attributeValue,
         int attributeSize);
 
     internal static nint GetWindowLongPtr(nint windowHandle, int index)
