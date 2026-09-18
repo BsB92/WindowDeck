@@ -6,7 +6,7 @@ using WindowDeck.Services;
 
 namespace WindowDeck;
 
-public partial class Form1 : Form
+internal partial class Form1 : Form
 {
     private const int DefaultPanelWidth = 680;
     private const int HtCaption = 2;
@@ -19,10 +19,11 @@ public partial class Form1 : Form
     private const uint SwpNoMove = 0x0002;
     private const int ActionColumnWidth = 32;
     private const int ScreenColumnWidth = 56;
-
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
     private readonly WindowActions windowActions = new();
+    private readonly ApplicationIconProvider applicationIconProvider = new();
+    private AppSettings settings;
     private IReadOnlyList<WindowInfo> currentSnapshot = [];
     private WindowEventMonitor? windowEventMonitor;
     private bool isClosing;
@@ -33,17 +34,37 @@ public partial class Form1 : Form
     private int anchoredOuterHeight;
     private int maximumPanelWidth;
 
-    public Form1()
+    public Form1(AppSettings settings)
     {
+        this.settings = settings.Copy();
         InitializeComponent();
+        ApplyTheme();
         PositionOnRelevantMonitor(DefaultPanelWidth);
+    }
+
+    public void InitializeWhileHidden()
+    {
+        _ = Handle;
+        RefreshWindowList();
+        EnsureMonitoringStarted();
+    }
+
+    public void ApplySettings(AppSettings updatedSettings)
+    {
+        settings = updatedSettings.Copy();
+        ApplyTheme();
+        RenderWindowList();
     }
 
     protected override void OnShown(EventArgs e)
     {
         base.OnShown(e);
         RefreshWindowList();
+        EnsureMonitoringStarted();
+    }
 
+    private void EnsureMonitoringStarted()
+    {
         if (monitoringStarted)
         {
             return;
@@ -255,7 +276,11 @@ public partial class Form1 : Form
     private void RenderWindowList()
     {
         IReadOnlyList<IGrouping<string, WindowInfo>> groups =
-            WindowListPresentation.Create(currentSnapshot, searchTextBox.Text);
+            WindowListPresentation.Create(
+                currentSnapshot,
+                searchTextBox.Text,
+                settings.GroupByApplication,
+                settings.ShowMinimizedWindows);
         int visibleCount = groups.Sum(group => group.Count());
 
         windowListPanel.SuspendLayout();
@@ -288,7 +313,10 @@ public partial class Form1 : Form
             {
                 foreach (IGrouping<string, WindowInfo> group in groups)
                 {
-                    windowListPanel.Controls.Add(CreateGroupHeader(group.Key));
+                    if (settings.GroupByApplication)
+                    {
+                        windowListPanel.Controls.Add(CreateGroupHeader(group.Key));
+                    }
                     foreach (WindowInfo window in group)
                     {
                         windowListPanel.Controls.Add(CreateWindowRow(window));
@@ -304,7 +332,7 @@ public partial class Form1 : Form
         }
     }
 
-    private static Control CreateColumnHeader()
+    private Control CreateColumnHeader()
     {
         TableLayoutPanel header = CreateListGrid(24, new Padding(4, 1, 4, 0));
         Label screenHeader = new()
@@ -317,7 +345,10 @@ public partial class Form1 : Form
             TextAlign = ContentAlignment.MiddleCenter
         };
 
-        header.Controls.Add(screenHeader, 3, 0);
+        if (settings.ShowScreenNumber)
+        {
+            header.Controls.Add(screenHeader, 4, 0);
+        }
         return header;
     }
 
@@ -338,6 +369,15 @@ public partial class Form1 : Form
     private Control CreateWindowRow(WindowInfo window)
     {
         TableLayoutPanel row = CreateListGrid(32, new Padding(4, 0, 4, 1));
+
+        PictureBox applicationIcon = new()
+        {
+            Anchor = AnchorStyles.None,
+            Image = applicationIconProvider.GetIcon(window),
+            Margin = new Padding(4),
+            Size = new Size(16, 16),
+            SizeMode = PictureBoxSizeMode.Zoom
+        };
 
         Button titleButton = new()
         {
@@ -387,27 +427,54 @@ public partial class Form1 : Form
             TextAlign = ContentAlignment.MiddleCenter
         };
 
-        row.Controls.Add(titleButton, 0, 0);
-        row.Controls.Add(minimizeButton, 1, 0);
-        row.Controls.Add(closeButton, 2, 0);
-        row.Controls.Add(monitorLabel, 3, 0);
+        if (settings.ShowApplicationIcons)
+        {
+            row.Controls.Add(applicationIcon, 0, 0);
+        }
+        else
+        {
+            applicationIcon.Dispose();
+        }
+        row.Controls.Add(titleButton, 1, 0);
+        row.Controls.Add(minimizeButton, 2, 0);
+        row.Controls.Add(closeButton, 3, 0);
+        if (settings.ShowScreenNumber)
+        {
+            row.Controls.Add(monitorLabel, 4, 0);
+        }
+        else
+        {
+            monitorLabel.Dispose();
+        }
         return row;
     }
 
-    private static TableLayoutPanel CreateListGrid(int height, Padding margin)
+    private TableLayoutPanel CreateListGrid(int height, Padding margin)
     {
         TableLayoutPanel grid = new()
         {
-            ColumnCount = 4,
+            ColumnCount = 5,
             Height = height,
             Margin = margin,
             RowCount = 1
         };
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowApplicationIcons ? 24 : 0));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ScreenColumnWidth));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowScreenNumber ? ScreenColumnWidth : 0));
         return grid;
+    }
+
+    private void ApplyTheme()
+    {
+        bool dark = settings.Theme == AppTheme.Dark;
+        BackColor = dark ? Color.FromArgb(32, 32, 32) : SystemColors.Control;
+        ForeColor = dark ? Color.WhiteSmoke : SystemColors.ControlText;
+        searchTextBox.BackColor = dark ? Color.FromArgb(48, 48, 48) : SystemColors.Window;
+        searchTextBox.ForeColor = dark ? Color.WhiteSmoke : SystemColors.WindowText;
+        windowListPanel.BackColor = BackColor;
+        windowListPanel.ForeColor = ForeColor;
     }
 
     private static Button CreateActionButton(

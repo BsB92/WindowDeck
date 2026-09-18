@@ -1,25 +1,43 @@
+using WindowDeck.Models;
 using WindowDeck.Services;
 
 namespace WindowDeck;
 
 internal sealed class WindowDeckApplicationContext : ApplicationContext
 {
+    private readonly SettingsService settingsService = new();
+    private readonly StartupManager startupManager = new();
     private readonly Form1 flyout;
     private readonly GlobalHotkeyManager hotkeyManager;
     private readonly ContextMenuStrip trayMenu;
+    private readonly ToolStripMenuItem startWithWindowsItem;
     private readonly NotifyIcon trayIcon;
+    private AppSettings settings;
+    private SettingsForm? settingsForm;
     private bool isExiting;
     private bool trayResourcesDisposed;
 
     public WindowDeckApplicationContext()
     {
-        flyout = new Form1();
+        settings = settingsService.Load(out bool invalidSettingsFile);
+        bool effectiveStartupState = startupManager.IsEnabled();
+        string? startupSynchronizationError = SynchronizeStartupState(effectiveStartupState);
+        flyout = new Form1(settings);
         flyout.FormClosed += Flyout_FormClosed;
 
         trayMenu = new ContextMenuStrip();
         trayMenu.Items.Add("Open WindowDeck", null, OpenWindowDeck_Click);
+        trayMenu.Items.Add("Settings", null, Settings_Click);
+        startWithWindowsItem = new ToolStripMenuItem("Start with Windows")
+        {
+            Checked = effectiveStartupState,
+            CheckOnClick = false
+        };
+        startWithWindowsItem.Click += StartWithWindows_Click;
+        trayMenu.Items.Add(startWithWindowsItem);
         trayMenu.Items.Add(new ToolStripSeparator());
         trayMenu.Items.Add("Exit", null, Exit_Click);
+        trayMenu.Opening += TrayMenu_Opening;
 
         trayIcon = new NotifyIcon
         {
@@ -30,16 +48,40 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         };
         trayIcon.MouseClick += TrayIcon_MouseClick;
 
-        hotkeyManager = new GlobalHotkeyManager();
+        hotkeyManager = new GlobalHotkeyManager(
+            settings.Hotkey.Modifiers,
+            settings.Hotkey.VirtualKey);
         hotkeyManager.HotkeyPressed += HotkeyManager_HotkeyPressed;
 
-        flyout.ShowFlyout();
+        if (settings.StartMinimizedToTray)
+        {
+            flyout.InitializeWhileHidden();
+        }
+        else
+        {
+            flyout.ShowFlyout();
+        }
+
+        if (invalidSettingsFile)
+        {
+            MessageBox.Show(
+                "WindowDeck could not read settings.json and is using safe defaults. " +
+                "Saving Settings will replace the invalid file.",
+                "WindowDeck", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        if (startupSynchronizationError is not null)
+        {
+            MessageBox.Show(startupSynchronizationError, "WindowDeck",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
 
         if (!hotkeyManager.IsRegistered)
         {
             MessageBox.Show(
                 flyout,
-                "WindowDeck could not register the Win + ` shortcut because it is unavailable.",
+                $"WindowDeck could not register {SettingsForm.FormatShortcut(settings.Hotkey)} " +
+                "because it is unavailable. The tray menu remains available.",
                 "WindowDeck",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
@@ -50,6 +92,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
     {
         if (disposing)
         {
+            settingsForm?.Dispose();
             hotkeyManager.Dispose();
             DisposeTrayResources();
             flyout.Dispose();
@@ -60,82 +103,143 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
 
     private void HotkeyManager_HotkeyPressed(object? sender, EventArgs e)
     {
-        if (isExiting)
-        {
-            return;
-        }
-
-        if (flyout.Visible)
-        {
-            flyout.Hide();
-        }
-        else
-        {
-            flyout.ShowFlyoutOnCursorMonitor();
-        }
+        if (isExiting) return;
+        if (flyout.Visible) flyout.Hide();
+        else flyout.ShowFlyoutOnCursorMonitor();
     }
 
     private void TrayIcon_MouseClick(object? sender, MouseEventArgs e)
     {
-        if (isExiting || e.Button != MouseButtons.Left)
-        {
-            return;
-        }
-
-        if (flyout.Visible)
-        {
-            flyout.Hide();
-        }
-        else
-        {
-            flyout.ShowFlyout();
-        }
+        if (isExiting || e.Button != MouseButtons.Left) return;
+        if (flyout.Visible) flyout.Hide();
+        else flyout.ShowFlyout();
     }
 
     private void OpenWindowDeck_Click(object? sender, EventArgs e)
     {
-        if (!isExiting)
+        if (!isExiting) flyout.ShowFlyout();
+    }
+
+    private void TrayMenu_Opening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        bool effectiveStartupState = startupManager.IsEnabled();
+        startWithWindowsItem.Checked = effectiveStartupState;
+        SynchronizeStartupState(effectiveStartupState);
+    }
+
+    private void Settings_Click(object? sender, EventArgs e)
+    {
+        if (isExiting) return;
+        if (settingsForm is { IsDisposed: false })
         {
-            flyout.ShowFlyout();
-        }
-    }
-
-    private void Exit_Click(object? sender, EventArgs e)
-    {
-        ExitApplication();
-    }
-
-    private void Flyout_FormClosed(object? sender, FormClosedEventArgs e)
-    {
-        ExitApplication();
-    }
-
-    private void ExitApplication()
-    {
-        if (isExiting)
-        {
+            settingsForm.Show();
+            settingsForm.Activate();
             return;
         }
 
-        isExiting = true;
-        hotkeyManager.Dispose();
-
-        if (!flyout.IsDisposed)
+        flyout.Hide();
+        bool effectiveStartupState = startupManager.IsEnabled();
+        string? synchronizationError = SynchronizeStartupState(effectiveStartupState);
+        startWithWindowsItem.Checked = effectiveStartupState;
+        if (synchronizationError is not null)
         {
-            flyout.ExitApplication();
+            MessageBox.Show(synchronizationError, "WindowDeck",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
+        settingsForm = new SettingsForm(settings, effectiveStartupState, ApplySettings);
+        settingsForm.FormClosed += (_, _) => settingsForm = null;
+        settingsForm.Show();
+        settingsForm.Activate();
+    }
+
+    private void StartWithWindows_Click(object? sender, EventArgs e)
+    {
+        AppSettings candidate = settings.Copy();
+        candidate.StartWithWindows = !startupManager.IsEnabled();
+        (bool success, string? errorMessage, _) = ApplySettings(candidate);
+        if (!success)
+        {
+            MessageBox.Show(errorMessage, "WindowDeck", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
+    private (bool Success, string? ErrorMessage, bool EffectiveStartupState) ApplySettings(AppSettings candidate)
+    {
+        AppSettings previous = settings.Copy();
+        bool previousStartupState = startupManager.IsEnabled();
+
+        if (!hotkeyManager.TryChange(candidate.Hotkey.Modifiers, candidate.Hotkey.VirtualKey))
+        {
+            return (false, "That shortcut is unavailable. The previous shortcut remains active.",
+                startupManager.IsEnabled());
+        }
+
+        if (!startupManager.TrySetEnabled(candidate.StartWithWindows, out string? startupError))
+        {
+            hotkeyManager.TryChange(previous.Hotkey.Modifiers, previous.Hotkey.VirtualKey);
+            bool effectiveStartupState = startupManager.IsEnabled();
+            startWithWindowsItem.Checked = effectiveStartupState;
+            return (false, startupError, effectiveStartupState);
+        }
+
+        if (!settingsService.TrySave(candidate, out string? saveError))
+        {
+            startupManager.TrySetEnabled(previousStartupState, out _);
+            bool hotkeyRestored = hotkeyManager.TryChange(
+                previous.Hotkey.Modifiers, previous.Hotkey.VirtualKey);
+            string rollbackMessage = hotkeyRestored
+                ? string.Empty
+                : " The previous hotkey could not be restored; use the tray menu to choose another shortcut.";
+            bool effectiveStartupState = startupManager.IsEnabled();
+            startWithWindowsItem.Checked = effectiveStartupState;
+            return (false, saveError + rollbackMessage, effectiveStartupState);
+        }
+
+        settings = candidate.Copy();
+        bool currentStartupState = startupManager.IsEnabled();
+        settings.StartWithWindows = currentStartupState;
+        startWithWindowsItem.Checked = currentStartupState;
+        flyout.ApplySettings(settings);
+        return (true, null, currentStartupState);
+    }
+
+    private string? SynchronizeStartupState(bool effectiveStartupState)
+    {
+        if (settings.StartWithWindows == effectiveStartupState)
+        {
+            return null;
+        }
+
+        AppSettings synchronizedSettings = settings.Copy();
+        synchronizedSettings.StartWithWindows = effectiveStartupState;
+        if (!settingsService.TrySave(synchronizedSettings, out string? saveError))
+        {
+            return saveError;
+        }
+
+        settings = synchronizedSettings;
+        return null;
+    }
+
+    private void Exit_Click(object? sender, EventArgs e) => ExitApplication();
+
+    private void Flyout_FormClosed(object? sender, FormClosedEventArgs e) => ExitApplication();
+
+    private void ExitApplication()
+    {
+        if (isExiting) return;
+        isExiting = true;
+        settingsForm?.Close();
+        hotkeyManager.Dispose();
+        if (!flyout.IsDisposed) flyout.ExitApplication();
         DisposeTrayResources();
         ExitThread();
     }
 
     private void DisposeTrayResources()
     {
-        if (trayResourcesDisposed)
-        {
-            return;
-        }
-
+        if (trayResourcesDisposed) return;
         trayResourcesDisposed = true;
         trayIcon.Visible = false;
         trayIcon.Dispose();

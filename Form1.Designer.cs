@@ -8,9 +8,10 @@ namespace WindowDeck
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                applicationIconProvider.Dispose();
+                components?.Dispose();
             }
             base.Dispose(disposing);
         }

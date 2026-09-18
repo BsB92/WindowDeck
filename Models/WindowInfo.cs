@@ -7,4 +7,5 @@ internal sealed record WindowInfo(
     string OriginalTitle,
     string DisplayTitle,
     string? MonitorDeviceName,
-    int? MonitorNumber);
+    int? MonitorNumber,
+    bool IsMinimized);
