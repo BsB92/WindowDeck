@@ -17,13 +17,13 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox showScreenNumber = new() { Text = "Show screen number", AutoSize = true };
     private readonly CheckBox showMinimizedWindows = new() { Text = "Show minimized windows", AutoSize = true };
     private readonly ComboBox theme = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
-    private readonly Func<AppSettings, (bool Success, string? ErrorMessage)> applySettings;
+    private readonly Func<AppSettings, (bool Success, string? ErrorMessage, bool EffectiveStartupState)> applySettings;
     private uint virtualKey;
 
     public SettingsForm(
         AppSettings currentSettings,
         bool effectiveStartupState,
-        Func<AppSettings, (bool Success, string? ErrorMessage)> applySettings)
+        Func<AppSettings, (bool Success, string? ErrorMessage, bool EffectiveStartupState)> applySettings)
     {
         this.applySettings = applySettings;
         Text = "WindowDeck Settings";
@@ -145,9 +145,10 @@ internal sealed class SettingsForm : Form
             Theme = Enum.Parse<AppTheme>((string)theme.SelectedItem!)
         };
 
-        (bool success, string? errorMessage) = applySettings(candidate);
+        (bool success, string? errorMessage, bool effectiveStartupState) = applySettings(candidate);
         if (!success)
         {
+            startWithWindows.Checked = effectiveStartupState;
             MessageBox.Show(this, errorMessage, Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
