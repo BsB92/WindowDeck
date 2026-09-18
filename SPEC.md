@@ -4,7 +4,7 @@
 
 This document is the single source of truth for WindowDeck product requirements and functional decisions. Development must be incremental and follow the stages in section 17. A task must implement only its requested stage; features must not be built speculatively.
 
-WindowDeck v1 is currently in early development. A feature described here is planned unless the repository and current stage explicitly show that it has been implemented.
+WindowDeck v1 is in release polish. Packaging and release publication remain outside the implemented stages.
 
 ## 2. Product purpose and boundaries
 
@@ -12,7 +12,7 @@ WindowDeck is a lightweight Windows 11 utility for quickly finding and activatin
 
 The application will present open windows in a wide flyout-style panel from the right side of the active monitor. A user must be able to activate several windows in succession without WindowDeck closing after each selection.
 
-WindowDeck must be fast, stable, event-driven, Windows-only, free and open source, and as portable as practical. It must require no account, cloud service, telemetry, analytics, network communication, or administrator privileges. It is not a Task Manager, PowerToys replacement, desktop manager, monitor manager, or general-purpose utility collection.
+WindowDeck must be fast, stable, event-driven, Windows-only, free, and as portable as practical. Any source-availability or license statement must accurately reflect the repository's actual license state. It must require no account, cloud service, telemetry, analytics, network communication, or administrator privileges. It is not a Task Manager, PowerToys replacement, desktop manager, monitor manager, or general-purpose utility collection.
 
 ## 3. Required technology
 
@@ -95,7 +95,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free and open sourc
 
 - WindowDeck runs continuously in the system tray using the standard WinForms `NotifyIcon`.
 - Left-clicking the tray icon shows or hides WindowDeck.
-- The tray context menu contains `Open WindowDeck`, `Settings`, `Start with Windows` with its checked state, and `Exit`.
+- The tray context menu contains `Open WindowDeck`, `Settings`, `Help`, `About WindowDeck`, `Start with Windows` with its checked state, and `Exit`.
 - Closing the panel with `X` only hides it to the tray. The process exits only through `Tray > Exit`.
 - Permit only one running WindowDeck instance. Use a simple standard .NET/Windows mechanism; do not build elaborate IPC unless later requirements demonstrably need it.
 
@@ -144,6 +144,7 @@ Implement in this order, with each stage being a separate small task or small se
 10. Settings and startup with Windows.
 11. Windows 11 visual styling.
 12. Final performance/stability cleanup.
+13. Help, About, and release polish.
 
 Before editing, read `AGENTS.md`, read the relevant parts of this specification, inspect the current code, and identify the smallest required change. During work, preserve working functionality, avoid unrelated refactors and large rewrites, build after meaningful changes, and correct introduced errors and warnings without merely suppressing them. After work, run a final build, inspect the diff, and ensure no build artifacts or unnecessary dependencies were added.
 
@@ -161,3 +162,7 @@ Do not add application ignore lists, monitor aliases, elaborate filters, profile
 ## 20. Stage 1 scope
 
 Stage 1 provides only a compiling WinForms solution, a minimal temporary startup form, repository documentation, and ignore rules. It must not implement `EnumWindows`, `SetWinEventHook`, external-window activation, monitor detection, tray behavior, global hotkeys, settings, Windows startup, or final styling.
+
+## 21. Stage 13 scope
+
+Stage 13 adds native, DPI-aware Help and About windows to the existing application lifecycle. Each window has at most one open instance, follows the selected System/Light/Dark appearance and native themed title bar, uses the WindowDeck icon, and performs no recurring background work. Help documents only implemented behavior. About displays the application version from assembly metadata and the visible authorship `Created by ::BsB!::`; source or license wording and external project links are included only when supported by repository metadata and license files. Stage 13 also permits narrow user-facing text and README corrections, but adds no window-management functionality, packaging, telemetry, analytics, automatic network communication, polling, or updater.
