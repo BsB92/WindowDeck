@@ -38,8 +38,8 @@ internal sealed class HelpForm : Form
             "You can change it in Settings. You can also left-click the tray icon to show or hide WindowDeck.");
         AddSection("Finding windows",
             "Type in Search windows to filter by application or visible window/document title. Windows can be " +
-            "grouped by application. The Screen column identifies the screen containing each window: [ 1 ], " +
-            "[ 2 ], and [ 3 ] mean screens 1, 2, and 3.");
+            "grouped by application. The Screen column shows which screen contains each window, for example " +
+            "[ 1 ], [ 2 ], [ 3 ], and so on.");
         AddSection("Window actions",
             "Click a title or row to activate that exact window. The — button minimizes that window. The × button " +
             "sends a normal close request; the application may still show its usual Save, Don't Save, or Cancel dialog.");
