@@ -19,11 +19,10 @@ internal partial class Form1 : Form
     private const uint SwpNoMove = 0x0002;
     private const int ActionColumnWidth = 32;
     private const int ScreenColumnWidth = 56;
-    private static readonly Image DefaultApplicationIcon = SystemIcons.Application.ToBitmap();
-
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
     private readonly WindowActions windowActions = new();
+    private readonly ApplicationIconProvider applicationIconProvider = new();
     private AppSettings settings;
     private IReadOnlyList<WindowInfo> currentSnapshot = [];
     private WindowEventMonitor? windowEventMonitor;
@@ -373,9 +372,10 @@ internal partial class Form1 : Form
 
         PictureBox applicationIcon = new()
         {
-            Dock = DockStyle.Fill,
-            Image = DefaultApplicationIcon,
-            Margin = new Padding(3),
+            Anchor = AnchorStyles.None,
+            Image = applicationIconProvider.GetIcon(window),
+            Margin = new Padding(4),
+            Size = new Size(16, 16),
             SizeMode = PictureBoxSizeMode.Zoom
         };
 
@@ -458,7 +458,7 @@ internal partial class Form1 : Form
             Margin = margin,
             RowCount = 1
         };
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowApplicationIcons ? 28 : 0));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowApplicationIcons ? 24 : 0));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));

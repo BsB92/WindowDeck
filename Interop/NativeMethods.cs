@@ -17,6 +17,11 @@ internal static class NativeMethods
     internal const uint EventSystemMinimizeEnd = 0x0017;
     internal const int ErrorInsufficientBuffer = 122;
     internal const int GwlExStyle = -20;
+    internal const int GclpHicon = -14;
+    internal const int GclpHiconSmall = -34;
+    internal const nint IconSmall = 0;
+    internal const nint IconBig = 1;
+    internal const nint IconSmall2 = 2;
     internal const uint MonitorDefaultToNearest = 2;
     internal const uint MonitorDefaultToNull = 0;
     internal const uint ModWin = 0x0008;
@@ -28,6 +33,7 @@ internal static class NativeMethods
     internal const int SwRestore = 9;
     internal const int SwMinimize = 6;
     internal const uint WmClose = 0x0010;
+    internal const uint WmGetIcon = 0x007F;
     internal const int WmHotkey = 0x0312;
     internal const uint VkOem3 = 0xC0;
     internal const uint GwOwner = 4;
@@ -37,6 +43,7 @@ internal static class NativeMethods
     internal const int ChildidSelf = 0;
     internal const uint WineventOutofcontext = 0;
     internal const uint WineventSkipownprocess = 2;
+    internal const uint SmtoAbortIfHung = 0x0002;
 
     internal delegate bool EnumWindowsProc(nint windowHandle, nint parameter);
     internal delegate void WinEventProc(
@@ -217,6 +224,16 @@ internal static class NativeMethods
         nint wParam,
         nint lParam);
 
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern nint SendMessageTimeout(
+        nint windowHandle,
+        uint message,
+        nint wParam,
+        nint lParam,
+        uint flags,
+        uint timeout,
+        out nint result);
+
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool SetForegroundWindow(nint windowHandle);
@@ -280,6 +297,12 @@ internal static class NativeMethods
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
     private static extern nint GetWindowLongPtr64(nint windowHandle, int index);
 
+    [DllImport("user32.dll", EntryPoint = "GetClassLongW", SetLastError = true)]
+    private static extern uint GetClassLong32(nint windowHandle, int index);
+
+    [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW", SetLastError = true)]
+    private static extern nint GetClassLongPtr64(nint windowHandle, int index);
+
     [DllImport("dwmapi.dll")]
     internal static extern int DwmGetWindowAttribute(
         nint windowHandle,
@@ -299,5 +322,12 @@ internal static class NativeMethods
         return nint.Size == 8
             ? GetWindowLongPtr64(windowHandle, index)
             : GetWindowLong32(windowHandle, index);
+    }
+
+    internal static nint GetClassLongPtr(nint windowHandle, int index)
+    {
+        return nint.Size == 8
+            ? GetClassLongPtr64(windowHandle, index)
+            : (nint)GetClassLong32(windowHandle, index);
     }
 }

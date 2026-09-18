@@ -20,6 +20,8 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
     public WindowDeckApplicationContext()
     {
         settings = settingsService.Load(out bool invalidSettingsFile);
+        bool effectiveStartupState = startupManager.IsEnabled();
+        string? startupSynchronizationError = SynchronizeStartupState(effectiveStartupState);
         flyout = new Form1(settings);
         flyout.FormClosed += Flyout_FormClosed;
 
@@ -28,13 +30,14 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         trayMenu.Items.Add("Settings", null, Settings_Click);
         startWithWindowsItem = new ToolStripMenuItem("Start with Windows")
         {
-            Checked = startupManager.IsEnabled(),
+            Checked = effectiveStartupState,
             CheckOnClick = false
         };
         startWithWindowsItem.Click += StartWithWindows_Click;
         trayMenu.Items.Add(startWithWindowsItem);
         trayMenu.Items.Add(new ToolStripSeparator());
         trayMenu.Items.Add("Exit", null, Exit_Click);
+        trayMenu.Opening += TrayMenu_Opening;
 
         trayIcon = new NotifyIcon
         {
@@ -49,13 +52,6 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
             settings.Hotkey.Modifiers,
             settings.Hotkey.VirtualKey);
         hotkeyManager.HotkeyPressed += HotkeyManager_HotkeyPressed;
-
-        string? startupInitializationError = null;
-        if (settings.StartWithWindows != startWithWindowsItem.Checked
-            && startupManager.TrySetEnabled(settings.StartWithWindows, out startupInitializationError))
-        {
-            startWithWindowsItem.Checked = settings.StartWithWindows;
-        }
 
         if (settings.StartMinimizedToTray)
         {
@@ -74,9 +70,9 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
                 "WindowDeck", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
-        if (startupInitializationError is not null)
+        if (startupSynchronizationError is not null)
         {
-            MessageBox.Show(startupInitializationError, "WindowDeck",
+            MessageBox.Show(startupSynchronizationError, "WindowDeck",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
@@ -124,6 +120,13 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         if (!isExiting) flyout.ShowFlyout();
     }
 
+    private void TrayMenu_Opening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        bool effectiveStartupState = startupManager.IsEnabled();
+        startWithWindowsItem.Checked = effectiveStartupState;
+        SynchronizeStartupState(effectiveStartupState);
+    }
+
     private void Settings_Click(object? sender, EventArgs e)
     {
         if (isExiting) return;
@@ -135,7 +138,16 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         }
 
         flyout.Hide();
-        settingsForm = new SettingsForm(settings, startupManager.IsEnabled(), ApplySettings);
+        bool effectiveStartupState = startupManager.IsEnabled();
+        string? synchronizationError = SynchronizeStartupState(effectiveStartupState);
+        startWithWindowsItem.Checked = effectiveStartupState;
+        if (synchronizationError is not null)
+        {
+            MessageBox.Show(synchronizationError, "WindowDeck",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        settingsForm = new SettingsForm(settings, effectiveStartupState, ApplySettings);
         settingsForm.FormClosed += (_, _) => settingsForm = null;
         settingsForm.Show();
         settingsForm.Activate();
@@ -145,27 +157,30 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
     {
         AppSettings candidate = settings.Copy();
         candidate.StartWithWindows = !startupManager.IsEnabled();
-        (bool success, string? errorMessage) = ApplySettings(candidate);
+        (bool success, string? errorMessage, _) = ApplySettings(candidate);
         if (!success)
         {
             MessageBox.Show(errorMessage, "WindowDeck", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
-    private (bool Success, string? ErrorMessage) ApplySettings(AppSettings candidate)
+    private (bool Success, string? ErrorMessage, bool EffectiveStartupState) ApplySettings(AppSettings candidate)
     {
         AppSettings previous = settings.Copy();
         bool previousStartupState = startupManager.IsEnabled();
 
         if (!hotkeyManager.TryChange(candidate.Hotkey.Modifiers, candidate.Hotkey.VirtualKey))
         {
-            return (false, "That shortcut is unavailable. The previous shortcut remains active.");
+            return (false, "That shortcut is unavailable. The previous shortcut remains active.",
+                startupManager.IsEnabled());
         }
 
         if (!startupManager.TrySetEnabled(candidate.StartWithWindows, out string? startupError))
         {
             hotkeyManager.TryChange(previous.Hotkey.Modifiers, previous.Hotkey.VirtualKey);
-            return (false, startupError);
+            bool effectiveStartupState = startupManager.IsEnabled();
+            startWithWindowsItem.Checked = effectiveStartupState;
+            return (false, startupError, effectiveStartupState);
         }
 
         if (!settingsService.TrySave(candidate, out string? saveError))
@@ -176,13 +191,35 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
             string rollbackMessage = hotkeyRestored
                 ? string.Empty
                 : " The previous hotkey could not be restored; use the tray menu to choose another shortcut.";
-            return (false, saveError + rollbackMessage);
+            bool effectiveStartupState = startupManager.IsEnabled();
+            startWithWindowsItem.Checked = effectiveStartupState;
+            return (false, saveError + rollbackMessage, effectiveStartupState);
         }
 
         settings = candidate.Copy();
-        startWithWindowsItem.Checked = startupManager.IsEnabled();
+        bool currentStartupState = startupManager.IsEnabled();
+        settings.StartWithWindows = currentStartupState;
+        startWithWindowsItem.Checked = currentStartupState;
         flyout.ApplySettings(settings);
-        return (true, null);
+        return (true, null, currentStartupState);
+    }
+
+    private string? SynchronizeStartupState(bool effectiveStartupState)
+    {
+        if (settings.StartWithWindows == effectiveStartupState)
+        {
+            return null;
+        }
+
+        AppSettings synchronizedSettings = settings.Copy();
+        synchronizedSettings.StartWithWindows = effectiveStartupState;
+        if (!settingsService.TrySave(synchronizedSettings, out string? saveError))
+        {
+            return saveError;
+        }
+
+        settings = synchronizedSettings;
+        return null;
     }
 
     private void Exit_Click(object? sender, EventArgs e) => ExitApplication();
