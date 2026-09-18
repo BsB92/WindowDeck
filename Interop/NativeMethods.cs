@@ -19,10 +19,13 @@ internal static class NativeMethods
     internal const int GwlExStyle = -20;
     internal const uint MonitorDefaultToNearest = 2;
     internal const uint MonitorDefaultToNull = 0;
+    internal const uint ModWin = 0x0008;
     internal const uint QdcOnlyActivePaths = 2;
     internal const int SwRestore = 9;
     internal const int SwMinimize = 6;
     internal const uint WmClose = 0x0010;
+    internal const int WmHotkey = 0x0312;
+    internal const uint VkOem3 = 0xC0;
     internal const uint GwOwner = 4;
     internal const long WsExAppWindow = 0x00040000L;
     internal const long WsExToolWindow = 0x00000080L;
@@ -159,6 +162,18 @@ internal static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool EnumWindows(EnumWindowsProc callback, nint parameter);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool RegisterHotKey(
+        nint windowHandle,
+        int identifier,
+        uint modifiers,
+        uint virtualKey);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool UnregisterHotKey(nint windowHandle, int identifier);
 
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern nint SetWinEventHook(

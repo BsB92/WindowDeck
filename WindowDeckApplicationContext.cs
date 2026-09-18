@@ -1,8 +1,11 @@
+using WindowDeck.Services;
+
 namespace WindowDeck;
 
 internal sealed class WindowDeckApplicationContext : ApplicationContext
 {
     private readonly Form1 flyout;
+    private readonly GlobalHotkeyManager hotkeyManager;
     private readonly ContextMenuStrip trayMenu;
     private readonly NotifyIcon trayIcon;
     private bool isExiting;
@@ -27,18 +30,49 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         };
         trayIcon.MouseClick += TrayIcon_MouseClick;
 
+        hotkeyManager = new GlobalHotkeyManager();
+        hotkeyManager.HotkeyPressed += HotkeyManager_HotkeyPressed;
+
         flyout.ShowFlyout();
+
+        if (!hotkeyManager.IsRegistered)
+        {
+            MessageBox.Show(
+                flyout,
+                "WindowDeck could not register the Win + ` shortcut because it is unavailable.",
+                "WindowDeck",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+        }
     }
 
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
+            hotkeyManager.Dispose();
             DisposeTrayResources();
             flyout.Dispose();
         }
 
         base.Dispose(disposing);
+    }
+
+    private void HotkeyManager_HotkeyPressed(object? sender, EventArgs e)
+    {
+        if (isExiting)
+        {
+            return;
+        }
+
+        if (flyout.Visible)
+        {
+            flyout.Hide();
+        }
+        else
+        {
+            flyout.ShowFlyout();
+        }
     }
 
     private void TrayIcon_MouseClick(object? sender, MouseEventArgs e)
@@ -84,6 +118,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         }
 
         isExiting = true;
+        hotkeyManager.Dispose();
 
         if (!flyout.IsDisposed)
         {
