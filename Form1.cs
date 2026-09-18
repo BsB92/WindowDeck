@@ -25,6 +25,7 @@ internal partial class Form1 : Form
     private readonly ApplicationIconProvider applicationIconProvider = new();
     private AppSettings settings;
     private IReadOnlyList<WindowInfo> currentSnapshot = [];
+    private bool currentSnapshotInitialized;
     private WindowEventMonitor? windowEventMonitor;
     private bool isClosing;
     private bool monitoringStarted;
@@ -62,6 +63,12 @@ internal partial class Form1 : Form
 
     public void RefreshTheme()
     {
+        ThemePalette resolvedPalette = ThemeManager.Resolve(settings.Theme);
+        if (resolvedPalette == palette)
+        {
+            return;
+        }
+
         ApplyTheme();
         RenderWindowList();
     }
@@ -275,7 +282,14 @@ internal partial class Form1 : Form
     {
         try
         {
-            currentSnapshot = windowEnumerator.Enumerate();
+            IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate();
+            if (currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
+            {
+                return;
+            }
+
+            currentSnapshot = updatedSnapshot;
+            currentSnapshotInitialized = true;
             RenderWindowList();
         }
         catch (Win32Exception exception)
