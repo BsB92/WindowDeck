@@ -20,7 +20,7 @@ internal sealed class HotkeySettings
 
 internal sealed class AppSettings
 {
-    public bool StartWithWindows { get; set; } = true;
+    public bool StartWithWindows { get; set; } = false;
 
     public bool StartMinimizedToTray { get; set; } = true;
 

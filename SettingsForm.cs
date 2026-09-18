@@ -14,7 +14,7 @@ internal sealed class SettingsForm : Form
     private readonly TextBox hotkeyKey = new() { ReadOnly = true, Width = 110, TextAlign = HorizontalAlignment.Center };
     private readonly CheckBox groupByApplication = new() { Text = "Group windows by application", AutoSize = true };
     private readonly CheckBox showApplicationIcons = new() { Text = "Show application icons", AutoSize = true };
-    private readonly CheckBox showScreenNumber = new() { Text = "Show monitor number", AutoSize = true };
+    private readonly CheckBox showScreenNumber = new() { Text = "Show screen number", AutoSize = true };
     private readonly CheckBox showMinimizedWindows = new() { Text = "Show minimized windows", AutoSize = true };
     private readonly ComboBox theme = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private readonly Func<AppSettings, (bool Success, string? ErrorMessage)> applySettings;
