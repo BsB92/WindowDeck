@@ -25,6 +25,7 @@ internal partial class Form1 : Form
     private readonly ApplicationIconProvider applicationIconProvider = new();
     private AppSettings settings;
     private IReadOnlyList<WindowInfo> currentSnapshot = [];
+    private bool currentSnapshotInitialized;
     private WindowEventMonitor? windowEventMonitor;
     private bool isClosing;
     private bool monitoringStarted;
@@ -33,11 +34,15 @@ internal partial class Form1 : Form
     private int anchoredOuterTop;
     private int anchoredOuterHeight;
     private int maximumPanelWidth;
+    private ThemePalette palette;
 
     public Form1(AppSettings settings)
     {
         this.settings = settings.Copy();
         InitializeComponent();
+        Icon = WindowDeckIcon.Load();
+        searchTextBox.Enter += (_, _) => searchTextBox.BackColor = palette.RaisedSurface;
+        searchTextBox.Leave += (_, _) => searchTextBox.BackColor = palette.Surface;
         ApplyTheme();
         PositionOnRelevantMonitor(DefaultPanelWidth);
     }
@@ -56,11 +61,29 @@ internal partial class Form1 : Form
         RenderWindowList();
     }
 
+    public void RefreshTheme()
+    {
+        ThemePalette resolvedPalette = ThemeManager.Resolve(settings.Theme);
+        if (resolvedPalette == palette)
+        {
+            return;
+        }
+
+        ApplyTheme();
+        RenderWindowList();
+    }
+
     protected override void OnShown(EventArgs e)
     {
         base.OnShown(e);
         RefreshWindowList();
         EnsureMonitoringStarted();
+    }
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        ThemeManager.ApplyTitleBar(this, palette.IsDark);
     }
 
     private void EnsureMonitoringStarted()
@@ -259,7 +282,14 @@ internal partial class Form1 : Form
     {
         try
         {
-            currentSnapshot = windowEnumerator.Enumerate();
+            IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate();
+            if (currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
+            {
+                return;
+            }
+
+            currentSnapshot = updatedSnapshot;
+            currentSnapshotInitialized = true;
             RenderWindowList();
         }
         catch (Win32Exception exception)
@@ -307,6 +337,7 @@ internal partial class Form1 : Form
                         : "No matching windows",
                     TextAlign = ContentAlignment.MiddleCenter
                 };
+                emptyLabel.ForeColor = palette.SecondaryForeground;
                 windowListPanel.Controls.Add(emptyLabel);
             }
             else
@@ -339,7 +370,7 @@ internal partial class Form1 : Form
         {
             Dock = DockStyle.Fill,
             Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Regular),
-            ForeColor = SystemColors.GrayText,
+            ForeColor = palette.SecondaryForeground,
             Margin = Padding.Empty,
             Text = "Screen",
             TextAlign = ContentAlignment.MiddleCenter
@@ -352,7 +383,7 @@ internal partial class Form1 : Form
         return header;
     }
 
-    private static Label CreateGroupHeader(string applicationName)
+    private Label CreateGroupHeader(string applicationName)
     {
         return new Label
         {
@@ -361,6 +392,8 @@ internal partial class Form1 : Form
             Height = 25,
             Margin = new Padding(4, 6, 4, 0),
             Padding = new Padding(5, 0, 0, 0),
+            BackColor = palette.RaisedSurface,
+            ForeColor = palette.Foreground,
             Text = applicationName,
             TextAlign = ContentAlignment.MiddleLeft
         };
@@ -369,6 +402,7 @@ internal partial class Form1 : Form
     private Control CreateWindowRow(WindowInfo window)
     {
         TableLayoutPanel row = CreateListGrid(32, new Padding(4, 0, 4, 1));
+        row.BackColor = palette.Surface;
 
         PictureBox applicationIcon = new()
         {
@@ -388,9 +422,13 @@ internal partial class Form1 : Form
             Padding = new Padding(6, 0, 3, 0),
             Text = window.DisplayTitle,
             TextAlign = ContentAlignment.MiddleLeft,
-            UseVisualStyleBackColor = true
+            BackColor = palette.Surface,
+            ForeColor = palette.Foreground,
+            UseVisualStyleBackColor = false
         };
         titleButton.FlatAppearance.BorderSize = 0;
+        titleButton.FlatAppearance.MouseOverBackColor = palette.Hover;
+        titleButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
         titleButton.Click += (_, _) => ActivateWindow(window);
 
         Button minimizeButton = CreateActionButton(
@@ -421,7 +459,7 @@ internal partial class Form1 : Form
         {
             Dock = DockStyle.Fill,
             Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 10F, FontStyle.Regular),
-            ForeColor = SystemColors.GrayText,
+            ForeColor = palette.SecondaryForeground,
             Margin = Padding.Empty,
             Text = window.MonitorNumber is int monitorNumber ? $"[ {monitorNumber} ]" : "[ ? ]",
             TextAlign = ContentAlignment.MiddleCenter
@@ -468,16 +506,17 @@ internal partial class Form1 : Form
 
     private void ApplyTheme()
     {
-        bool dark = settings.Theme == AppTheme.Dark;
-        BackColor = dark ? Color.FromArgb(32, 32, 32) : SystemColors.Control;
-        ForeColor = dark ? Color.WhiteSmoke : SystemColors.ControlText;
-        searchTextBox.BackColor = dark ? Color.FromArgb(48, 48, 48) : SystemColors.Window;
-        searchTextBox.ForeColor = dark ? Color.WhiteSmoke : SystemColors.WindowText;
-        windowListPanel.BackColor = BackColor;
-        windowListPanel.ForeColor = ForeColor;
+        palette = ThemeManager.Resolve(settings.Theme);
+        BackColor = palette.Background;
+        ForeColor = palette.Foreground;
+        searchTextBox.BackColor = palette.Surface;
+        searchTextBox.ForeColor = palette.Foreground;
+        windowListPanel.BackColor = palette.Background;
+        windowListPanel.ForeColor = palette.Foreground;
+        ThemeManager.ApplyTitleBar(this, palette.IsDark);
     }
 
-    private static Button CreateActionButton(
+    private Button CreateActionButton(
         string text,
         string accessibleName,
         bool isCloseButton)
@@ -485,11 +524,11 @@ internal partial class Form1 : Form
         Button button = new()
         {
             AccessibleName = accessibleName,
-            BackColor = SystemColors.Control,
+            BackColor = palette.Surface,
             Dock = DockStyle.Fill,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Segoe UI Symbol", 10F, FontStyle.Regular),
-            ForeColor = SystemColors.ControlText,
+            ForeColor = palette.Foreground,
             Margin = Padding.Empty,
             Padding = Padding.Empty,
             Text = text,
@@ -497,16 +536,16 @@ internal partial class Form1 : Form
         };
         button.FlatAppearance.BorderSize = 0;
         button.FlatAppearance.MouseDownBackColor = isCloseButton
-            ? Color.FromArgb(196, 43, 28)
-            : SystemColors.ControlDark;
+            ? palette.ClosePressed
+            : palette.Pressed;
         button.FlatAppearance.MouseOverBackColor = isCloseButton
-            ? Color.FromArgb(232, 17, 35)
-            : SystemColors.ControlLight;
+            ? palette.CloseHover
+            : palette.Hover;
 
         if (isCloseButton)
         {
             button.MouseEnter += (_, _) => button.ForeColor = Color.White;
-            button.MouseLeave += (_, _) => button.ForeColor = SystemColors.ControlText;
+            button.MouseLeave += (_, _) => button.ForeColor = palette.Foreground;
         }
 
         return button;

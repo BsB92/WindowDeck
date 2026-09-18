@@ -66,7 +66,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free and open sourc
 
 ## 9. Monitor identity and placement
 
-- Each window entry shows a small monitor number such as `[1]`, `[2]`, or `[3]`.
+- Each window entry shows a small Screen badge such as `[ 1 ]`, `[ 2 ]`, or `[ 3 ]`.
 - Prefer the Windows/GDI display identifier (for example, `\\.\DISPLAY1`) and derive the displayed number from it. Do not invent arbitrary numbering when Windows supplies an identifier.
 - Do not show monitor model names, aliases, resolutions, or extra monitor-information tooltips.
 - Update an entry's monitor when its window moves to another display.
@@ -80,7 +80,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free and open sourc
 - It is an overlay: it must not reserve work area, resize other windows, or behave as a dock/AppBar.
 - Initial width is approximately 600–750 px. The user can resize it by dragging its left edge, and the selected width is persisted.
 - Full document names take priority. Use ellipsis only when text genuinely does not fit the available space.
-- The panel is hidden by `Esc`, an ordinary click outside it, or its `X` button. The `X` hides the application to the tray rather than terminating it.
+- The panel is hidden by `Esc` or its `X` button. The `X` hides the application to the tray rather than terminating it.
 - Visual motion must be minimal and lightweight.
 
 ## 11. Global hotkey
@@ -105,13 +105,13 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free and open sourc
 - The Settings UI contains:
   - **General:** `Start WindowDeck with Windows`; `Start minimized to tray`.
   - **Hotkey:** the configurable shortcut, defaulting to **Win + `**, with validation described in section 11.
-  - **Window list:** `Group windows by application`; `Show application icons`; `Show monitor number`; `Show minimized windows`.
+  - **Window list:** `Group windows by application`; `Show application icons`; `Show screen number`; `Show minimized windows`.
   - **Appearance:** theme choices `System`, `Light`, and `Dark`.
 - Settings loading must tolerate the absence of a settings file and should fail safely if local data is invalid.
 
 ## 14. Start with Windows
 
-- `Start WindowDeck with Windows` is enabled by default.
+- `Start WindowDeck with Windows` is disabled by default.
 - Use a simple per-user startup mechanism that needs no administrator privileges or installed service.
 - Following Windows sign-in, WindowDeck starts in the background, does not automatically display the panel, creates its tray icon, and waits for the hotkey or tray interaction.
 

@@ -1,5 +1,6 @@
 using WindowDeck.Models;
 using WindowDeck.Services;
+using Microsoft.Win32;
 
 namespace WindowDeck;
 
@@ -12,6 +13,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
     private readonly ContextMenuStrip trayMenu;
     private readonly ToolStripMenuItem startWithWindowsItem;
     private readonly NotifyIcon trayIcon;
+    private readonly Icon applicationIcon;
     private AppSettings settings;
     private SettingsForm? settingsForm;
     private bool isExiting;
@@ -20,6 +22,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
     public WindowDeckApplicationContext()
     {
         settings = settingsService.Load(out bool invalidSettingsFile);
+        applicationIcon = WindowDeckIcon.Load();
         bool effectiveStartupState = startupManager.IsEnabled();
         string? startupSynchronizationError = SynchronizeStartupState(effectiveStartupState);
         flyout = new Form1(settings);
@@ -42,7 +45,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         trayIcon = new NotifyIcon
         {
             ContextMenuStrip = trayMenu,
-            Icon = SystemIcons.Application,
+            Icon = applicationIcon,
             Text = "WindowDeck",
             Visible = true
         };
@@ -52,6 +55,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
             settings.Hotkey.Modifiers,
             settings.Hotkey.VirtualKey);
         hotkeyManager.HotkeyPressed += HotkeyManager_HotkeyPressed;
+        SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
 
         if (settings.StartMinimizedToTray)
         {
@@ -93,12 +97,41 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         if (disposing)
         {
             settingsForm?.Dispose();
+            SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
             hotkeyManager.Dispose();
             DisposeTrayResources();
             flyout.Dispose();
+            applicationIcon.Dispose();
         }
 
         base.Dispose(disposing);
+    }
+
+    private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        if (settings.Theme != AppTheme.System
+            || flyout.IsDisposed
+            || e.Category is not (UserPreferenceCategory.Color
+                or UserPreferenceCategory.VisualStyle
+                or UserPreferenceCategory.General))
+        {
+            return;
+        }
+
+        void RefreshTheme()
+        {
+            flyout.RefreshTheme();
+            settingsForm?.RefreshTheme();
+        }
+
+        if (flyout.InvokeRequired)
+        {
+            flyout.BeginInvoke((Action)RefreshTheme);
+        }
+        else
+        {
+            RefreshTheme();
+        }
     }
 
     private void HotkeyManager_HotkeyPressed(object? sender, EventArgs e)
