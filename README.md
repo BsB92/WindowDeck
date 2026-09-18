@@ -2,7 +2,7 @@
 
 WindowDeck is a planned lightweight Windows 11 utility for quickly finding and activating the right open window, especially when many documents have similar names.
 
-> **Project status: early development.** Stage 6 introduces the first product-like flyout panel. Tray behavior, hotkeys, settings, final organization, and final styling remain planned for later stages.
+> **Project status: early development.** Stage 8 adds the system tray and application lifecycle. Hotkeys, settings, startup behavior, final organization, and final styling remain planned for later stages.
 
 ## What is available now
 
@@ -11,6 +11,7 @@ WindowDeck is a planned lightweight Windows 11 utility for quickly finding and a
 - A right-aligned, topmost flyout that lists window titles and monitor numbers.
 - Exact-window activation, including restoration of minimized windows.
 - Event-driven list updates when external windows change.
+- A persistent system tray icon for showing, hiding, and exiting WindowDeck.
 - The complete v1 requirements in [`SPEC.md`](SPEC.md).
 
 ## Planned direction
@@ -41,7 +42,7 @@ dotnet build WindowDeck.sln
 
 ## Run
 
-In Visual Studio, press **F5** or select the green **Start** button. WindowDeck opens on the right side of the monitor containing the current foreground window and updates its list automatically. Click a row to activate that exact window. Press **Esc** or click **X** to hide the flyout. Until the tray and global hotkey arrive in later stages, stop and restart debugging to show a hidden flyout again.
+In Visual Studio, press **F5** or select the green **Start** button. WindowDeck opens on the right side of the monitor containing the current foreground window and updates its list automatically. Click a row to activate that exact window. Press **Esc** or click **X** to hide the flyout, then left-click the WindowDeck tray icon to show it again. Right-click the tray icon and select **Exit** to close the application.
 
 ## Development approach
 
