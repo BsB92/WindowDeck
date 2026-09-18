@@ -27,6 +27,21 @@ internal sealed class ApplicationIconProvider : IDisposable
         return icon;
     }
 
+    public void RetainIconsFor(IEnumerable<uint> processIds)
+    {
+        HashSet<uint> activeProcessIds = processIds.ToHashSet();
+        foreach (uint processId in iconCache.Keys.Where(id => !activeProcessIds.Contains(id)).ToArray())
+        {
+            Image icon = iconCache[processId];
+            iconCache.Remove(processId);
+            if (!ReferenceEquals(icon, fallbackIcon)
+                && !iconCache.Values.Contains(icon, ReferenceEqualityComparer.Instance))
+            {
+                icon.Dispose();
+            }
+        }
+    }
+
     public void Dispose()
     {
         if (disposed)
