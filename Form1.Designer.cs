@@ -11,6 +11,7 @@ namespace WindowDeck
             if (disposing)
             {
                 applicationIconProvider.Dispose();
+                Icon?.Dispose();
                 components?.Dispose();
             }
             base.Dispose(disposing);
@@ -30,6 +31,7 @@ namespace WindowDeck
             searchTextBox.Location = new Point(16, 16);
             searchTextBox.Name = "searchTextBox";
             searchTextBox.PlaceholderText = "Search windows";
+            searchTextBox.BorderStyle = BorderStyle.FixedSingle;
             searchTextBox.Size = new Size(648, 27);
             searchTextBox.TabIndex = 0;
             searchTextBox.TextChanged += SearchTextBox_TextChanged;
@@ -38,7 +40,7 @@ namespace WindowDeck
             //
             windowListPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             windowListPanel.AutoScroll = true;
-            windowListPanel.BorderStyle = BorderStyle.FixedSingle;
+            windowListPanel.BorderStyle = BorderStyle.None;
             windowListPanel.FlowDirection = FlowDirection.TopDown;
             windowListPanel.Location = new Point(16, 51);
             windowListPanel.Name = "windowListPanel";
