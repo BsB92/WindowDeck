@@ -1,22 +1,25 @@
 # WindowDeck
 
-WindowDeck is a planned lightweight Windows 11 utility for quickly finding and activating the right open window, especially when many documents have similar names.
+WindowDeck is a lightweight Windows 11 utility for quickly finding and activating the right open window, especially when many documents have similar names.
 
-> **Project status: early development.** Stage 8 adds the system tray and application lifecycle. Hotkeys, settings, startup behavior, final organization, and final styling remain planned for later stages.
+> **Project status: release polish.** The v1 application features are implemented; packaging and release publication are not yet complete.
 
 ## What is available now
 
 - A .NET 10 Windows Forms project and solution.
 - Initial discovery of visible, user-facing top-level windows using documented Windows APIs.
-- A right-aligned, topmost flyout that lists window titles and monitor numbers.
+- A right-aligned, topmost flyout that lists window titles and Screen numbers.
+- Search, grouping by application, application icons, and `[ 1 ]`-style Screen indicators.
 - Exact-window activation, including restoration of minimized windows.
+- Exact-window minimize and normal close-request actions.
 - Event-driven list updates when external windows change.
 - A persistent system tray icon for showing, hiding, and exiting WindowDeck.
+- A configurable global hotkey (default `Win + \``), including cursor-screen placement.
+- Settings for Windows startup, minimized startup, list presentation, and System/Light/Dark appearance.
+- Native Help and About windows.
 - The complete v1 requirements in [`SPEC.md`](SPEC.md).
 
-## Planned direction
-
-WindowDeck will eventually show current desktop windows in a lightweight Windows 11-inspired flyout, group and sort them for quick navigation, and activate the selected window. Development is deliberately incremental; planned behavior is documented in `SPEC.md`, which is the source of truth.
+Development is deliberately incremental; implemented behavior and product requirements are documented in `SPEC.md`, which is the source of truth.
 
 ## Requirements
 

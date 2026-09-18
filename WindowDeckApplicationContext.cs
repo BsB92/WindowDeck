@@ -16,6 +16,8 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
     private readonly Icon applicationIcon;
     private AppSettings settings;
     private SettingsForm? settingsForm;
+    private HelpForm? helpForm;
+    private AboutForm? aboutForm;
     private bool isExiting;
     private bool trayResourcesDisposed;
 
@@ -31,6 +33,8 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         trayMenu = new ContextMenuStrip();
         trayMenu.Items.Add("Open WindowDeck", null, OpenWindowDeck_Click);
         trayMenu.Items.Add("Settings", null, Settings_Click);
+        trayMenu.Items.Add("Help", null, Help_Click);
+        trayMenu.Items.Add("About WindowDeck", null, About_Click);
         startWithWindowsItem = new ToolStripMenuItem("Start with Windows")
         {
             Checked = effectiveStartupState,
@@ -97,6 +101,8 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         if (disposing)
         {
             settingsForm?.Dispose();
+            helpForm?.Dispose();
+            aboutForm?.Dispose();
             SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
             hotkeyManager.Dispose();
             DisposeTrayResources();
@@ -128,6 +134,8 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
 
             flyout.RefreshTheme();
             settingsForm?.RefreshTheme();
+            helpForm?.RefreshTheme();
+            aboutForm?.RefreshTheme();
         }
 
         try
@@ -199,6 +207,38 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         settingsForm.Activate();
     }
 
+    private void Help_Click(object? sender, EventArgs e)
+    {
+        if (isExiting) return;
+        if (helpForm is { IsDisposed: false })
+        {
+            helpForm.Show();
+            helpForm.Activate();
+            return;
+        }
+
+        helpForm = new HelpForm(settings.Theme);
+        helpForm.FormClosed += (_, _) => helpForm = null;
+        helpForm.Show();
+        helpForm.Activate();
+    }
+
+    private void About_Click(object? sender, EventArgs e)
+    {
+        if (isExiting) return;
+        if (aboutForm is { IsDisposed: false })
+        {
+            aboutForm.Show();
+            aboutForm.Activate();
+            return;
+        }
+
+        aboutForm = new AboutForm(settings.Theme);
+        aboutForm.FormClosed += (_, _) => aboutForm = null;
+        aboutForm.Show();
+        aboutForm.Activate();
+    }
+
     private void StartWithWindows_Click(object? sender, EventArgs e)
     {
         AppSettings candidate = settings.Copy();
@@ -247,6 +287,8 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         settings.StartWithWindows = currentStartupState;
         startWithWindowsItem.Checked = currentStartupState;
         flyout.ApplySettings(settings);
+        helpForm?.SetTheme(settings.Theme);
+        aboutForm?.SetTheme(settings.Theme);
         return (true, null, currentStartupState);
     }
 
@@ -278,6 +320,8 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         isExiting = true;
         SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
         settingsForm?.Close();
+        helpForm?.Close();
+        aboutForm?.Close();
         hotkeyManager.Dispose();
         if (!flyout.IsDisposed) flyout.ExitApplication();
         DisposeTrayResources();
