@@ -109,7 +109,11 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
 
     private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
     {
-        if (settings.Theme != AppTheme.System || flyout.IsDisposed)
+        if (settings.Theme != AppTheme.System
+            || flyout.IsDisposed
+            || e.Category is not (UserPreferenceCategory.Color
+                or UserPreferenceCategory.VisualStyle
+                or UserPreferenceCategory.General))
         {
             return;
         }

@@ -21,6 +21,7 @@ internal sealed class SettingsForm : Form
     private readonly Func<AppSettings, (bool Success, string? ErrorMessage, bool EffectiveStartupState)> applySettings;
     private uint virtualKey;
     private AppTheme selectedTheme;
+    private ThemePalette palette;
     private readonly List<Label> sectionLabels = [];
     private readonly Label hotkeyHelp;
     private readonly TableLayoutPanel content;
@@ -140,7 +141,16 @@ internal sealed class SettingsForm : Form
         return label;
     }
 
-    public void RefreshTheme() => ApplyTheme();
+    public void RefreshTheme()
+    {
+        ThemePalette resolvedPalette = ThemeManager.Resolve(selectedTheme);
+        if (resolvedPalette == palette)
+        {
+            return;
+        }
+
+        ApplyTheme();
+    }
 
     private void Theme_SelectedIndexChanged(object? sender, EventArgs e)
     {
@@ -153,7 +163,7 @@ internal sealed class SettingsForm : Form
 
     private void ApplyTheme()
     {
-        ThemePalette palette = ThemeManager.Resolve(selectedTheme);
+        palette = ThemeManager.Resolve(selectedTheme);
         BackColor = palette.Background;
         ForeColor = palette.Foreground;
         content.BackColor = palette.Background;
