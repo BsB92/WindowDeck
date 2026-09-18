@@ -71,7 +71,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         }
         else
         {
-            flyout.ShowFlyout();
+            flyout.ShowFlyoutOnCursorMonitor();
         }
     }
 

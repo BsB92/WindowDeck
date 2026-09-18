@@ -71,7 +71,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free and open sourc
 - Do not show monitor model names, aliases, resolutions, or extra monitor-information tooltips.
 - Update an entry's monitor when its window moves to another display.
 - Use documented APIs such as `MonitorFromWindow` and `GetMonitorInfo`.
-- When invoked by the global shortcut, find the current foreground window and show WindowDeck on the monitor containing it. If that cannot be determined reliably, use the monitor containing the mouse cursor.
+- When invoked by the global shortcut, show WindowDeck on the monitor containing the mouse cursor at the moment the shortcut is pressed. Cursor-based monitor selection has priority, and the foreground-window monitor must not override it for this invocation path. If the cursor position or its monitor cannot be determined unexpectedly, fall back to the ordinary non-hotkey placement behavior so the application fails safely.
 
 ## 10. WindowDeck flyout panel
 

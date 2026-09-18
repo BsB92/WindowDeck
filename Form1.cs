@@ -82,6 +82,21 @@ public partial class Form1 : Form
     public void ShowFlyout()
     {
         PositionOnRelevantMonitor(Width);
+        ShowPositionedFlyout();
+    }
+
+    public void ShowFlyoutOnCursorMonitor()
+    {
+        if (!PositionOnCursorMonitor(Width))
+        {
+            PositionOnRelevantMonitor(Width);
+        }
+
+        ShowPositionedFlyout();
+    }
+
+    private void ShowPositionedFlyout()
+    {
         RefreshWindowList();
         Show();
         Activate();
@@ -440,7 +455,20 @@ public partial class Form1 : Form
             MessageBoxIcon.Information);
     }
 
-    private void PositionOnRelevantMonitor(int requestedWidth)
+    private bool PositionOnCursorMonitor(int requestedWidth)
+    {
+        if (!NativeMethods.GetCursorPos(out NativeMethods.NativePoint cursor))
+        {
+            return false;
+        }
+
+        nint monitorHandle = NativeMethods.MonitorFromPoint(
+            cursor,
+            NativeMethods.MonitorDefaultToNull);
+        return PositionOnMonitor(monitorHandle, requestedWidth);
+    }
+
+    private bool PositionOnRelevantMonitor(int requestedWidth)
     {
         nint monitorHandle = 0;
         nint foregroundWindow = NativeMethods.GetForegroundWindow();
@@ -464,7 +492,17 @@ public partial class Form1 : Form
 
         if (monitorHandle == 0)
         {
-            return;
+            return false;
+        }
+
+        return PositionOnMonitor(monitorHandle, requestedWidth);
+    }
+
+    private bool PositionOnMonitor(nint monitorHandle, int requestedWidth)
+    {
+        if (monitorHandle == 0)
+        {
+            return false;
         }
 
         NativeMethods.MonitorInfoEx monitorInfo = new()
@@ -474,7 +512,7 @@ public partial class Form1 : Form
 
         if (!NativeMethods.GetMonitorInfo(monitorHandle, ref monitorInfo))
         {
-            return;
+            return false;
         }
 
         NativeMethods.Rect workArea = monitorInfo.WorkArea;
@@ -521,6 +559,7 @@ public partial class Form1 : Form
             anchoredOuterTop,
             width,
             anchoredOuterHeight);
+        return true;
     }
 
     private void SizeWindowRows()
