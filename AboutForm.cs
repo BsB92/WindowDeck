@@ -1,4 +1,5 @@
 using System.Reflection;
+using WindowDeck.Localization;
 using WindowDeck.Models;
 using WindowDeck.Services;
 
@@ -12,18 +13,18 @@ internal sealed class AboutForm : Form
     private readonly Label version;
     private readonly Label description;
     private readonly Label author;
+    private readonly Label designedFor;
     private readonly Label sourceAvailability;
     private AppTheme theme;
 
     public AboutForm(AppTheme theme)
     {
         this.theme = theme;
-        Text = "About WindowDeck";
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(500, 270);
+        ClientSize = new Size(520, 315);
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = new Font("Segoe UI", 9F);
         Icon applicationIcon = WindowDeckIcon.Load();
@@ -34,7 +35,7 @@ internal sealed class AboutForm : Form
             ColumnCount = 1,
             Dock = DockStyle.Fill,
             Padding = new Padding(28, 22, 28, 22),
-            RowCount = 6
+            RowCount = 7
         };
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         Controls.Add(content);
@@ -47,22 +48,21 @@ internal sealed class AboutForm : Form
             Size = new Size(48, 48),
             SizeMode = PictureBoxSizeMode.Zoom
         };
-        applicationName = CreateLabel("WindowDeck", 16F, FontStyle.Bold);
-        version = CreateLabel($"Version {GetApplicationVersion()}", 9F, FontStyle.Regular);
-        description = CreateLabel(
-            "A lightweight Windows utility for quickly finding and switching between open windows.",
-            9F, FontStyle.Regular);
-        author = CreateLabel("Created by ::BsB!::", 9F, FontStyle.Regular);
-        sourceAvailability = CreateLabel(
-            "Source code is included in the WindowDeck repository.",
-            9F, FontStyle.Regular);
+        applicationName = CreateLabel(LocalizationService.Get("App_Title"), 16F, FontStyle.Bold);
+        version = CreateLabel(string.Empty, 9F, FontStyle.Regular);
+        description = CreateLabel(string.Empty, 9F, FontStyle.Regular);
+        author = CreateLabel(string.Empty, 9F, FontStyle.Regular);
+        designedFor = CreateLabel(string.Empty, 9F, FontStyle.Regular);
+        sourceAvailability = CreateLabel(string.Empty, 9F, FontStyle.Regular);
         content.Controls.Add(iconView);
         content.Controls.Add(applicationName);
         content.Controls.Add(version);
         content.Controls.Add(description);
         content.Controls.Add(author);
+        content.Controls.Add(designedFor);
         content.Controls.Add(sourceAvailability);
 
+        ApplyLocalization();
         ApplyTheme();
     }
 
@@ -73,6 +73,17 @@ internal sealed class AboutForm : Form
     }
 
     public void RefreshTheme() => ApplyTheme();
+
+    public void ApplyLocalization()
+    {
+        Text = LocalizationService.Get("About_Title");
+        applicationName.Text = LocalizationService.Get("App_Title");
+        version.Text = LocalizationService.Format("About_Version", GetApplicationVersion());
+        description.Text = LocalizationService.Get("About_Description");
+        author.Text = LocalizationService.Get("About_Author");
+        designedFor.Text = LocalizationService.Get("About_DesignedFor");
+        sourceAvailability.Text = LocalizationService.Get("About_Source");
+    }
 
     protected override void OnHandleCreated(EventArgs e)
     {
@@ -87,12 +98,12 @@ internal sealed class AboutForm : Form
             iconView.Image?.Dispose();
             Icon?.Dispose();
         }
-
         base.Dispose(disposing);
     }
 
     private static string GetApplicationVersion() =>
-        Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
+        Assembly.GetEntryAssembly()?.GetName().Version?.ToString()
+        ?? LocalizationService.Get("About_UnknownVersion");
 
     private Label CreateLabel(string text, float size, FontStyle style) => new()
     {
@@ -100,7 +111,7 @@ internal sealed class AboutForm : Form
         Dock = DockStyle.Fill,
         Font = new Font(Font.FontFamily, size, style),
         Margin = new Padding(0, 3, 0, 3),
-        MaximumSize = new Size(430, 0),
+        MaximumSize = new Size(450, 0),
         Text = text,
         TextAlign = ContentAlignment.MiddleCenter
     };
@@ -111,14 +122,13 @@ internal sealed class AboutForm : Form
         BackColor = palette.Background;
         ForeColor = palette.Foreground;
         content.BackColor = palette.Background;
-        foreach (Label label in new[] { applicationName, version, description, author, sourceAvailability })
+        foreach (Label label in new[] { applicationName, version, description, author, designedFor, sourceAvailability })
         {
             label.BackColor = palette.Background;
             label.ForeColor = label == version || label == sourceAvailability
                 ? palette.SecondaryForeground
                 : palette.Foreground;
         }
-
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
     }
 }

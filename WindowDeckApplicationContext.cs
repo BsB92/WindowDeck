@@ -1,5 +1,6 @@
 using WindowDeck.Models;
 using WindowDeck.Services;
+using WindowDeck.Localization;
 using Microsoft.Win32;
 
 namespace WindowDeck;
@@ -11,7 +12,12 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
     private readonly Form1 flyout;
     private readonly GlobalHotkeyManager hotkeyManager;
     private readonly ContextMenuStrip trayMenu;
+    private readonly ToolStripMenuItem openWindowDeckItem;
+    private readonly ToolStripMenuItem settingsItem;
+    private readonly ToolStripMenuItem helpItem;
+    private readonly ToolStripMenuItem aboutItem;
     private readonly ToolStripMenuItem startWithWindowsItem;
+    private readonly ToolStripMenuItem exitItem;
     private readonly NotifyIcon trayIcon;
     private readonly Icon applicationIcon;
     private AppSettings settings;
@@ -24,6 +30,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
     public WindowDeckApplicationContext()
     {
         settings = settingsService.Load(out bool invalidSettingsFile);
+        LocalizationService.Apply(settings.Language);
         applicationIcon = WindowDeckIcon.Load();
         bool effectiveStartupState = startupManager.IsEnabled();
         string? startupSynchronizationError = SynchronizeStartupState(effectiveStartupState);
@@ -31,11 +38,12 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         flyout.FormClosed += Flyout_FormClosed;
 
         trayMenu = new ContextMenuStrip();
-        trayMenu.Items.Add("Open WindowDeck", null, OpenWindowDeck_Click);
-        trayMenu.Items.Add("Settings", null, Settings_Click);
-        trayMenu.Items.Add("Help", null, Help_Click);
-        trayMenu.Items.Add("About WindowDeck", null, About_Click);
-        startWithWindowsItem = new ToolStripMenuItem("Start with Windows")
+        openWindowDeckItem = new ToolStripMenuItem(null, null, OpenWindowDeck_Click);
+        settingsItem = new ToolStripMenuItem(null, null, Settings_Click);
+        helpItem = new ToolStripMenuItem(null, null, Help_Click);
+        aboutItem = new ToolStripMenuItem(null, null, About_Click);
+        trayMenu.Items.AddRange([openWindowDeckItem, settingsItem, helpItem, aboutItem]);
+        startWithWindowsItem = new ToolStripMenuItem
         {
             Checked = effectiveStartupState,
             CheckOnClick = false
@@ -43,14 +51,16 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         startWithWindowsItem.Click += StartWithWindows_Click;
         trayMenu.Items.Add(startWithWindowsItem);
         trayMenu.Items.Add(new ToolStripSeparator());
-        trayMenu.Items.Add("Exit", null, Exit_Click);
+        exitItem = new ToolStripMenuItem(null, null, Exit_Click);
+        trayMenu.Items.Add(exitItem);
         trayMenu.Opening += TrayMenu_Opening;
+        ApplyLocalization();
 
         trayIcon = new NotifyIcon
         {
             ContextMenuStrip = trayMenu,
             Icon = applicationIcon,
-            Text = "WindowDeck",
+            Text = LocalizationService.Get("App_Title"),
             Visible = true
         };
         trayIcon.MouseClick += TrayIcon_MouseClick;
@@ -73,14 +83,13 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         if (invalidSettingsFile)
         {
             MessageBox.Show(
-                "WindowDeck could not read settings.json and is using safe defaults. " +
-                "Saving Settings will replace the invalid file.",
-                "WindowDeck", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                LocalizationService.Get("Message_InvalidSettings"),
+                LocalizationService.Get("App_Title"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         if (startupSynchronizationError is not null)
         {
-            MessageBox.Show(startupSynchronizationError, "WindowDeck",
+            MessageBox.Show(startupSynchronizationError, LocalizationService.Get("App_Title"),
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
@@ -88,9 +97,9 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         {
             MessageBox.Show(
                 flyout,
-                $"WindowDeck could not register {SettingsForm.FormatShortcut(settings.Hotkey)} " +
-                "because it is unavailable. The tray menu remains available.",
-                "WindowDeck",
+                LocalizationService.Format("Message_HotkeyUnavailable",
+                    SettingsForm.FormatShortcut(settings.Hotkey)),
+                LocalizationService.Get("App_Title"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
         }
@@ -197,7 +206,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         startWithWindowsItem.Checked = effectiveStartupState;
         if (synchronizationError is not null)
         {
-            MessageBox.Show(synchronizationError, "WindowDeck",
+            MessageBox.Show(synchronizationError, LocalizationService.Get("App_Title"),
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
@@ -246,7 +255,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         (bool success, string? errorMessage, _) = ApplySettings(candidate);
         if (!success)
         {
-            MessageBox.Show(errorMessage, "WindowDeck", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(errorMessage, LocalizationService.Get("App_Title"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
@@ -257,7 +266,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
 
         if (!hotkeyManager.TryChange(candidate.Hotkey.Modifiers, candidate.Hotkey.VirtualKey))
         {
-            return (false, "That shortcut is unavailable. The previous shortcut remains active.",
+            return (false, LocalizationService.Get("Message_ShortcutUnavailable"),
                 startupManager.IsEnabled());
         }
 
@@ -276,20 +285,35 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
                 previous.Hotkey.Modifiers, previous.Hotkey.VirtualKey);
             string rollbackMessage = hotkeyRestored
                 ? string.Empty
-                : " The previous hotkey could not be restored; use the tray menu to choose another shortcut.";
+                : LocalizationService.Get("Message_HotkeyRollbackFailed");
             bool effectiveStartupState = startupManager.IsEnabled();
             startWithWindowsItem.Checked = effectiveStartupState;
             return (false, saveError + rollbackMessage, effectiveStartupState);
         }
 
         settings = candidate.Copy();
+        LocalizationService.Apply(settings.Language);
         bool currentStartupState = startupManager.IsEnabled();
         settings.StartWithWindows = currentStartupState;
         startWithWindowsItem.Checked = currentStartupState;
         flyout.ApplySettings(settings);
+        settingsForm?.Relocalize();
         helpForm?.SetTheme(settings.Theme);
+        helpForm?.ApplyLocalization();
         aboutForm?.SetTheme(settings.Theme);
+        aboutForm?.ApplyLocalization();
+        ApplyLocalization();
         return (true, null, currentStartupState);
+    }
+
+    private void ApplyLocalization()
+    {
+        openWindowDeckItem.Text = LocalizationService.Get("Tray_Open");
+        settingsItem.Text = LocalizationService.Get("Tray_Settings");
+        helpItem.Text = LocalizationService.Get("Tray_Help");
+        aboutItem.Text = LocalizationService.Get("Tray_About");
+        startWithWindowsItem.Text = LocalizationService.Get("Tray_StartWithWindows");
+        exitItem.Text = LocalizationService.Get("Tray_Exit");
     }
 
     private string? SynchronizeStartupState(bool effectiveStartupState)

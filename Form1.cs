@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using WindowDeck.Interop;
+using WindowDeck.Localization;
 using WindowDeck.Models;
 using WindowDeck.Services;
 
@@ -43,6 +44,7 @@ internal partial class Form1 : Form
         Icon = WindowDeckIcon.Load();
         searchTextBox.Enter += (_, _) => searchTextBox.BackColor = palette.RaisedSurface;
         searchTextBox.Leave += (_, _) => searchTextBox.BackColor = palette.Surface;
+        ApplyLocalization();
         ApplyTheme();
         PositionOnRelevantMonitor(DefaultPanelWidth);
     }
@@ -56,9 +58,19 @@ internal partial class Form1 : Form
 
     public void ApplySettings(AppSettings updatedSettings)
     {
+        bool languageChanged = settings.Language != updatedSettings.Language;
         settings = updatedSettings.Copy();
+        ApplyLocalization();
         ApplyTheme();
-        RenderWindowList();
+        if (languageChanged)
+        {
+            currentSnapshotInitialized = false;
+            RefreshWindowList();
+        }
+        else
+        {
+            RenderWindowList();
+        }
     }
 
     public void RefreshTheme()
@@ -102,7 +114,7 @@ internal partial class Form1 : Form
             MessageBox.Show(
                 this,
                 errorMessage,
-                "WindowDeck",
+                LocalizationService.Get("App_Title"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
         }
@@ -233,14 +245,14 @@ internal partial class Form1 : Form
                 break;
             case WindowActivationResult.WindowUnavailable:
                 ShowActivationFailure(
-                    "The selected window is no longer available. Try again.");
+                    LocalizationService.Get("Window_UnavailableRetry"));
                 break;
             case WindowActivationResult.RestorationFailed:
-                ShowActivationFailure("The selected window could not be restored.");
+                ShowActivationFailure(LocalizationService.Get("Window_RestoreFailed"));
                 break;
             case WindowActivationResult.ForegroundActivationFailed:
                 ShowActivationFailure(
-                    "Windows did not allow or complete activation of the selected window.");
+                    LocalizationService.Get("Window_ActivateFailed"));
                 break;
         }
     }
@@ -273,7 +285,7 @@ internal partial class Form1 : Form
         MessageBox.Show(
             this,
             message,
-            "WindowDeck",
+            LocalizationService.Get("App_Title"),
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
     }
@@ -299,7 +311,7 @@ internal partial class Form1 : Form
             MessageBox.Show(
                 this,
                 exception.Message,
-                "WindowDeck",
+                LocalizationService.Get("App_Title"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }
@@ -335,8 +347,8 @@ internal partial class Form1 : Form
                     Height = 44,
                     Margin = new Padding(8),
                     Text = searchTextBox.TextLength == 0
-                        ? "No windows found"
-                        : "No matching windows",
+                        ? LocalizationService.Get("Flyout_NoWindows")
+                        : LocalizationService.Get("Flyout_NoMatches"),
                     TextAlign = ContentAlignment.MiddleCenter
                 };
                 emptyLabel.ForeColor = palette.SecondaryForeground;
@@ -374,7 +386,7 @@ internal partial class Form1 : Form
             Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Regular),
             ForeColor = palette.SecondaryForeground,
             Margin = Padding.Empty,
-            Text = "Screen",
+            Text = LocalizationService.Get("Flyout_Screen"),
             TextAlign = ContentAlignment.MiddleCenter
         };
 
@@ -426,7 +438,7 @@ internal partial class Form1 : Form
 
         Button minimizeButton = CreateActionButton(
             "—",
-            $"Minimize {window.DisplayTitle}",
+            LocalizationService.Format("Flyout_MinimizeAccessible", window.DisplayTitle),
             isCloseButton: false);
         minimizeButton.Click += (_, _) =>
         {
@@ -438,7 +450,7 @@ internal partial class Form1 : Form
 
         Button closeButton = CreateActionButton(
             "×",
-            $"Close {window.DisplayTitle}",
+            LocalizationService.Format("Flyout_CloseAccessible", window.DisplayTitle),
             isCloseButton: true);
         closeButton.Click += (_, _) =>
         {
@@ -513,6 +525,12 @@ internal partial class Form1 : Form
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
     }
 
+    private void ApplyLocalization()
+    {
+        Text = LocalizationService.Get("App_Title");
+        searchTextBox.PlaceholderText = LocalizationService.Get("Flyout_Search");
+    }
+
     private Button CreateActionButton(
         string text,
         string accessibleName,
@@ -552,8 +570,8 @@ internal partial class Form1 : Form
     {
         MessageBox.Show(
             this,
-            "The selected window is no longer available.",
-            "WindowDeck",
+            LocalizationService.Get("Window_Unavailable"),
+            LocalizationService.Get("App_Title"),
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
     }

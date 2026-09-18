@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using WindowDeck.Localization;
 
 namespace WindowDeck.Services;
 
@@ -86,7 +87,7 @@ internal sealed class StartupManager
                 TryRestoreValue(RunKeyPath, previousRunValue);
                 TryRestoreValue(StartupApprovedRunKeyPath, previousApprovalValue);
             }
-            errorMessage = $"WindowDeck could not update Windows startup. {exception.Message}";
+            errorMessage = LocalizationService.Format("Message_UpdateStartupFailed", exception.Message);
             return false;
         }
     }

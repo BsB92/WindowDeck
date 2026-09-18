@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using WindowDeck.Interop;
 using WindowDeck.Models;
+using WindowDeck.Localization;
 
 namespace WindowDeck.Services;
 
@@ -31,7 +32,7 @@ internal sealed class WindowEnumerator
         if (!succeeded)
         {
             int error = Marshal.GetLastWin32Error();
-            throw new Win32Exception(error, "Top-level window enumeration failed.");
+            throw new Win32Exception(error, LocalizationService.Get("Message_EnumerationFailed"));
         }
 
         return windows;
@@ -97,28 +98,28 @@ internal sealed class WindowEnumerator
             string processName = process.ProcessName;
             if (processName.Equals("explorer", StringComparison.OrdinalIgnoreCase))
             {
-                return "File Explorer";
+                return LocalizationService.Get("Application_FileExplorer");
             }
 
             return string.IsNullOrEmpty(processName)
-                ? "Unknown application"
+                ? LocalizationService.Get("Application_Unknown")
                 : char.ToUpperInvariant(processName[0]) + processName[1..].ToLowerInvariant();
         }
         catch (ArgumentException)
         {
-            return "Unknown application";
+            return LocalizationService.Get("Application_Unknown");
         }
         catch (OverflowException)
         {
-            return "Unknown application";
+            return LocalizationService.Get("Application_Unknown");
         }
         catch (InvalidOperationException)
         {
-            return "Unknown application";
+            return LocalizationService.Get("Application_Unknown");
         }
         catch (Win32Exception)
         {
-            return "Unknown application";
+            return LocalizationService.Get("Application_Unknown");
         }
     }
 

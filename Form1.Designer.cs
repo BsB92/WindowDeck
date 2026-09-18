@@ -30,7 +30,6 @@ namespace WindowDeck
             searchTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             searchTextBox.Location = new Point(16, 16);
             searchTextBox.Name = "searchTextBox";
-            searchTextBox.PlaceholderText = "Search windows";
             searchTextBox.BorderStyle = BorderStyle.FixedSingle;
             searchTextBox.Size = new Size(648, 27);
             searchTextBox.TabIndex = 0;
@@ -60,7 +59,6 @@ namespace WindowDeck
             MinimumSize = new Size(600, 400);
             Name = "Form1";
             StartPosition = FormStartPosition.Manual;
-            Text = "WindowDeck";
             TopMost = true;
             ResumeLayout(false);
             PerformLayout();

@@ -33,7 +33,8 @@ internal static class NativeMethods
     internal const uint QdcOnlyActivePaths = 2;
     internal const int SwRestore = 9;
     internal const int SwMinimize = 6;
-    internal const uint WmClose = 0x0010;
+    internal const uint WmSysCommand = 0x0112;
+    internal static readonly nint ScClose = 0xF060;
     internal const uint WmGetIcon = 0x007F;
     internal const int WmHotkey = 0x0312;
     internal const uint VkOem3 = 0xC0;

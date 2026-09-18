@@ -108,6 +108,8 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free, and as portab
   - **Window list:** `Group windows by application`; `Show application icons`; `Show screen number`; `Show minimized windows`.
   - **Appearance:** theme choices `System`, `Light`, and `Dark`.
 - Settings loading must tolerate the absence of a settings file and should fail safely if local data is invalid.
+- The Settings UI also contains **Language** choices `System`, `English`, and `Polski`; the default is `System`. This value is persisted in the existing `settings.json`, and a missing value in an older file means `System`. Language and Appearance are independent settings.
+- Localization uses application-owned `.resx` resources and `ResourceManager`, with English base resources and Polish satellite resources. A central localization service owns the selected language, effective UI culture, supported-language definitions, and fallback to English. For `System`, a Windows UI culture beginning with `pl` selects Polish; every other current culture selects English. Adding a future language should primarily require its culture resource file, translations, and one entry in the central supported-language definition rather than form-specific culture logic.
 
 ## 14. Start with Windows
 
@@ -147,6 +149,8 @@ Implement in this order, with each stage being a separate small task or small se
 13. Help, About, and release polish.
 
 Before editing, read `AGENTS.md`, read the relevant parts of this specification, inspect the current code, and identify the smallest required change. During work, preserve working functionality, avoid unrelated refactors and large rewrites, build after meaningful changes, and correct introduced errors and warnings without merely suppressing them. After work, run a final build, inspect the diff, and ensure no build artifacts or unnecessary dependencies were added.
+
+Stage 14 adds the English/Polish localization and language selection described in section 13. It also requires every row-level activate, minimize, and close action to use the exact `HWND` captured in that row without process-, application-, title-, or group-based target inference. A row close posts one normal system close command to that exact `HWND`; it must not kill or close a process, enumerate sibling windows, or bypass the target application's Save / Don't Save / Cancel lifecycle.
 
 ## 18. Features excluded from v1
 

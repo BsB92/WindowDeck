@@ -20,7 +20,11 @@ internal sealed class WindowActions
     public bool RequestClose(WindowInfo window)
     {
         return IsSameWindow(window)
-            && NativeMethods.PostMessage(window.Handle, NativeMethods.WmClose, 0, 0);
+            && NativeMethods.PostMessage(
+                window.Handle,
+                NativeMethods.WmSysCommand,
+                NativeMethods.ScClose,
+                0);
     }
 
     private static bool IsSameWindow(WindowInfo window)
