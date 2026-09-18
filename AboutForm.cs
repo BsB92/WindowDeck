@@ -23,7 +23,7 @@ internal sealed class AboutForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(500, 330);
+        ClientSize = new Size(500, 270);
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = new Font("Segoe UI", 9F);
         Icon applicationIcon = WindowDeckIcon.Load();
@@ -34,7 +34,7 @@ internal sealed class AboutForm : Form
             ColumnCount = 1,
             Dock = DockStyle.Fill,
             Padding = new Padding(28, 22, 28, 22),
-            RowCount = 7
+            RowCount = 6
         };
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         Controls.Add(content);
@@ -56,25 +56,12 @@ internal sealed class AboutForm : Form
         sourceAvailability = CreateLabel(
             "Source code is included in the WindowDeck repository.",
             9F, FontStyle.Regular);
-        Button close = new()
-        {
-            Anchor = AnchorStyles.None,
-            AutoSize = true,
-            DialogResult = DialogResult.OK,
-            Margin = new Padding(0, 16, 0, 0),
-            Padding = new Padding(16, 2, 16, 2),
-            Text = "OK"
-        };
-
         content.Controls.Add(iconView);
         content.Controls.Add(applicationName);
         content.Controls.Add(version);
         content.Controls.Add(description);
         content.Controls.Add(author);
         content.Controls.Add(sourceAvailability);
-        content.Controls.Add(close);
-        AcceptButton = close;
-        CancelButton = close;
 
         ApplyTheme();
     }
@@ -130,11 +117,6 @@ internal sealed class AboutForm : Form
             label.ForeColor = label == version || label == sourceAvailability
                 ? palette.SecondaryForeground
                 : palette.Foreground;
-        }
-
-        if (AcceptButton is Button close)
-        {
-            ThemeManager.StyleButton(close, palette);
         }
 
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
