@@ -4,12 +4,16 @@ namespace WindowDeck.Services;
 
 internal sealed class GlobalHotkeyManager : NativeWindow, IDisposable
 {
-    private const int WindowDeckHotkeyId = 1;
+    private const int FirstHotkeyId = 1;
+    private const int SecondHotkeyId = 2;
     private static readonly nint MessageOnlyWindowParent = new(-3);
 
     private bool disposed;
+    private int activeHotkeyId;
+    private uint activeModifiers;
+    private uint activeVirtualKey;
 
-    public GlobalHotkeyManager()
+    public GlobalHotkeyManager(uint modifiers, uint virtualKey)
     {
         CreateHandle(new CreateParams
         {
@@ -19,14 +23,50 @@ internal sealed class GlobalHotkeyManager : NativeWindow, IDisposable
 
         IsRegistered = NativeMethods.RegisterHotKey(
             Handle,
-            WindowDeckHotkeyId,
-            NativeMethods.ModWin,
-            NativeMethods.VkOem3);
+            FirstHotkeyId,
+            modifiers,
+            virtualKey);
+        if (IsRegistered)
+        {
+            activeHotkeyId = FirstHotkeyId;
+            activeModifiers = modifiers;
+            activeVirtualKey = virtualKey;
+        }
     }
 
     public event EventHandler? HotkeyPressed;
 
-    public bool IsRegistered { get; }
+    public bool IsRegistered { get; private set; }
+
+    public bool TryChange(uint modifiers, uint virtualKey)
+    {
+        if (disposed || modifiers == 0 || virtualKey == 0)
+        {
+            return false;
+        }
+
+        if (IsRegistered && modifiers == activeModifiers && virtualKey == activeVirtualKey)
+        {
+            return true;
+        }
+
+        int candidateId = activeHotkeyId == FirstHotkeyId ? SecondHotkeyId : FirstHotkeyId;
+        if (!NativeMethods.RegisterHotKey(Handle, candidateId, modifiers, virtualKey))
+        {
+            return false;
+        }
+
+        if (IsRegistered)
+        {
+            NativeMethods.UnregisterHotKey(Handle, activeHotkeyId);
+        }
+
+        activeHotkeyId = candidateId;
+        activeModifiers = modifiers;
+        activeVirtualKey = virtualKey;
+        IsRegistered = true;
+        return true;
+    }
 
     public void Dispose()
     {
@@ -38,7 +78,7 @@ internal sealed class GlobalHotkeyManager : NativeWindow, IDisposable
         disposed = true;
         if (IsRegistered)
         {
-            NativeMethods.UnregisterHotKey(Handle, WindowDeckHotkeyId);
+            NativeMethods.UnregisterHotKey(Handle, activeHotkeyId);
         }
 
         DestroyHandle();
@@ -48,7 +88,7 @@ internal sealed class GlobalHotkeyManager : NativeWindow, IDisposable
     {
         if (!disposed
             && message.Msg == NativeMethods.WmHotkey
-            && message.WParam == WindowDeckHotkeyId)
+            && message.WParam == activeHotkeyId)
         {
             HotkeyPressed?.Invoke(this, EventArgs.Empty);
         }

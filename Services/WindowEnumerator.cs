@@ -84,7 +84,8 @@ internal sealed class WindowEnumerator
             title,
             title,
             monitorDeviceName,
-            monitorNumber);
+            monitorNumber,
+            NativeMethods.IsIconic(windowHandle));
         return true;
     }
 
