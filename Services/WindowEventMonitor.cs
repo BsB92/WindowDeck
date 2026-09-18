@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using WindowDeck.Interop;
+using WindowDeck.Localization;
 
 namespace WindowDeck.Services;
 
@@ -63,7 +64,7 @@ internal sealed class WindowEventMonitor : IDisposable
                 monitor = null;
                 errorMessage = new Win32Exception(
                     error,
-                    $"Automatic window monitoring could not register event 0x{eventType:X4}.").Message;
+                    LocalizationService.Format("Message_MonitoringFailed", eventType)).Message;
                 return false;
             }
 

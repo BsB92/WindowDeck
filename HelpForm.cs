@@ -1,3 +1,4 @@
+using WindowDeck.Localization;
 using WindowDeck.Models;
 using WindowDeck.Services;
 
@@ -5,20 +6,28 @@ namespace WindowDeck;
 
 internal sealed class HelpForm : Form
 {
+    private static readonly (string Heading, string Text)[] Sections =
+    [
+        ("Help_OpeningHeading", "Help_OpeningText"),
+        ("Help_FindingHeading", "Help_FindingText"),
+        ("Help_ActionsHeading", "Help_ActionsText"),
+        ("Help_TrayHeading", "Help_TrayText"),
+        ("Help_SettingsHeading", "Help_SettingsText")
+    ];
+
     private readonly TableLayoutPanel content;
-    private readonly List<Label> headings = [];
+    private readonly List<(Label Heading, Label Text)> sectionControls = [];
     private AppTheme theme;
 
     public HelpForm(AppTheme theme)
     {
         this.theme = theme;
-        Text = "Help";
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = false;
         MinimizeBox = false;
         MinimumSize = new Size(540, 560);
-        ClientSize = new Size(620, 680);
+        ClientSize = new Size(650, 710);
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = new Font("Segoe UI", 9F);
         Icon = WindowDeckIcon.Load();
@@ -33,23 +42,8 @@ internal sealed class HelpForm : Form
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         Controls.Add(content);
 
-        AddSection("Opening WindowDeck",
-            "Use the global hotkey to show or hide WindowDeck. The default shortcut is Win + `. " +
-            "You can change it in Settings. You can also left-click the tray icon to show or hide WindowDeck.");
-        AddSection("Finding windows",
-            "Type in Search windows to filter by application or visible window/document title. Windows can be " +
-            "grouped by application. The Screen column shows which screen contains each window, for example " +
-            "[ 1 ], [ 2 ], [ 3 ], and so on.");
-        AddSection("Window actions",
-            "Click a title or row to activate that exact window. The — button minimizes that window. The × button " +
-            "sends a normal close request; the application may still show its usual Save, Don't Save, or Cancel dialog.");
-        AddSection("Tray behavior",
-            "WindowDeck's X button and Esc hide the flyout. WindowDeck keeps running in the tray. To shut down the " +
-            "application, use Tray > Exit.");
-        AddSection("Settings",
-            "Settings includes Start with Windows, Start minimized to tray, the global hotkey, grouping by application, " +
-            "application icons, screen numbers, minimized windows, and Appearance (System, Light, or Dark).");
-
+        foreach ((string heading, string text) in Sections) AddSection(heading, text);
+        ApplyLocalization();
         ApplyTheme();
     }
 
@@ -61,6 +55,16 @@ internal sealed class HelpForm : Form
 
     public void RefreshTheme() => ApplyTheme();
 
+    public void ApplyLocalization()
+    {
+        Text = LocalizationService.Get("Help_Title");
+        for (int index = 0; index < Sections.Length; index++)
+        {
+            sectionControls[index].Heading.Text = LocalizationService.Get(Sections[index].Heading);
+            sectionControls[index].Text.Text = LocalizationService.Get(Sections[index].Text);
+        }
+    }
+
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
@@ -69,33 +73,28 @@ internal sealed class HelpForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            Icon?.Dispose();
-        }
-
+        if (disposing) Icon?.Dispose();
         base.Dispose(disposing);
     }
 
-    private void AddSection(string heading, string text)
+    private void AddSection(string headingKey, string textKey)
     {
-        Label headingLabel = new()
+        Label heading = new()
         {
             AutoSize = true,
             Font = new Font(Font, FontStyle.Bold),
-            Margin = new Padding(0, 14, 0, 5),
-            Text = heading
+            Margin = new Padding(0, 14, 0, 5)
         };
-        headings.Add(headingLabel);
-        content.Controls.Add(headingLabel);
-        content.Controls.Add(new Label
+        Label text = new()
         {
             AutoSize = true,
             Dock = DockStyle.Fill,
             Margin = new Padding(0, 0, 0, 5),
-            MaximumSize = new Size(540, 0),
-            Text = text
-        });
+            MaximumSize = new Size(570, 0)
+        };
+        sectionControls.Add((heading, text));
+        content.Controls.Add(heading);
+        content.Controls.Add(text);
     }
 
     private void ApplyTheme()
@@ -105,11 +104,7 @@ internal sealed class HelpForm : Form
         ForeColor = palette.Foreground;
         content.BackColor = palette.Background;
         content.ForeColor = palette.Foreground;
-        foreach (Label heading in headings)
-        {
-            heading.ForeColor = palette.Foreground;
-        }
-
+        foreach ((Label heading, _) in sectionControls) heading.ForeColor = palette.Foreground;
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
     }
 }

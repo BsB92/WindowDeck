@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WindowDeck.Models;
+using WindowDeck.Localization;
 
 namespace WindowDeck.Services;
 
@@ -36,6 +37,7 @@ internal sealed class SettingsService
                 File.ReadAllText(SettingsPath), JsonOptions) ?? new AppSettings();
             settings.Hotkey ??= new HotkeySettings();
             if (!Enum.IsDefined(settings.Theme)
+                || !Enum.IsDefined(settings.Language)
                 || settings.Hotkey.VirtualKey == 0
                 || (settings.Hotkey.Modifiers & ~Interop.NativeMethods.SupportedHotkeyModifiers) != 0)
             {
@@ -76,7 +78,7 @@ internal sealed class SettingsService
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             try { File.Delete(temporaryPath); } catch (IOException) { }
-            errorMessage = $"WindowDeck could not save settings. {exception.Message}";
+            errorMessage = LocalizationService.Format("Message_SaveSettingsFailed", exception.Message);
             return false;
         }
     }

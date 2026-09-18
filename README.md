@@ -17,6 +17,7 @@ WindowDeck is a lightweight Windows 11 utility for quickly finding and activatin
 - A configurable global hotkey (default `Win + \``), including cursor-screen placement.
 - Settings for Windows startup, minimized startup, list presentation, and System/Light/Dark appearance.
 - Native Help and About windows.
+- English and Polish user interfaces, with a System language option that follows Polish Windows UI cultures and otherwise uses English.
 - The complete v1 requirements in [`SPEC.md`](SPEC.md).
 
 Development is deliberately incremental; implemented behavior and product requirements are documented in `SPEC.md`, which is the source of truth.

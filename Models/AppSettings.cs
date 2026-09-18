@@ -9,6 +9,13 @@ internal enum AppTheme
     Dark
 }
 
+internal enum AppLanguage
+{
+    System,
+    English,
+    Polish
+}
+
 internal sealed class HotkeySettings
 {
     public uint Modifiers { get; set; } = NativeMethods.ModWin;
@@ -36,6 +43,8 @@ internal sealed class AppSettings
 
     public AppTheme Theme { get; set; } = AppTheme.System;
 
+    public AppLanguage Language { get; set; } = AppLanguage.System;
+
     public AppSettings Copy() => new()
     {
         StartWithWindows = StartWithWindows,
@@ -45,6 +54,7 @@ internal sealed class AppSettings
         ShowApplicationIcons = ShowApplicationIcons,
         ShowScreenNumber = ShowScreenNumber,
         ShowMinimizedWindows = ShowMinimizedWindows,
-        Theme = Theme
+        Theme = Theme,
+        Language = Language
     };
 }
