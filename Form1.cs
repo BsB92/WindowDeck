@@ -291,6 +291,8 @@ internal partial class Form1 : Form
             currentSnapshot = updatedSnapshot;
             currentSnapshotInitialized = true;
             RenderWindowList();
+            applicationIconProvider.RetainIconsFor(
+                currentSnapshot.Select(window => window.ProcessId));
         }
         catch (Win32Exception exception)
         {
@@ -404,15 +406,6 @@ internal partial class Form1 : Form
         TableLayoutPanel row = CreateListGrid(32, new Padding(4, 0, 4, 1));
         row.BackColor = palette.Surface;
 
-        PictureBox applicationIcon = new()
-        {
-            Anchor = AnchorStyles.None,
-            Image = applicationIconProvider.GetIcon(window),
-            Margin = new Padding(4),
-            Size = new Size(16, 16),
-            SizeMode = PictureBoxSizeMode.Zoom
-        };
-
         Button titleButton = new()
         {
             AutoEllipsis = true,
@@ -467,11 +460,15 @@ internal partial class Form1 : Form
 
         if (settings.ShowApplicationIcons)
         {
+            PictureBox applicationIcon = new()
+            {
+                Anchor = AnchorStyles.None,
+                Image = applicationIconProvider.GetIcon(window),
+                Margin = new Padding(4),
+                Size = new Size(16, 16),
+                SizeMode = PictureBoxSizeMode.Zoom
+            };
             row.Controls.Add(applicationIcon, 0, 0);
-        }
-        else
-        {
-            applicationIcon.Dispose();
         }
         row.Controls.Add(titleButton, 1, 0);
         row.Controls.Add(minimizeButton, 2, 0);

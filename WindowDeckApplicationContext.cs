@@ -109,7 +109,8 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
 
     private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
     {
-        if (settings.Theme != AppTheme.System
+        if (isExiting
+            || settings.Theme != AppTheme.System
             || flyout.IsDisposed
             || e.Category is not (UserPreferenceCategory.Color
                 or UserPreferenceCategory.VisualStyle
@@ -120,17 +121,29 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
 
         void RefreshTheme()
         {
+            if (isExiting)
+            {
+                return;
+            }
+
             flyout.RefreshTheme();
             settingsForm?.RefreshTheme();
         }
 
-        if (flyout.InvokeRequired)
+        try
         {
-            flyout.BeginInvoke((Action)RefreshTheme);
+            if (flyout.InvokeRequired)
+            {
+                flyout.BeginInvoke((Action)RefreshTheme);
+            }
+            else
+            {
+                RefreshTheme();
+            }
         }
-        else
+        catch (InvalidOperationException) when (isExiting || flyout.IsDisposed)
         {
-            RefreshTheme();
+            // The flyout began shutting down between the state check and marshaling.
         }
     }
 
@@ -263,6 +276,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
     {
         if (isExiting) return;
         isExiting = true;
+        SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
         settingsForm?.Close();
         hotkeyManager.Dispose();
         if (!flyout.IsDisposed) flyout.ExitApplication();
