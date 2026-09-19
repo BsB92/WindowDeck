@@ -101,9 +101,13 @@ internal sealed class AboutForm : Form
         base.Dispose(disposing);
     }
 
-    private static string GetApplicationVersion() =>
-        Assembly.GetEntryAssembly()?.GetName().Version?.ToString()
-        ?? LocalizationService.Get("About_UnknownVersion");
+    private static string GetApplicationVersion()
+    {
+        Assembly? assembly = Assembly.GetEntryAssembly();
+        return assembly?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? assembly?.GetName().Version?.ToString()
+            ?? LocalizationService.Get("About_UnknownVersion");
+    }
 
     private Label CreateLabel(string text, float size, FontStyle style) => new()
     {

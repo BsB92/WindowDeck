@@ -4,7 +4,7 @@
 
 This document is the single source of truth for WindowDeck product requirements and functional decisions. Development must be incremental and follow the stages in section 17. A task must implement only its requested stage; features must not be built speculatively.
 
-WindowDeck v1 is in release polish. Packaging and release publication remain outside the implemented stages.
+WindowDeck v1.0.0 is release-ready. Its release distribution is a Windows x64, Release, self-contained, single-file publish that does not require a preinstalled .NET runtime. Release publication remains a separate manual step.
 
 ## 2. Product purpose and boundaries
 
@@ -12,7 +12,7 @@ WindowDeck is a lightweight Windows 11 utility for quickly finding and activatin
 
 The application will present open windows in a wide flyout-style panel from the right side of the active monitor. A user must be able to activate several windows in succession without WindowDeck closing after each selection.
 
-WindowDeck must be fast, stable, event-driven, Windows-only, free, and as portable as practical. Any source-availability or license statement must accurately reflect the repository's actual license state. It must require no account, cloud service, telemetry, analytics, network communication, or administrator privileges. It is not a Task Manager, PowerToys replacement, desktop manager, monitor manager, or general-purpose utility collection.
+WindowDeck must be fast, stable, event-driven, Windows-only, free, open source under the MIT License, and as portable as practical. It must require no account, cloud service, telemetry, analytics, network communication, or administrator privileges. It is not a Task Manager, PowerToys replacement, desktop manager, monitor manager, or general-purpose utility collection.
 
 ## 3. Required technology
 

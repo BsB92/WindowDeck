@@ -59,7 +59,7 @@
   <data name="About_Description" xml:space="preserve"><value>Lekka aplikacja dla systemu Windows do szybkiego znajdowania i przełączania się między otwartymi oknami.</value></data>
   <data name="About_Author" xml:space="preserve"><value>Created by ::BsB!::</value></data>
   <data name="About_DesignedFor" xml:space="preserve"><value>Zaprojektowano dla Windows 11</value></data>
-  <data name="About_Source" xml:space="preserve"><value>Kod źródłowy znajduje się w repozytorium WindowDeck.</value></data>
+  <data name="About_Source" xml:space="preserve"><value>Open source na licencji MIT.</value></data>
   <data name="About_UnknownVersion" xml:space="preserve"><value>Nieznana</value></data>
   <data name="Message_InvalidSettings" xml:space="preserve"><value>WindowDeck nie może odczytać pliku settings.json i używa bezpiecznych wartości domyślnych. Zapisanie Ustawień zastąpi nieprawidłowy plik.</value></data>
   <data name="Message_HotkeyUnavailable" xml:space="preserve"><value>WindowDeck nie może zarejestrować skrótu {0}, ponieważ jest niedostępny. Menu zasobnika pozostaje dostępne.</value></data>
