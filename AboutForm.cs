@@ -104,8 +104,18 @@ internal sealed class AboutForm : Form
     private static string GetApplicationVersion()
     {
         Assembly? assembly = Assembly.GetEntryAssembly();
-        return assembly?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-            ?? assembly?.GetName().Version?.ToString()
+        string? informationalVersion = assembly?
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+        if (informationalVersion is not null)
+        {
+            int buildMetadataIndex = informationalVersion.IndexOf('+');
+            return buildMetadataIndex >= 0
+                ? informationalVersion[..buildMetadataIndex]
+                : informationalVersion;
+        }
+
+        return assembly?.GetName().Version?.ToString()
             ?? LocalizationService.Get("About_UnknownVersion");
     }
 
