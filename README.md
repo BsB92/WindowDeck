@@ -4,6 +4,12 @@
 
 Designed for Windows 11.
 
+> **About this project**
+>
+> I am not a software developer. WindowDeck started as a practical idea for solving a problem I had in everyday work.
+>
+> The application was designed, specified, tested, and iteratively refined by me, while the code was created with the help of **ChatGPT** and **OpenAI Codex**.
+
 ## Download
 
 Download the latest version from:
