@@ -1,14 +1,18 @@
-# WindowDeck
+# WindowDeck — Fast Window Switcher for Windows 11
 
-**WindowDeck** is a lightweight Windows utility for quickly finding and switching between open windows, especially when working with many applications, documents, and screens.
+**Find the exact open window you need in seconds.**
 
-Designed for Windows 11.
+WindowDeck is a lightweight, event-driven **Windows 11 window switcher and open-window search utility** for people who work with many applications, documents, and monitors.
+
+It gives you a searchable list of open windows, optional grouping by application, monitor indicators, and direct actions for the exact selected window — activate, minimize, or close.
+
+WindowDeck is especially useful when many open windows have similar names or are spread across multiple screens.
 
 > **About this project**
 >
 > I am not a software developer. WindowDeck started as a practical idea for solving a problem I had in everyday work.
 >
-> The application was designed, specified, tested, and iteratively refined by me, while the code was created with the help of **ChatGPT** and **OpenAI Codex**.
+> I designed the concept, requirements, workflow, and UI, and tested and refined the application iteratively. The code was created with the help of **ChatGPT** and **OpenAI Codex**.
 
 ## Download
 
