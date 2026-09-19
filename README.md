@@ -20,6 +20,14 @@ WindowDeck is distributed as a **single, self-contained `WindowDeck.exe`**.
 
 No installer is required and no separate .NET Runtime installation is needed.
 
+### Windows SmartScreen
+
+WindowDeck is currently distributed without a code-signing certificate.
+
+Because of this, Windows SmartScreen may show an **"Unknown publisher"** warning when you run `WindowDeck.exe` for the first time.
+
+This warning does not mean that Windows detected malware. It means the application is unsigned and does not yet have an established SmartScreen reputation.
+
 ## Features
 
 - Quickly find and switch between open windows
