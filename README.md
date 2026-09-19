@@ -28,6 +28,8 @@ Because of this, Windows SmartScreen may show an **"Unknown publisher"** warning
 
 This warning does not mean that Windows detected malware. It means the application is unsigned and does not yet have an established SmartScreen reputation.
 
+If you downloaded WindowDeck from the official GitHub Releases page, you can verify the file source before running it.
+
 ## Features
 
 - Quickly find and switch between open windows
