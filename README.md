@@ -74,12 +74,12 @@ WindowDeck uses event-driven window tracking and does not continuously poll for 
 
 1. Download `WindowDeck.exe` from the latest GitHub Release.
 2. Run `WindowDeck.exe`.
-3. Use the default global shortcut:
-
-   **Win + `**
-
-4. Search for a window or select one from the list.
-5. Click a window to activate it.
+3. WindowDeck starts in the **system tray**, so no main window may appear immediately.
+4. Open WindowDeck by:
+   - clicking the WindowDeck tray icon near the clock, or
+   - using the default global shortcut **Win + `**
+5. Search for a window or select one from the list.
+6. Click a window to activate it.
 
 The global shortcut can be changed in **Settings**.
 
