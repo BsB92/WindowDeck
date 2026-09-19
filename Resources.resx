@@ -59,7 +59,7 @@
   <data name="About_Description" xml:space="preserve"><value>A lightweight Windows utility for quickly finding and switching between open windows.</value></data>
   <data name="About_Author" xml:space="preserve"><value>Created by ::BsB!::</value></data>
   <data name="About_DesignedFor" xml:space="preserve"><value>Designed for Windows 11</value></data>
-  <data name="About_Source" xml:space="preserve"><value>Source code is included in the WindowDeck repository.</value></data>
+  <data name="About_Source" xml:space="preserve"><value>Open source under the MIT License.</value></data>
   <data name="About_UnknownVersion" xml:space="preserve"><value>Unknown</value></data>
   <data name="Message_InvalidSettings" xml:space="preserve"><value>WindowDeck could not read settings.json and is using safe defaults. Saving Settings will replace the invalid file.</value></data>
   <data name="Message_HotkeyUnavailable" xml:space="preserve"><value>WindowDeck could not register {0} because it is unavailable. The tray menu remains available.</value></data>

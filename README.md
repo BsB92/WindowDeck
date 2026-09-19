@@ -1,53 +1,53 @@
-# WindowDeck
+# WindowDeck 1.0.0
 
-WindowDeck is a lightweight Windows 11 utility for quickly finding and activating the right open window, especially when many documents have similar names.
+WindowDeck is a lightweight, event-driven Windows utility for finding the right open window when many documents have similar names. It is designed for Windows 11; this statement does not claim that Windows 10 is unsupported.
 
-> **Project status: release polish.** The v1 application features are implemented; packaging and release publication are not yet complete.
+## Features
 
-## What is available now
-
-- A .NET 10 Windows Forms project and solution.
-- Initial discovery of visible, user-facing top-level windows using documented Windows APIs.
-- A right-aligned, topmost flyout that lists window titles and Screen numbers.
-- Search, grouping by application, application icons, and `[ 1 ]`-style Screen indicators.
-- Exact-window activation, including restoration of minimized windows.
-- Exact-window minimize and normal close-request actions.
-- Event-driven list updates when external windows change.
-- A persistent system tray icon for showing, hiding, and exiting WindowDeck.
-- A configurable global hotkey (default `Win + \``), including cursor-screen placement.
-- Settings for Windows startup, minimized startup, list presentation, and System/Light/Dark appearance.
+- English and Polish interfaces, plus a **System** option that selects Polish for a Polish Windows UI culture and English otherwise.
+- Configurable global hotkey (default `Win + \``) and placement on the screen containing the cursor.
+- Search and optional grouping by application.
+- Activation, minimization, and normal close requests addressed to the exact selected window.
+- System tray controls and a single running application instance.
+- Settings for **Start with Windows**, minimized startup, list presentation, and **System / Light / Dark** appearance.
 - Native Help and About windows.
-- English and Polish user interfaces, with a System language option that follows Polish Windows UI cultures and otherwise uses English.
-- The complete v1 requirements in [`SPEC.md`](SPEC.md).
+- Event-driven window tracking with no continuous polling.
+- No telemetry, analytics, account, cloud service, automatic update check, or automatic network traffic.
 
-Development is deliberately incremental; implemented behavior and product requirements are documented in `SPEC.md`, which is the source of truth.
+## Run the published application
 
-## Requirements
+1. Obtain the `WindowDeck-1.0.0-win-x64` release folder.
+2. Run `WindowDeck.exe`. The self-contained release does not require a separate .NET Runtime installation.
+3. Use the tray menu's **Exit** command when you want to stop WindowDeck completely.
 
-- Windows 11.
-- Visual Studio 2026 Community, or another compatible environment that supports .NET 10 Windows desktop development.
-- The .NET 10 SDK and the Visual Studio **.NET desktop development** workload.
+The release has no installer. See [`docs/RELEASE_TEST_CHECKLIST.md`](docs/RELEASE_TEST_CHECKLIST.md) for final Windows acceptance checks.
 
-## Open the project
+## Build for development
 
-1. Download or clone the repository.
-2. Open `WindowDeck.sln` in Visual Studio.
-3. If Visual Studio asks to install missing components, install the .NET 10 SDK and **.NET desktop development** workload, then reopen the solution.
-
-## Build
-
-In Visual Studio, select **Build > Build Solution**. A successful build should finish with 0 errors.
-
-From a Developer PowerShell or terminal with the .NET 10 SDK installed, run:
+Install the .NET 10 SDK and a Windows desktop development workload, then open `WindowDeck.sln` in a compatible Visual Studio version or run:
 
 ```powershell
-dotnet build WindowDeck.sln
+dotnet build WindowDeck.sln -c Release
 ```
 
-## Run
+Run from Visual Studio with **F5**, or use `dotnet run --project WindowDeck.csproj` on Windows.
 
-In Visual Studio, press **F5** or select the green **Start** button. WindowDeck opens on the right side of the monitor containing the current foreground window and updates its list automatically. Click a row to activate that exact window. Press **Esc** or click **X** to hide the flyout, then left-click the WindowDeck tray icon to show it again. Right-click the tray icon and select **Exit** to close the application.
+## Create the release publish
 
-## Development approach
+From the repository root, run:
 
-The project is built in small, reviewable stages. Implemented functionality must not be inferred from the planned feature list; consult the current code and project status above. All product and functional decisions are governed by [`SPEC.md`](SPEC.md).
+```powershell
+dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64
+```
+
+The profile creates a Release, `win-x64`, self-contained, single-file publish in `artifacts\WindowDeck-1.0.0-win-x64`. Trimming and NativeAOT are disabled so localization resources and assembly metadata remain intact.
+
+## Project documentation
+
+[`SPEC.md`](SPEC.md) is the source of truth for implemented behavior and product requirements. No canonical GitHub repository URL is documented because this repository currently has no configured Git remote or other authoritative URL metadata.
+
+## License
+
+WindowDeck is open source under the [MIT License](LICENSE).
+
+Copyright (c) 2026 ::BsB!::
