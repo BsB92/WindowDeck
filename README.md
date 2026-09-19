@@ -30,6 +30,22 @@ This warning does not mean that Windows detected malware. It means the applicati
 
 If you downloaded WindowDeck from the official GitHub Releases page, you can verify the file source before running it.
 
+### Verify the download
+
+SHA-256 for `WindowDeck.exe` version 1.0.0:
+
+```text
+967af1660e0a1207586745472b93ce13f4dbb5a980059f1ed8741a76b0adeff4
+```
+
+You can verify the downloaded file in PowerShell:
+
+```powershell
+Get-FileHash .\WindowDeck.exe -Algorithm SHA256
+```
+
+The resulting hash should match the value above.
+
 ## Features
 
 - Quickly find and switch between open windows
