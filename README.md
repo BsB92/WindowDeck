@@ -142,3 +142,23 @@ Clone the repository and build:
 
 ```powershell
 dotnet build WindowDeck.sln -c Release
+You can also open WindowDeck.sln in Visual Studio and run the application with F5.
+Create a release build
+The repository contains a publish profile for the Windows x64 release.
+Run:
+dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64
+The output is created in:
+artifacts\WindowDeck-1.0.0-win-x64
+The release configuration uses:
+- Release configuration
+- win-x64
+- self-contained deployment
+- single-file publishing
+- trimming disabled
+- NativeAOT disabled
+Project documentation
+Detailed product behavior and technical requirements are documented in:
+[`SPEC.md`](SPEC.md)
+License
+WindowDeck is open source under the MIT License.
+Copyright (c) 2026 ::BsB!::
