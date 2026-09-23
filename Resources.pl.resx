@@ -47,9 +47,9 @@
   <data name="Help_OpeningHeading" xml:space="preserve"><value>Otwieranie WindowDeck</value></data>
   <data name="Help_OpeningText" xml:space="preserve"><value>Użyj globalnego skrótu, aby pokazać lub ukryć WindowDeck. Domyślny skrót to Win + `. Możesz go zmienić w Ustawieniach. Możesz też kliknąć lewym przyciskiem ikonę w zasobniku, aby pokazać lub ukryć WindowDeck.</value></data>
   <data name="Help_FindingHeading" xml:space="preserve"><value>Znajdowanie okien</value></data>
-  <data name="Help_FindingText" xml:space="preserve"><value>Wpisz tekst w polu Wyszukaj okna, aby filtrować według aplikacji albo widocznego tytułu okna lub dokumentu. Okna mogą być grupowane według aplikacji. Kolumna Ekran pokazuje ekran zawierający każde okno, na przykład [ 1 ], [ 2 ], [ 3 ] i kolejne.</value></data>
+  <data name="Help_FindingText" xml:space="preserve"><value>Wpisz tekst w polu Wyszukaj okna, aby filtrować według aplikacji albo widocznego tytułu okna lub dokumentu. Okna mogą być grupowane według aplikacji. Gdy podłączono wiele ekranów, ponumerowane przyciski wskazują bieżący ekran i jednym kliknięciem przenoszą dokładnie to okno na inny ekran.</value></data>
   <data name="Help_ActionsHeading" xml:space="preserve"><value>Akcje okien</value></data>
-  <data name="Help_ActionsText" xml:space="preserve"><value>Kliknij tytuł lub wiersz, aby aktywować dokładnie to okno. Przycisk — minimalizuje to okno. Przycisk × wysyła jedno normalne żądanie zamknięcia do dokładnie tego okna; aplikacja może nadal wyświetlić zwykłe okno dialogowe Zapisz, Nie zapisuj lub Anuluj.</value></data>
+  <data name="Help_ActionsText" xml:space="preserve"><value>Kliknij tytuł lub wiersz, aby aktywować dokładnie to okno. Przycisk — minimalizuje to okno. Przycisk × wysyła jedno normalne żądanie zamknięcia do dokładnie tego okna; aplikacja może nadal wyświetlić zwykłe okno dialogowe Zapisz, Nie zapisuj lub Anuluj. Nagłówki grup mają oddzielne akcje zwijania, minimalizowania wszystkich oraz zamykania wszystkich z potwierdzeniem.</value></data>
   <data name="Help_TrayHeading" xml:space="preserve"><value>Działanie zasobnika</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>Przycisk X WindowDeck oraz Esc ukrywają panel. WindowDeck nadal działa w zasobniku. Aby zakończyć aplikację, użyj Zasobnik &gt; Zakończ.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Ustawienia</value></data>
@@ -71,4 +71,15 @@
   <data name="Message_EnumerationFailed" xml:space="preserve"><value>Nie udało się wyliczyć okien najwyższego poziomu.</value></data>
   <data name="Application_FileExplorer" xml:space="preserve"><value>Eksplorator plików</value></data>
   <data name="Application_Unknown" xml:space="preserve"><value>Nieznana aplikacja</value></data>
+  <data name="Flyout_MinimizeAll" xml:space="preserve"><value>Minimalizuj wszystkie</value></data>
+  <data name="Flyout_CloseAll" xml:space="preserve"><value>Zamknij wszystkie</value></data>
+  <data name="Flyout_CloseAllConfirmation" xml:space="preserve"><value>Zamknąć wszystkie okna w tej grupie?</value></data>
+  <data name="Flyout_CloseAllCount" xml:space="preserve"><value>Zostanie zamkniętych {0} okien.</value></data>
+  <data name="Flyout_PresentationMode" xml:space="preserve"><value>Tryb prezentacji</value></data>
+  <data name="Flyout_ComingSoon" xml:space="preserve"><value>Wkrótce</value></data>
+  <data name="Flyout_MoveToScreen" xml:space="preserve"><value>Przenieś na ekran {0}</value></data>
+  <data name="Flyout_MinimizeAllTooltip" xml:space="preserve"><value>Minimalizuj wszystkie okna</value></data>
+  <data name="Flyout_CloseAllTooltip" xml:space="preserve"><value>Zamknij wszystkie okna</value></data>
+  <data name="Flyout_CollapseGroup" xml:space="preserve"><value>Zwiń grupę</value></data>
+  <data name="Flyout_ExpandGroup" xml:space="preserve"><value>Rozwiń grupę</value></data>
 </root>

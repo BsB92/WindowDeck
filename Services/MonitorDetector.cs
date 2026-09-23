@@ -44,6 +44,19 @@ internal sealed class MonitorDetector
         }
     }
 
+    public IReadOnlyList<MonitorDisplay> GetDisplays()
+    {
+        RefreshDisplayMapping();
+        return Screen.AllScreens
+            .Select(screen => new MonitorDisplay(
+                screen.DeviceName,
+                displayNumbers.TryGetValue(screen.DeviceName, out int number) ? number : (int?)null,
+                screen.WorkingArea))
+            .Where(display => display.Number.HasValue)
+            .OrderBy(display => display.Number)
+            .ToArray();
+    }
+
     private static Dictionary<string, int> GetDisplayNumbers()
     {
         Dictionary<string, int> numbers = new(StringComparer.OrdinalIgnoreCase);
@@ -104,3 +117,5 @@ internal sealed class MonitorDetector
         return numbers;
     }
 }
+
+internal sealed record MonitorDisplay(string DeviceName, int? Number, Rectangle WorkArea);

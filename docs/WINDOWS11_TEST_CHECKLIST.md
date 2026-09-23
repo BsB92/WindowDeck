@@ -33,3 +33,32 @@ Run this checklist on Windows 11 after building the solution with zero errors.
 
 - [ ] Repeat the visual checks at 100%, 125%, and 150% scaling; text/icons are not clipped, controls do not overlap, and action targets remain usable.
 - [ ] Repeatedly show/hide WindowDeck, change themes, and open/close Settings; no crash, stale styling, or obvious resource degradation occurs.
+
+## Window controls and bottom command bar
+
+### Monitor buttons
+
+- [ ] With one monitor, no monitor buttons are shown.
+- [ ] With two monitors, buttons 1 and 2 are shown, the current monitor is visually active, and clicking the other button moves the exact selected window.
+- [ ] With three or four monitors, all buttons remain on one row.
+- [ ] With more than four monitors, buttons wrap after four, the window row grows, and controls do not overlap at 100%, 125%, or 150% DPI and at different flyout widths.
+- [ ] A normal window keeps a sensible size and relative position and remains inside the destination work area.
+- [ ] A maximized window moves to the destination and remains maximized.
+- [ ] A minimized window moves without requiring the user to restore it first.
+
+### Group header actions
+
+- [ ] The arrow and application-name label collapse and expand the group.
+- [ ] A collapsed group still displays Minimize all and Close all.
+- [ ] Minimize all affects every exact HWND in the group without changing collapse state.
+- [ ] Close all always displays localized confirmation; Cancel closes nothing.
+- [ ] Confirming Close all sends the normal close request to every exact HWND, including several independent Excel windows, without changing collapse state.
+- [ ] Search temporarily exposes matching rows in collapsed groups and does not change remembered collapse state.
+
+### Bottom bar, localization, and appearance
+
+- [ ] Settings opens the existing Settings window and Help opens the existing Help window.
+- [ ] Presentation Mode is visible, disabled, and described as coming soon; no presentation functionality is available.
+- [ ] The command bar stays at the bottom while the list and flyout height change.
+- [ ] Verify all new labels, confirmations, and tooltips with English, Polish, and System language.
+- [ ] Verify the group headers, monitor buttons, confirmation, and bottom bar with Light, Dark, and System appearance.

@@ -160,6 +160,17 @@ internal static class NativeMethods
         internal uint Flags;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WindowPlacement
+    {
+        internal uint Length;
+        internal uint Flags;
+        internal uint ShowCommand;
+        internal NativePoint MinimumPosition;
+        internal NativePoint MaximumPosition;
+        internal Rect NormalPosition;
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct MonitorInfoEx
     {
@@ -242,6 +253,18 @@ internal static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ShowWindowAsync(nint windowHandle, int command);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetWindowPlacement(
+        nint windowHandle,
+        ref WindowPlacement placement);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetWindowPlacement(
+        nint windowHandle,
+        ref WindowPlacement placement);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

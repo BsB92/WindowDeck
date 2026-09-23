@@ -172,3 +172,11 @@ Stage 1 provides only a compiling WinForms solution, a minimal temporary startup
 ## 21. Stage 13 scope
 
 Stage 13 adds native, DPI-aware Help and About windows to the existing application lifecycle. Each window has at most one open instance, follows the selected System/Light/Dark appearance and native themed title bar, uses the WindowDeck icon, and performs no recurring background work. Help documents only implemented behavior. About displays the application version from assembly metadata and the visible authorship `Created by ::BsB!::`; source or license wording and external project links are included only when supported by repository metadata and license files. Stage 13 also permits narrow user-facing text and README corrections, but adds no window-management functionality, packaging, telemetry, analytics, automatic network communication, polling, or updater.
+
+## 22. Post-v1 window controls and flyout command bar
+
+Each grouped application header is a container with independent collapse, minimize-all, and close-all controls. Group actions operate on the exact currently displayed window handles; closing a group always requires localized confirmation. Collapse state remains process-memory-only, and search retains its temporary expansion behavior.
+
+When more than one display is connected, each window row shows localized, wrapping monitor buttons using the existing Windows display numbering. Selecting one moves that exact HWND to the target work area while preserving its restored size and relative position where possible and retaining minimized or maximized state. A single-display system shows no monitor buttons.
+
+A fixed flyout command bar provides access to the existing Help and Settings windows. It also reserves a disabled, localized Presentation Mode control marked as coming soon; Presentation Mode itself is not implemented.

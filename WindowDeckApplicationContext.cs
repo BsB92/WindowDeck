@@ -36,6 +36,8 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         string? startupSynchronizationError = SynchronizeStartupState(effectiveStartupState);
         flyout = new Form1(settings);
         flyout.FormClosed += Flyout_FormClosed;
+        flyout.SettingsRequested += Settings_Click;
+        flyout.HelpRequested += Help_Click;
 
         trayMenu = new ContextMenuStrip();
         openWindowDeckItem = new ToolStripMenuItem(null, null, OpenWindowDeck_Click);
