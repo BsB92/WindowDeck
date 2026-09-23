@@ -28,6 +28,23 @@ internal sealed class WindowActions
                 0);
     }
 
+    public bool Restore(WindowInfo window)
+    {
+        if (!IsSameWindow(window))
+        {
+            return false;
+        }
+
+        if (!NativeMethods.IsIconic(window.Handle))
+        {
+            return true;
+        }
+
+        // ShowWindowAsync reports the previous visibility state, not operation success.
+        NativeMethods.ShowWindowAsync(window.Handle, NativeMethods.SwRestore);
+        return IsSameWindow(window);
+    }
+
     public bool MoveToMonitor(WindowInfo window, MonitorDisplay target)
     {
         if (!IsSameWindow(window))
@@ -44,26 +61,98 @@ internal sealed class WindowActions
             return false;
         }
 
-        Rectangle sourceArea = Screen.FromHandle(window.Handle).WorkingArea;
+        bool isMinimized = NativeMethods.IsIconic(window.Handle);
+        bool isMaximized = placement.ShowCommand == NativeMethods.SwMaximize;
         Rectangle targetArea = target.WorkArea;
-        NativeMethods.Rect normal = placement.NormalPosition;
-        int width = Math.Min(normal.Right - normal.Left, targetArea.Width);
-        int height = Math.Min(normal.Bottom - normal.Top, targetArea.Height);
-        int relativeX = normal.Left - sourceArea.Left;
-        int relativeY = normal.Top - sourceArea.Top;
+        Rectangle restoredBounds;
+        if (!isMinimized && !isMaximized
+            && NativeMethods.GetWindowRect(window.Handle, out NativeMethods.Rect windowRectangle))
+        {
+            restoredBounds = ToRectangle(windowRectangle);
+        }
+        else
+        {
+            restoredBounds = WorkspaceToScreen(ToRectangle(placement.NormalPosition));
+        }
+
+        Rectangle sourceArea = Screen.FromRectangle(restoredBounds).WorkingArea;
+        int width = Math.Clamp(restoredBounds.Width, 1, targetArea.Width);
+        int height = Math.Clamp(restoredBounds.Height, 1, targetArea.Height);
+        int relativeX = restoredBounds.Left - sourceArea.Left;
+        int relativeY = restoredBounds.Top - sourceArea.Top;
         int left = Math.Clamp(targetArea.Left + relativeX, targetArea.Left, targetArea.Right - width);
         int top = Math.Clamp(targetArea.Top + relativeY, targetArea.Top, targetArea.Bottom - height);
-        placement.NormalPosition = new NativeMethods.Rect
-        {
-            Left = left,
-            Top = top,
-            Right = left + width,
-            Bottom = top + height
-        };
+        Rectangle targetBounds = new(left, top, width, height);
+        placement.NormalPosition = ToNativeRect(ScreenToWorkspace(targetBounds));
 
-        return IsSameWindow(window)
-            && NativeMethods.SetWindowPlacement(window.Handle, ref placement);
+        if (!IsSameWindow(window) || !NativeMethods.SetWindowPlacement(window.Handle, ref placement))
+        {
+            return false;
+        }
+
+        if (isMinimized)
+        {
+            return IsSameWindow(window);
+        }
+
+        if (isMaximized)
+        {
+            // Restore synchronously so SetWindowPos moves the restored window rather
+            // than racing a queued state transition on the owning UI thread.
+            NativeMethods.ShowWindow(window.Handle, NativeMethods.SwRestore);
+        }
+
+        bool moved = IsSameWindow(window)
+            && NativeMethods.SetWindowPos(
+                window.Handle,
+                0,
+                targetBounds.Left,
+                targetBounds.Top,
+                targetBounds.Width,
+                targetBounds.Height,
+                NativeMethods.SwpNoActivate | NativeMethods.SwpNoZOrder);
+
+        if (moved && isMaximized && IsSameWindow(window))
+        {
+            NativeMethods.ShowWindow(window.Handle, NativeMethods.SwMaximize);
+        }
+
+        return moved && IsSameWindow(window);
     }
+
+    private static Rectangle WorkspaceToScreen(Rectangle rectangle)
+    {
+        Screen primary = Screen.PrimaryScreen ?? Screen.AllScreens[0];
+        return new Rectangle(
+            rectangle.X + primary.WorkingArea.Left - primary.Bounds.Left,
+            rectangle.Y + primary.WorkingArea.Top - primary.Bounds.Top,
+            rectangle.Width,
+            rectangle.Height);
+    }
+
+    private static Rectangle ScreenToWorkspace(Rectangle rectangle)
+    {
+        Screen primary = Screen.PrimaryScreen ?? Screen.AllScreens[0];
+        return new Rectangle(
+            rectangle.X - primary.WorkingArea.Left + primary.Bounds.Left,
+            rectangle.Y - primary.WorkingArea.Top + primary.Bounds.Top,
+            rectangle.Width,
+            rectangle.Height);
+    }
+
+    private static Rectangle ToRectangle(NativeMethods.Rect rectangle) => new(
+        rectangle.Left,
+        rectangle.Top,
+        rectangle.Right - rectangle.Left,
+        rectangle.Bottom - rectangle.Top);
+
+    private static NativeMethods.Rect ToNativeRect(Rectangle rectangle) => new()
+    {
+        Left = rectangle.Left,
+        Top = rectangle.Top,
+        Right = rectangle.Right,
+        Bottom = rectangle.Bottom
+    };
 
     private static bool IsSameWindow(WindowInfo window)
     {

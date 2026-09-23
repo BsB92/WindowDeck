@@ -18,8 +18,9 @@ internal partial class Form1 : Form
     private const int WmWindowPositionChanging = 0x0046;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
-    private const int ActionColumnWidth = 32;
+    private const int ActionColumnWidth = 34;
     private const int MonitorButtonSize = 26;
+    private const int MonitorButtonGap = 3;
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
     private readonly WindowActions windowActions = new();
@@ -298,12 +299,12 @@ internal partial class Form1 : Form
             MessageBoxIcon.Information);
     }
 
-    private void RefreshWindowList()
+    private void RefreshWindowList(bool force = false)
     {
         try
         {
             IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate();
-            if (currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
+            if (!force && currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
             {
                 return;
             }
@@ -388,12 +389,13 @@ internal partial class Form1 : Form
                 }
             }
 
-            SizeWindowRows();
         }
         finally
         {
             windowListPanel.ResumeLayout();
         }
+
+        SizeWindowRows();
     }
 
     private Control CreateColumnHeader()
@@ -424,14 +426,15 @@ internal partial class Form1 : Form
     {
         TableLayoutPanel header = new()
         {
-            ColumnCount = 4,
+            ColumnCount = 5,
             Dock = DockStyle.Top,
-            Height = 25,
-            Margin = new Padding(4, 6, 4, 0),
+            Height = 31,
+            Margin = new Padding(4, 8, 4, 2),
             BackColor = palette.RaisedSurface,
         };
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
 
@@ -443,6 +446,7 @@ internal partial class Form1 : Form
             Dock = DockStyle.Fill,
             Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
             ForeColor = palette.Foreground,
+            Margin = new Padding(2, 0, 6, 0),
             Text = applicationName,
             TextAlign = ContentAlignment.MiddleLeft
         };
@@ -457,24 +461,32 @@ internal partial class Form1 : Form
         collapseButton.Click += ToggleGroup;
         nameLabel.Click += ToggleGroup;
 
+        Button restoreButton = CreateActionButton("□", LocalizationService.Get("Flyout_RestoreAllTooltip"), false);
+        StyleGroupActionButton(restoreButton, isCloseButton: false);
+        restoreButton.Click += (_, _) => RunForGroup(windows, windowActions.Restore);
         Button minimizeButton = CreateActionButton("—", LocalizationService.Get("Flyout_MinimizeAllTooltip"), false);
+        StyleGroupActionButton(minimizeButton, isCloseButton: false);
         minimizeButton.Click += (_, _) => RunForGroup(windows, windowActions.Minimize);
         Button closeButton = CreateActionButton("×", LocalizationService.Get("Flyout_CloseAllTooltip"), true);
+        StyleGroupActionButton(closeButton, isCloseButton: true);
         closeButton.Click += (_, _) => ConfirmAndCloseGroup(windows);
         toolTip.SetToolTip(collapseButton, collapseButton.AccessibleName);
+        toolTip.SetToolTip(restoreButton, restoreButton.AccessibleName);
         toolTip.SetToolTip(minimizeButton, minimizeButton.AccessibleName);
         toolTip.SetToolTip(closeButton, closeButton.AccessibleName);
         header.Controls.Add(collapseButton, 0, 0);
         header.Controls.Add(nameLabel, 1, 0);
-        header.Controls.Add(minimizeButton, 2, 0);
-        header.Controls.Add(closeButton, 3, 0);
+        header.Controls.Add(restoreButton, 2, 0);
+        header.Controls.Add(minimizeButton, 3, 0);
+        header.Controls.Add(closeButton, 4, 0);
         return header;
     }
 
     private Control CreateWindowRow(WindowInfo window)
     {
         int monitorRows = displays.Count > 1 ? (displays.Count + 3) / 4 : 1;
-        TableLayoutPanel row = CreateListGrid(Math.Max(32, monitorRows * MonitorButtonSize), new Padding(4, 0, 4, 1));
+        int monitorButtonPitch = MonitorButtonSize + MonitorButtonGap;
+        TableLayoutPanel row = CreateListGrid(Math.Max(32, monitorRows * monitorButtonPitch), new Padding(4, 1, 4, 1));
         row.BackColor = palette.Surface;
 
         Button titleButton = new()
@@ -555,18 +567,36 @@ internal partial class Form1 : Form
             Button button = new()
             {
                 AccessibleName = LocalizationService.Format("Flyout_MoveToScreen", display.Number),
-                BackColor = active ? palette.Pressed : palette.Surface,
-                Enabled = !active,
+                BackColor = active ? palette.Accent : palette.RaisedSurface,
                 FlatStyle = FlatStyle.Flat,
-                Margin = Padding.Empty,
+                Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
+                ForeColor = active ? Color.White : palette.Foreground,
+                Margin = new Padding(0, 0, MonitorButtonGap, MonitorButtonGap),
                 Size = new Size(MonitorButtonSize, MonitorButtonSize),
+                TabStop = !active,
                 Text = display.Number?.ToString(),
                 UseVisualStyleBackColor = false
             };
             button.FlatAppearance.BorderSize = active ? 2 : 1;
+            button.FlatAppearance.BorderColor = active ? palette.Accent : palette.Border;
+            button.FlatAppearance.MouseOverBackColor = palette.Accent;
+            button.FlatAppearance.MouseDownBackColor = palette.Pressed;
+            button.MouseEnter += (_, _) => button.ForeColor = Color.White;
+            button.MouseLeave += (_, _) => button.ForeColor = active ? Color.White : palette.Foreground;
             button.Click += (_, _) =>
             {
-                if (!windowActions.MoveToMonitor(window, display)) ShowWindowActionFailure();
+                if (active)
+                {
+                    return;
+                }
+
+                if (!windowActions.MoveToMonitor(window, display))
+                {
+                    ShowWindowActionFailure();
+                    return;
+                }
+
+                RefreshWindowList(force: true);
             };
             toolTip.SetToolTip(button, button.AccessibleName);
             panel.Controls.Add(button);
@@ -579,16 +609,20 @@ internal partial class Form1 : Form
         TableLayoutPanel grid = new()
         {
             ColumnCount = 5,
+            GrowStyle = TableLayoutPanelGrowStyle.FixedSize,
             Height = height,
             Margin = margin,
-            RowCount = 1
+            RowCount = 1,
+            Width = Math.Max(120, windowListPanel.ClientSize.Width
+                - SystemInformation.VerticalScrollBarWidth - 10)
         };
+        grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowApplicationIcons ? 24 : 0));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         int monitorWidth = settings.ShowScreenNumber && displays.Count > 1
-            ? MonitorButtonSize * Math.Min(4, displays.Count)
+            ? (MonitorButtonSize + MonitorButtonGap) * Math.Min(4, displays.Count)
             : 0;
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, monitorWidth));
         return grid;
@@ -632,12 +666,21 @@ internal partial class Form1 : Form
         windowListPanel.BackColor = palette.Background;
         windowListPanel.ForeColor = palette.Foreground;
         bottomBar.BackColor = palette.RaisedSurface;
+        topBar.BackColor = palette.Background;
         presentationModeButton.BackColor = palette.RaisedSurface;
         helpButton.BackColor = palette.RaisedSurface;
         settingsButton.BackColor = palette.RaisedSurface;
         presentationModeButton.ForeColor = palette.SecondaryForeground;
         helpButton.ForeColor = palette.Foreground;
         settingsButton.ForeColor = palette.Foreground;
+        presentationModeButton.FlatAppearance.BorderColor = palette.Border;
+        presentationModeButton.FlatAppearance.BorderSize = 1;
+        helpButton.FlatAppearance.BorderColor = palette.Border;
+        settingsButton.FlatAppearance.BorderColor = palette.Border;
+        helpButton.FlatAppearance.MouseOverBackColor = palette.Hover;
+        settingsButton.FlatAppearance.MouseOverBackColor = palette.Hover;
+        helpButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
+        settingsButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
     }
 
@@ -646,8 +689,12 @@ internal partial class Form1 : Form
         Text = LocalizationService.Get("App_Title");
         searchTextBox.PlaceholderText = LocalizationService.Get("Flyout_Search");
         presentationModeButton.Text = LocalizationService.Get("Flyout_PresentationMode");
-        helpButton.Text = LocalizationService.Get("Tray_Help");
-        settingsButton.Text = LocalizationService.Get("Tray_Settings");
+        helpButton.Text = "?";
+        settingsButton.Text = "⚙";
+        helpButton.AccessibleName = LocalizationService.Get("Tray_Help");
+        settingsButton.AccessibleName = LocalizationService.Get("Tray_Settings");
+        toolTip.SetToolTip(helpButton, helpButton.AccessibleName);
+        toolTip.SetToolTip(settingsButton, settingsButton.AccessibleName);
         toolTip.SetToolTip(presentationModeButton, LocalizationService.Get("Flyout_ComingSoon"));
     }
 
@@ -664,7 +711,7 @@ internal partial class Form1 : Form
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Segoe UI Symbol", 10F, FontStyle.Regular),
             ForeColor = palette.Foreground,
-            Margin = Padding.Empty,
+            Margin = new Padding(2, 2, 2, 2),
             Padding = Padding.Empty,
             Text = text,
             UseVisualStyleBackColor = false
@@ -684,6 +731,14 @@ internal partial class Form1 : Form
         }
 
         return button;
+    }
+
+    private void StyleGroupActionButton(Button button, bool isCloseButton)
+    {
+        button.BackColor = palette.Surface;
+        button.ForeColor = isCloseButton ? palette.CloseHover : palette.Accent;
+        button.FlatAppearance.BorderColor = isCloseButton ? palette.CloseHover : palette.Accent;
+        button.FlatAppearance.BorderSize = 1;
     }
 
     private void ShowWindowActionFailure()

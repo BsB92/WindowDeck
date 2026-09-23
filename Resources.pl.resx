@@ -72,6 +72,8 @@
   <data name="Application_FileExplorer" xml:space="preserve"><value>Eksplorator plików</value></data>
   <data name="Application_Unknown" xml:space="preserve"><value>Nieznana aplikacja</value></data>
   <data name="Flyout_MinimizeAll" xml:space="preserve"><value>Minimalizuj wszystkie</value></data>
+  <data name="Flyout_RestoreAll" xml:space="preserve"><value>Przywróć wszystkie</value></data>
+  <data name="Flyout_RestoreAllTooltip" xml:space="preserve"><value>Przywróć wszystkie okna</value></data>
   <data name="Flyout_CloseAll" xml:space="preserve"><value>Zamknij wszystkie</value></data>
   <data name="Flyout_CloseAllConfirmation" xml:space="preserve"><value>Zamknąć wszystkie okna w tej grupie?</value></data>
   <data name="Flyout_CloseAllCount" xml:space="preserve"><value>Zostanie zamkniętych {0} okien.</value></data>

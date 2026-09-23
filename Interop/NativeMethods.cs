@@ -33,6 +33,9 @@ internal static class NativeMethods
     internal const uint QdcOnlyActivePaths = 2;
     internal const int SwRestore = 9;
     internal const int SwMinimize = 6;
+    internal const int SwMaximize = 3;
+    internal const uint SwpNoActivate = 0x0010;
+    internal const uint SwpNoZOrder = 0x0004;
     internal const uint WmSysCommand = 0x0112;
     internal static readonly nint ScClose = 0xF060;
     internal const uint WmGetIcon = 0x007F;
@@ -254,6 +257,10 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ShowWindowAsync(nint windowHandle, int command);
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool ShowWindow(nint windowHandle, int command);
+
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool GetWindowPlacement(
@@ -265,6 +272,21 @@ internal static class NativeMethods
     internal static extern bool SetWindowPlacement(
         nint windowHandle,
         ref WindowPlacement placement);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetWindowRect(nint windowHandle, out Rect rectangle);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetWindowPos(
+        nint windowHandle,
+        nint insertAfter,
+        int x,
+        int y,
+        int width,
+        int height,
+        uint flags);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
