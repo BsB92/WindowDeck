@@ -18,11 +18,13 @@ internal partial class Form1 : Form
     private const int WmWindowPositionChanging = 0x0046;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
-    private const int ActionColumnWidth = 32;
-    private const int ScreenColumnWidth = 56;
+    private const int ActionColumnWidth = 34;
+    private const int MonitorButtonSize = 26;
+    private const int MonitorButtonGap = 3;
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
     private readonly WindowActions windowActions = new();
+    private readonly MonitorDetector monitorDetector = new();
     private readonly ApplicationIconProvider applicationIconProvider = new();
     private readonly HashSet<string> collapsedApplicationIds = new(StringComparer.OrdinalIgnoreCase);
     private AppSettings settings;
@@ -37,6 +39,10 @@ internal partial class Form1 : Form
     private int anchoredOuterHeight;
     private int maximumPanelWidth;
     private ThemePalette palette;
+    private IReadOnlyList<MonitorDisplay> displays = [];
+
+    public event EventHandler? SettingsRequested;
+    public event EventHandler? HelpRequested;
 
     public Form1(AppSettings settings)
     {
@@ -45,6 +51,8 @@ internal partial class Form1 : Form
         Icon = WindowDeckIcon.Load();
         searchTextBox.Enter += (_, _) => searchTextBox.BackColor = palette.RaisedSurface;
         searchTextBox.Leave += (_, _) => searchTextBox.BackColor = palette.Surface;
+        settingsButton.Click += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
+        helpButton.Click += (_, _) => HelpRequested?.Invoke(this, EventArgs.Empty);
         ApplyLocalization();
         ApplyTheme();
         PositionOnRelevantMonitor(DefaultPanelWidth);
@@ -291,12 +299,12 @@ internal partial class Form1 : Form
             MessageBoxIcon.Information);
     }
 
-    private void RefreshWindowList()
+    private void RefreshWindowList(bool force = false)
     {
         try
         {
             IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate();
-            if (currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
+            if (!force && currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
             {
                 return;
             }
@@ -320,6 +328,7 @@ internal partial class Form1 : Form
 
     private void RenderWindowList()
     {
+        displays = monitorDetector.GetDisplays();
         IReadOnlyList<IGrouping<string, WindowInfo>> groups =
             WindowListPresentation.Create(
                 currentSnapshot,
@@ -366,7 +375,8 @@ internal partial class Form1 : Form
                         windowListPanel.Controls.Add(CreateGroupHeader(
                             group.Key,
                             group.First().ApplicationName,
-                            collapsed && !searchActive));
+                            collapsed && !searchActive,
+                            group.ToArray()));
                         if (collapsed && !searchActive)
                         {
                             continue;
@@ -379,12 +389,13 @@ internal partial class Form1 : Form
                 }
             }
 
-            SizeWindowRows();
         }
         finally
         {
             windowListPanel.ResumeLayout();
         }
+
+        SizeWindowRows();
     }
 
     private Control CreateColumnHeader()
@@ -407,45 +418,75 @@ internal partial class Form1 : Form
         return header;
     }
 
-    private Button CreateGroupHeader(
+    private Control CreateGroupHeader(
         string applicationId,
         string applicationName,
-        bool visuallyCollapsed)
+        bool visuallyCollapsed,
+        IReadOnlyList<WindowInfo> windows)
     {
-        Button header = new()
+        TableLayoutPanel header = new()
         {
-            AccessibleName = applicationName,
-            AutoEllipsis = true,
+            ColumnCount = 5,
             Dock = DockStyle.Top,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
-            Height = 25,
-            Margin = new Padding(4, 6, 4, 0),
-            Padding = new Padding(5, 0, 0, 0),
+            Height = 31,
+            Margin = new Padding(4, 8, 4, 2),
             BackColor = palette.RaisedSurface,
-            ForeColor = palette.Foreground,
-            Text = $"{(visuallyCollapsed ? '▶' : '▼')} {applicationName}",
-            TextAlign = ContentAlignment.MiddleLeft,
-            UseVisualStyleBackColor = false
         };
-        header.FlatAppearance.BorderSize = 0;
-        header.FlatAppearance.MouseOverBackColor = palette.Hover;
-        header.FlatAppearance.MouseDownBackColor = palette.Pressed;
-        header.Click += (_, _) =>
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+
+        Button collapseButton = CreateActionButton(visuallyCollapsed ? "▶" : "▼",
+            LocalizationService.Get(visuallyCollapsed ? "Flyout_ExpandGroup" : "Flyout_CollapseGroup"), false);
+        Label nameLabel = new()
+        {
+            AutoEllipsis = true,
+            Dock = DockStyle.Fill,
+            Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
+            ForeColor = palette.Foreground,
+            Margin = new Padding(2, 0, 6, 0),
+            Text = applicationName,
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+        void ToggleGroup(object? sender, EventArgs e)
         {
             if (!collapsedApplicationIds.Remove(applicationId))
             {
                 collapsedApplicationIds.Add(applicationId);
             }
-
             RenderWindowList();
-        };
+        }
+        collapseButton.Click += ToggleGroup;
+        nameLabel.Click += ToggleGroup;
+
+        Button restoreButton = CreateActionButton("□", LocalizationService.Get("Flyout_RestoreAllTooltip"), false);
+        StyleGroupActionButton(restoreButton, isCloseButton: false);
+        restoreButton.Click += (_, _) => RunForGroup(windows, windowActions.Restore);
+        Button minimizeButton = CreateActionButton("—", LocalizationService.Get("Flyout_MinimizeAllTooltip"), false);
+        StyleGroupActionButton(minimizeButton, isCloseButton: false);
+        minimizeButton.Click += (_, _) => RunForGroup(windows, windowActions.Minimize);
+        Button closeButton = CreateActionButton("×", LocalizationService.Get("Flyout_CloseAllTooltip"), true);
+        StyleGroupActionButton(closeButton, isCloseButton: true);
+        closeButton.Click += (_, _) => ConfirmAndCloseGroup(windows);
+        toolTip.SetToolTip(collapseButton, collapseButton.AccessibleName);
+        toolTip.SetToolTip(restoreButton, restoreButton.AccessibleName);
+        toolTip.SetToolTip(minimizeButton, minimizeButton.AccessibleName);
+        toolTip.SetToolTip(closeButton, closeButton.AccessibleName);
+        header.Controls.Add(collapseButton, 0, 0);
+        header.Controls.Add(nameLabel, 1, 0);
+        header.Controls.Add(restoreButton, 2, 0);
+        header.Controls.Add(minimizeButton, 3, 0);
+        header.Controls.Add(closeButton, 4, 0);
         return header;
     }
 
     private Control CreateWindowRow(WindowInfo window)
     {
-        TableLayoutPanel row = CreateListGrid(32, new Padding(4, 0, 4, 1));
+        int monitorRows = displays.Count > 1 ? (displays.Count + 3) / 4 : 1;
+        int monitorButtonPitch = MonitorButtonSize + MonitorButtonGap;
+        TableLayoutPanel row = CreateListGrid(Math.Max(32, monitorRows * monitorButtonPitch), new Padding(4, 1, 4, 1));
         row.BackColor = palette.Surface;
 
         Button titleButton = new()
@@ -490,16 +531,6 @@ internal partial class Form1 : Form
             }
         };
 
-        Label monitorLabel = new()
-        {
-            Dock = DockStyle.Fill,
-            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 10F, FontStyle.Regular),
-            ForeColor = palette.SecondaryForeground,
-            Margin = Padding.Empty,
-            Text = window.MonitorNumber is int monitorNumber ? $"[ {monitorNumber} ]" : "[ ? ]",
-            TextAlign = ContentAlignment.MiddleCenter
-        };
-
         if (settings.ShowApplicationIcons)
         {
             PictureBox applicationIcon = new()
@@ -515,15 +546,62 @@ internal partial class Form1 : Form
         row.Controls.Add(titleButton, 1, 0);
         row.Controls.Add(minimizeButton, 2, 0);
         row.Controls.Add(closeButton, 3, 0);
-        if (settings.ShowScreenNumber)
+        if (settings.ShowScreenNumber && displays.Count > 1)
         {
-            row.Controls.Add(monitorLabel, 4, 0);
-        }
-        else
-        {
-            monitorLabel.Dispose();
+            row.Controls.Add(CreateMonitorButtons(window), 4, 0);
         }
         return row;
+    }
+
+    private Control CreateMonitorButtons(WindowInfo window)
+    {
+        FlowLayoutPanel panel = new()
+        {
+            Dock = DockStyle.Fill,
+            Margin = Padding.Empty,
+            WrapContents = true
+        };
+        foreach (MonitorDisplay display in displays)
+        {
+            bool active = display.Number == window.MonitorNumber;
+            Button button = new()
+            {
+                AccessibleName = LocalizationService.Format("Flyout_MoveToScreen", display.Number),
+                BackColor = active ? palette.Accent : palette.RaisedSurface,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
+                ForeColor = active ? Color.White : palette.Foreground,
+                Margin = new Padding(0, 0, MonitorButtonGap, MonitorButtonGap),
+                Size = new Size(MonitorButtonSize, MonitorButtonSize),
+                TabStop = !active,
+                Text = display.Number?.ToString(),
+                UseVisualStyleBackColor = false
+            };
+            button.FlatAppearance.BorderSize = active ? 2 : 1;
+            button.FlatAppearance.BorderColor = active ? palette.Accent : palette.Border;
+            button.FlatAppearance.MouseOverBackColor = palette.Accent;
+            button.FlatAppearance.MouseDownBackColor = palette.Pressed;
+            button.MouseEnter += (_, _) => button.ForeColor = Color.White;
+            button.MouseLeave += (_, _) => button.ForeColor = active ? Color.White : palette.Foreground;
+            button.Click += (_, _) =>
+            {
+                if (active)
+                {
+                    return;
+                }
+
+                if (!windowActions.MoveToMonitor(window, display))
+                {
+                    ShowWindowActionFailure();
+                    return;
+                }
+
+                RefreshWindowList(force: true);
+            };
+            toolTip.SetToolTip(button, button.AccessibleName);
+            panel.Controls.Add(button);
+        }
+        return panel;
     }
 
     private TableLayoutPanel CreateListGrid(int height, Padding margin)
@@ -531,16 +609,51 @@ internal partial class Form1 : Form
         TableLayoutPanel grid = new()
         {
             ColumnCount = 5,
+            GrowStyle = TableLayoutPanelGrowStyle.FixedSize,
             Height = height,
             Margin = margin,
-            RowCount = 1
+            RowCount = 1,
+            Width = Math.Max(120, windowListPanel.ClientSize.Width
+                - SystemInformation.VerticalScrollBarWidth - 10)
         };
+        grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowApplicationIcons ? 24 : 0));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowScreenNumber ? ScreenColumnWidth : 0));
+        int monitorWidth = settings.ShowScreenNumber && displays.Count > 1
+            ? (MonitorButtonSize + MonitorButtonGap) * Math.Min(4, displays.Count)
+            : 0;
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, monitorWidth));
         return grid;
+    }
+
+    private void RunForGroup(IEnumerable<WindowInfo> windows, Func<WindowInfo, bool> action)
+    {
+        bool success = true;
+        foreach (WindowInfo window in windows) success &= action(window);
+        if (!success) ShowWindowActionFailure();
+    }
+
+    private void ConfirmAndCloseGroup(IReadOnlyList<WindowInfo> windows)
+    {
+        TaskDialogButton closeAll = new(LocalizationService.Get("Flyout_CloseAll"));
+        TaskDialogButton cancel = new(LocalizationService.Get("Common_Cancel"));
+        TaskDialogPage page = new()
+        {
+            Caption = LocalizationService.Get("App_Title"),
+            Heading = LocalizationService.Get("Flyout_CloseAllConfirmation"),
+            Text = LocalizationService.Format("Flyout_CloseAllCount", windows.Count),
+            Icon = TaskDialogIcon.Warning,
+            AllowCancel = true,
+            DefaultButton = cancel
+        };
+        page.Buttons.Add(closeAll);
+        page.Buttons.Add(cancel);
+        if (TaskDialog.ShowDialog(this, page) == closeAll)
+        {
+            RunForGroup(windows, windowActions.RequestClose);
+        }
     }
 
     private void ApplyTheme()
@@ -552,6 +665,22 @@ internal partial class Form1 : Form
         searchTextBox.ForeColor = palette.Foreground;
         windowListPanel.BackColor = palette.Background;
         windowListPanel.ForeColor = palette.Foreground;
+        bottomBar.BackColor = palette.RaisedSurface;
+        topBar.BackColor = palette.Background;
+        presentationModeButton.BackColor = palette.RaisedSurface;
+        helpButton.BackColor = palette.RaisedSurface;
+        settingsButton.BackColor = palette.RaisedSurface;
+        presentationModeButton.ForeColor = palette.SecondaryForeground;
+        helpButton.ForeColor = palette.Foreground;
+        settingsButton.ForeColor = palette.Foreground;
+        presentationModeButton.FlatAppearance.BorderColor = palette.Border;
+        presentationModeButton.FlatAppearance.BorderSize = 1;
+        helpButton.FlatAppearance.BorderColor = palette.Border;
+        settingsButton.FlatAppearance.BorderColor = palette.Border;
+        helpButton.FlatAppearance.MouseOverBackColor = palette.Hover;
+        settingsButton.FlatAppearance.MouseOverBackColor = palette.Hover;
+        helpButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
+        settingsButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
     }
 
@@ -559,6 +688,14 @@ internal partial class Form1 : Form
     {
         Text = LocalizationService.Get("App_Title");
         searchTextBox.PlaceholderText = LocalizationService.Get("Flyout_Search");
+        presentationModeButton.Text = LocalizationService.Get("Flyout_PresentationMode");
+        helpButton.Text = "?";
+        settingsButton.Text = "⚙";
+        helpButton.AccessibleName = LocalizationService.Get("Tray_Help");
+        settingsButton.AccessibleName = LocalizationService.Get("Tray_Settings");
+        toolTip.SetToolTip(helpButton, helpButton.AccessibleName);
+        toolTip.SetToolTip(settingsButton, settingsButton.AccessibleName);
+        toolTip.SetToolTip(presentationModeButton, LocalizationService.Get("Flyout_ComingSoon"));
     }
 
     private Button CreateActionButton(
@@ -574,7 +711,7 @@ internal partial class Form1 : Form
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Segoe UI Symbol", 10F, FontStyle.Regular),
             ForeColor = palette.Foreground,
-            Margin = Padding.Empty,
+            Margin = new Padding(2, 2, 2, 2),
             Padding = Padding.Empty,
             Text = text,
             UseVisualStyleBackColor = false
@@ -594,6 +731,14 @@ internal partial class Form1 : Form
         }
 
         return button;
+    }
+
+    private void StyleGroupActionButton(Button button, bool isCloseButton)
+    {
+        button.BackColor = palette.Surface;
+        button.ForeColor = isCloseButton ? palette.CloseHover : palette.Accent;
+        button.FlatAppearance.BorderColor = isCloseButton ? palette.CloseHover : palette.Accent;
+        button.FlatAppearance.BorderSize = 1;
     }
 
     private void ShowWindowActionFailure()

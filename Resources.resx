@@ -47,9 +47,9 @@
   <data name="Help_OpeningHeading" xml:space="preserve"><value>Opening WindowDeck</value></data>
   <data name="Help_OpeningText" xml:space="preserve"><value>Use the global hotkey to show or hide WindowDeck. The default shortcut is Win + `. You can change it in Settings. You can also left-click the tray icon to show or hide WindowDeck.</value></data>
   <data name="Help_FindingHeading" xml:space="preserve"><value>Finding windows</value></data>
-  <data name="Help_FindingText" xml:space="preserve"><value>Type in Search windows to filter by application or visible window/document title. Windows can be grouped by application. The Screen column shows which screen contains each window, for example [ 1 ], [ 2 ], [ 3 ], and so on.</value></data>
+  <data name="Help_FindingText" xml:space="preserve"><value>Type in Search windows to filter by application or visible window/document title. Windows can be grouped by application. When multiple screens are connected, numbered buttons show the current screen and move that exact window to another screen with one click.</value></data>
   <data name="Help_ActionsHeading" xml:space="preserve"><value>Window actions</value></data>
-  <data name="Help_ActionsText" xml:space="preserve"><value>Click a title or row to activate that exact window. The — button minimizes that window. The × button sends one normal close request to that exact window; the application may still show its usual Save, Don't Save, or Cancel dialog.</value></data>
+  <data name="Help_ActionsText" xml:space="preserve"><value>Click a title or row to activate that exact window. The — button minimizes that window. The × button sends one normal close request to that exact window; the application may still show its usual Save, Don't Save, or Cancel dialog. Group headers provide separate collapse, minimize-all, and confirmed close-all actions.</value></data>
   <data name="Help_TrayHeading" xml:space="preserve"><value>Tray behavior</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>WindowDeck's X button and Esc hide the flyout. WindowDeck keeps running in the tray. To shut down the application, use Tray &gt; Exit.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Settings</value></data>
@@ -71,4 +71,17 @@
   <data name="Message_EnumerationFailed" xml:space="preserve"><value>Top-level window enumeration failed.</value></data>
   <data name="Application_FileExplorer" xml:space="preserve"><value>File Explorer</value></data>
   <data name="Application_Unknown" xml:space="preserve"><value>Unknown application</value></data>
+  <data name="Flyout_MinimizeAll" xml:space="preserve"><value>Minimize all</value></data>
+  <data name="Flyout_RestoreAll" xml:space="preserve"><value>Restore all</value></data>
+  <data name="Flyout_RestoreAllTooltip" xml:space="preserve"><value>Restore all windows</value></data>
+  <data name="Flyout_CloseAll" xml:space="preserve"><value>Close all</value></data>
+  <data name="Flyout_CloseAllConfirmation" xml:space="preserve"><value>Close all windows in this group?</value></data>
+  <data name="Flyout_CloseAllCount" xml:space="preserve"><value>This will close {0} windows.</value></data>
+  <data name="Flyout_PresentationMode" xml:space="preserve"><value>Presentation Mode</value></data>
+  <data name="Flyout_ComingSoon" xml:space="preserve"><value>Coming soon</value></data>
+  <data name="Flyout_MoveToScreen" xml:space="preserve"><value>Move to screen {0}</value></data>
+  <data name="Flyout_MinimizeAllTooltip" xml:space="preserve"><value>Minimize all windows</value></data>
+  <data name="Flyout_CloseAllTooltip" xml:space="preserve"><value>Close all windows</value></data>
+  <data name="Flyout_CollapseGroup" xml:space="preserve"><value>Collapse group</value></data>
+  <data name="Flyout_ExpandGroup" xml:space="preserve"><value>Expand group</value></data>
 </root>
