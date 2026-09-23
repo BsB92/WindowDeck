@@ -12,7 +12,7 @@
 
 WindowDeck is a lightweight, event-driven **Windows 11 window switcher and open-window search utility** for people who work with many applications, documents, and monitors.
 
-It gives you a searchable list of open windows, optional grouping by application, monitor indicators, and direct actions for the exact selected window — activate, minimize, or close.
+It gives you a searchable list of open windows, optional grouping by application, numbered monitor controls for moving windows between screens, and direct actions for the exact selected window — activate, minimize, or close.
 
 WindowDeck is especially useful when many open windows have similar names or are spread across multiple screens.
 
@@ -44,10 +44,10 @@ If you downloaded WindowDeck from the official GitHub Releases page, you can ver
 
 #### Verify the download
 
-SHA-256 for `WindowDeck.exe` version 1.0.0:
+SHA-256 for `WindowDeck.exe` version 1.1.0:
 
 ```text
-967af1660e0a1207586745472b93ce13f4dbb5a980059f1ed8741a76b0adeff4
+2089F68B5D9C6B42A643E02A578445C9EA53A32C487DE0EE32806FFF3BE60413
 ```
 
 You can verify the downloaded file in PowerShell:
@@ -63,10 +63,15 @@ The resulting hash should match the value above.
 - Quickly find and switch between open windows
 - Search open windows by title
 - Optional grouping by application
-- Screen indicators such as `[ 1 ]`, `[ 2 ]`, `[ 3 ]`, etc.
+- Collapsible application groups
+- Cleaner window titles and friendlier application names
+- Numbered monitor buttons for moving individual windows between screens
+- Clear indication of the monitor currently containing each window
 - Exact-window activation
 - Minimize a specific window
 - Send a normal close request to a specific window
+- Restore all, Minimize all, and Close all actions for application groups
+- Confirmation before closing all windows in a group
 - Configurable global hotkey
 - Opens on the screen containing the mouse cursor
 - System tray integration
@@ -113,14 +118,13 @@ WindowDeck does not force-kill applications.
 
 If an application needs confirmation before closing, its normal **Save / Don't Save / Cancel** dialog remains in control.
 
+Application groups can also be collapsed and expanded. Group headers provide **Restore all**, **Minimize all**, and **Close all** actions. Closing an entire group always requires confirmation.
+
 ### Multiple screens
 
-WindowDeck shows the screen containing each window using indicators such as:
+With multiple monitors, WindowDeck shows numbered monitor buttons for each window. The current monitor is highlighted, and clicking another monitor number moves that exact window to the selected screen.
 
-- `[ 1 ]`
-- `[ 2 ]`
-- `[ 3 ]`
-- and so on.
+Normal, maximized, and minimized windows can be moved between monitors while preserving their appropriate window state.
 
 When WindowDeck is opened using the global hotkey, it appears on the screen containing the mouse cursor.
 
@@ -203,7 +207,7 @@ dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64
 The output is created in:
 
 ```text
-artifacts\WindowDeck-1.0.0-win-x64
+artifacts\WindowDeck-1.1.0-win-x64
 ```
 
 The release configuration uses:
@@ -237,7 +241,7 @@ Copyright (c) 2026 **::BsB!::**
 
 WindowDeck to lekki, działający zdarzeniowo **przełącznik okien i narzędzie do wyszukiwania otwartych okien w Windows 11**, stworzone z myślą o osobach pracujących z wieloma aplikacjami, dokumentami i monitorami.
 
-Program wyświetla przeszukiwalną listę otwartych okien, umożliwia opcjonalne grupowanie według aplikacji, pokazuje oznaczenia monitorów i pozwala wykonywać operacje bezpośrednio na wybranym oknie — aktywować je, zminimalizować lub zamknąć.
+Program wyświetla przeszukiwalną listę otwartych okien, umożliwia opcjonalne grupowanie według aplikacji, pozwala przenosić okna między ekranami za pomocą numerowanych przycisków monitorów i wykonywać operacje bezpośrednio na wybranym oknie — aktywować je, zminimalizować lub zamknąć.
 
 WindowDeck jest szczególnie przydatny, gdy wiele otwartych okien ma podobne nazwy albo jest rozmieszczonych na kilku ekranach.
 
@@ -269,10 +273,10 @@ Jeżeli pobrałeś WindowDeck z oficjalnej strony GitHub Releases, przed uruchom
 
 #### Weryfikacja pobranego pliku
 
-SHA-256 dla `WindowDeck.exe` w wersji 1.0.0:
+SHA-256 dla `WindowDeck.exe` w wersji 1.1.0:
 
 ```text
-967af1660e0a1207586745472b93ce13f4dbb5a980059f1ed8741a76b0adeff4
+2089F68B5D9C6B42A643E02A578445C9EA53A32C487DE0EE32806FFF3BE60413
 ```
 
 Pobrany plik możesz sprawdzić w PowerShell:
@@ -288,10 +292,15 @@ Otrzymany skrót powinien być identyczny z wartością podaną powyżej.
 - Szybkie wyszukiwanie i przełączanie między otwartymi oknami
 - Wyszukiwanie otwartych okien po tytule
 - Opcjonalne grupowanie według aplikacji
-- Oznaczenia ekranów, np. `[ 1 ]`, `[ 2 ]`, `[ 3 ]` itd.
+- Zwijanie i rozwijanie grup aplikacji
+- Czytelniejsze tytuły okien i przyjaźniejsze nazwy aplikacji
+- Numerowane przyciski monitorów do przenoszenia pojedynczych okien między ekranami
+- Wyraźne oznaczenie monitora, na którym aktualnie znajduje się okno
 - Aktywacja dokładnie wybranego okna
 - Minimalizowanie konkretnego okna
 - Wysyłanie standardowego żądania zamknięcia do konkretnego okna
+- Akcje Przywróć wszystkie, Minimalizuj wszystkie i Zamknij wszystkie dla grup aplikacji
+- Potwierdzenie przed zamknięciem wszystkich okien w grupie
 - Konfigurowalny globalny skrót klawiaturowy
 - Otwieranie na ekranie, na którym znajduje się kursor myszy
 - Integracja z zasobnikiem systemowym
@@ -338,14 +347,13 @@ WindowDeck nie wymusza zakończenia procesu aplikacji.
 
 Jeżeli aplikacja wymaga potwierdzenia przed zamknięciem, jej standardowe okno **Zapisz / Nie zapisuj / Anuluj** nadal działa normalnie.
 
+Grupy aplikacji można również zwijać i rozwijać. Nagłówek grupy udostępnia akcje **Przywróć wszystkie**, **Minimalizuj wszystkie** i **Zamknij wszystkie**. Zamknięcie całej grupy zawsze wymaga potwierdzenia.
+
 ### Wiele ekranów
 
-WindowDeck pokazuje ekran, na którym znajduje się dane okno, za pomocą oznaczeń takich jak:
+Przy wielu monitorach WindowDeck pokazuje przy każdym oknie numerowane przyciski monitorów. Aktualny monitor jest wyróżniony, a kliknięcie innego numeru przenosi dokładnie to okno na wybrany ekran.
 
-- `[ 1 ]`
-- `[ 2 ]`
-- `[ 3 ]`
-- itd.
+Między monitorami można przenosić okna zwykłe, zmaksymalizowane i zminimalizowane z zachowaniem odpowiedniego stanu okna.
 
 Po otwarciu WindowDeck globalnym skrótem program pojawia się na ekranie, na którym znajduje się kursor myszy.
 
