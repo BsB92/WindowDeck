@@ -178,6 +178,31 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool EnumChildWindows(
+        nint parentWindowHandle,
+        EnumWindowsProc callback,
+        nint parameter);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int GetPackageFamilyName(
+        nint processHandle,
+        ref uint packageFamilyNameLength,
+        [Out] char[]? packageFamilyName);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int GetPackageFullName(
+        nint processHandle,
+        ref uint packageFullNameLength,
+        [Out] char[]? packageFullName);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int GetPackagePathByFullName(
+        string packageFullName,
+        ref uint pathLength,
+        [Out] char[]? path);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool RegisterHotKey(
         nint windowHandle,
         int identifier,

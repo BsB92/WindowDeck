@@ -24,6 +24,7 @@ internal partial class Form1 : Form
     private readonly WindowActivator windowActivator = new();
     private readonly WindowActions windowActions = new();
     private readonly ApplicationIconProvider applicationIconProvider = new();
+    private readonly HashSet<string> collapsedApplicationIds = new(StringComparer.OrdinalIgnoreCase);
     private AppSettings settings;
     private IReadOnlyList<WindowInfo> currentSnapshot = [];
     private bool currentSnapshotInitialized;
@@ -326,6 +327,7 @@ internal partial class Form1 : Form
                 settings.GroupByApplication,
                 settings.ShowMinimizedWindows);
         int visibleCount = groups.Sum(group => group.Count());
+        bool searchActive = searchTextBox.Text.Trim().Length > 0;
 
         windowListPanel.SuspendLayout();
         try
@@ -360,7 +362,15 @@ internal partial class Form1 : Form
                 {
                     if (settings.GroupByApplication)
                     {
-                        windowListPanel.Controls.Add(CreateGroupHeader(group.Key));
+                        bool collapsed = collapsedApplicationIds.Contains(group.Key);
+                        windowListPanel.Controls.Add(CreateGroupHeader(
+                            group.Key,
+                            group.First().ApplicationName,
+                            collapsed && !searchActive));
+                        if (collapsed && !searchActive)
+                        {
+                            continue;
+                        }
                     }
                     foreach (WindowInfo window in group)
                     {
@@ -397,20 +407,40 @@ internal partial class Form1 : Form
         return header;
     }
 
-    private Label CreateGroupHeader(string applicationName)
+    private Button CreateGroupHeader(
+        string applicationId,
+        string applicationName,
+        bool visuallyCollapsed)
     {
-        return new Label
+        Button header = new()
         {
+            AccessibleName = applicationName,
             AutoEllipsis = true,
+            Dock = DockStyle.Top,
+            FlatStyle = FlatStyle.Flat,
             Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
             Height = 25,
             Margin = new Padding(4, 6, 4, 0),
             Padding = new Padding(5, 0, 0, 0),
             BackColor = palette.RaisedSurface,
             ForeColor = palette.Foreground,
-            Text = applicationName,
-            TextAlign = ContentAlignment.MiddleLeft
+            Text = $"{(visuallyCollapsed ? '▶' : '▼')} {applicationName}",
+            TextAlign = ContentAlignment.MiddleLeft,
+            UseVisualStyleBackColor = false
         };
+        header.FlatAppearance.BorderSize = 0;
+        header.FlatAppearance.MouseOverBackColor = palette.Hover;
+        header.FlatAppearance.MouseDownBackColor = palette.Pressed;
+        header.Click += (_, _) =>
+        {
+            if (!collapsedApplicationIds.Remove(applicationId))
+            {
+                collapsedApplicationIds.Add(applicationId);
+            }
+
+            RenderWindowList();
+        };
+        return header;
     }
 
     private Control CreateWindowRow(WindowInfo window)

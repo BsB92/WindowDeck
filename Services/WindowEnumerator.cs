@@ -1,10 +1,9 @@
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using WindowDeck.Interop;
-using WindowDeck.Models;
 using WindowDeck.Localization;
+using WindowDeck.Models;
 
 namespace WindowDeck.Services;
 
@@ -16,11 +15,12 @@ internal sealed class WindowEnumerator
     public IReadOnlyList<WindowInfo> Enumerate()
     {
         List<WindowInfo> windows = [];
+        ApplicationNameResolver applicationNameResolver = new();
         monitorDetector.RefreshDisplayMapping();
 
         bool succeeded = NativeMethods.EnumWindows((windowHandle, _) =>
             {
-                if (TryCreateWindowInfo(windowHandle, out WindowInfo? window))
+                if (TryCreateWindowInfo(windowHandle, applicationNameResolver, out WindowInfo? window))
                 {
                     windows.Add(window);
                 }
@@ -38,7 +38,10 @@ internal sealed class WindowEnumerator
         return windows;
     }
 
-    private bool TryCreateWindowInfo(nint windowHandle, out WindowInfo? window)
+    private bool TryCreateWindowInfo(
+        nint windowHandle,
+        ApplicationNameResolver applicationNameResolver,
+        out WindowInfo? window)
     {
         window = null;
 
@@ -77,50 +80,19 @@ internal sealed class WindowEnumerator
             return false;
         }
 
+        ResolvedApplication application = applicationNameResolver.Resolve(windowHandle, processId);
         monitorDetector.Detect(windowHandle, out string? monitorDeviceName, out int? monitorNumber);
         window = new WindowInfo(
             windowHandle,
             processId,
-            GetApplicationName(processId),
+            application.Id,
+            application.Name,
             title,
-            title,
+            WindowTitleFormatter.CreateDisplayTitle(title, application.TitleSuffixes),
             monitorDeviceName,
             monitorNumber,
             NativeMethods.IsIconic(windowHandle));
         return true;
-    }
-
-    private static string GetApplicationName(uint processId)
-    {
-        try
-        {
-            using Process process = Process.GetProcessById(checked((int)processId));
-            string processName = process.ProcessName;
-            if (processName.Equals("explorer", StringComparison.OrdinalIgnoreCase))
-            {
-                return LocalizationService.Get("Application_FileExplorer");
-            }
-
-            return string.IsNullOrEmpty(processName)
-                ? LocalizationService.Get("Application_Unknown")
-                : char.ToUpperInvariant(processName[0]) + processName[1..].ToLowerInvariant();
-        }
-        catch (ArgumentException)
-        {
-            return LocalizationService.Get("Application_Unknown");
-        }
-        catch (OverflowException)
-        {
-            return LocalizationService.Get("Application_Unknown");
-        }
-        catch (InvalidOperationException)
-        {
-            return LocalizationService.Get("Application_Unknown");
-        }
-        catch (Win32Exception)
-        {
-            return LocalizationService.Get("Application_Unknown");
-        }
     }
 
     private static string? GetWindowTitle(nint windowHandle)

@@ -152,6 +152,8 @@ Before editing, read `AGENTS.md`, read the relevant parts of this specification,
 
 Stage 14 adds the English/Polish localization and language selection described in section 13. It also requires every row-level activate, minimize, and close action to use the exact `HWND` captured in that row without process-, application-, title-, or group-based target inference. A row close posts one normal system close command to that exact `HWND`; it must not kill or close a process, enumerate sibling windows, or bypass the target application's Save / Don't Save / Cancel lifecycle.
 
+Stage 15 gives application groups user-facing names resolved from package and executable metadata, with a small alias fallback for known technical process names. A redundant application suffix is removed only from WindowDeck's separate display title when the final title segment exactly matches verified application metadata or an alias; the original Win32 title remains unchanged. When grouping is enabled, each group header can collapse or expand its rows. Collapse state is held only in memory for the current WindowDeck process, survives window-list refreshes and hiding to the tray, and resets to expanded when WindowDeck restarts. Active search temporarily shows matching rows from collapsed groups without changing their remembered in-session state.
+
 ## 18. Features excluded from v1
 
 Do not add application ignore lists, monitor aliases, elaborate filters, profiles, synchronization, user accounts, plugins, cloud functionality, telemetry, analytics, network communication, automatic updates, heavy animations, extensive customization, desktop management, monitor management, or a PowerToys-like collection of features. Do not implement features "just in case."
