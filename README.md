@@ -436,7 +436,7 @@ dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64
 Pliki wynikowe są tworzone w:
 
 ```text
-artifacts\WindowDeck-1.0.0-win-x64
+artifacts\WindowDeck-1.1.0-win-x64
 ```
 
 Konfiguracja wydania wykorzystuje:
