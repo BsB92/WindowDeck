@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 using WindowDeck.Interop;
+using WindowDeck.Localization;
 using WindowDeck.Models;
 
 namespace WindowDeck.Services;
