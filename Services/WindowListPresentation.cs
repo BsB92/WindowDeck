@@ -6,7 +6,7 @@ internal static class WindowListPresentation
 {
     private static readonly StringComparer DisplayComparer = StringComparer.CurrentCultureIgnoreCase;
 
-    public static IReadOnlyList<IGrouping<string, WindowInfo>> Create(
+    public static IReadOnlyList<WindowGroup> Create(
         IReadOnlyList<WindowInfo> snapshot,
         string searchText,
         bool groupByApplication,
@@ -34,7 +34,14 @@ internal static class WindowListPresentation
         }
 
         return filtered
-            .GroupBy(window => groupByApplication ? window.ApplicationName : string.Empty, DisplayComparer)
+            .GroupBy(window => groupByApplication ? window.ApplicationId : string.Empty,
+                StringComparer.OrdinalIgnoreCase)
+            .Select(group => new WindowGroup(group.Key, group.First().ApplicationName, group.ToList()))
             .ToList();
     }
 }
+
+internal sealed record WindowGroup(
+    string ApplicationId,
+    string ApplicationName,
+    IReadOnlyList<WindowInfo> Windows);

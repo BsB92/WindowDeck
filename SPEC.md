@@ -152,6 +152,8 @@ Before editing, read `AGENTS.md`, read the relevant parts of this specification,
 
 Stage 14 adds the English/Polish localization and language selection described in section 13. It also requires every row-level activate, minimize, and close action to use the exact `HWND` captured in that row without process-, application-, title-, or group-based target inference. A row close posts one normal system close command to that exact `HWND`; it must not kill or close a process, enumerate sibling windows, or bypass the target application's Save / Don't Save / Cancel lifecycle.
 
+Stage 15 resolves user-facing application names from package identity or executable metadata, with narrow aliases and a cleaned process name used only as fallbacks. Window rows retain their original Win32 title and may remove a trailing application name only from the separate display title when that suffix matches a known identity alias. When application grouping is enabled, group headers can be collapsed and expanded; collapsed application identifiers are stored in the existing local settings JSON. An active search temporarily reveals matching rows without changing the persisted collapsed state.
+
 ## 18. Features excluded from v1
 
 Do not add application ignore lists, monitor aliases, elaborate filters, profiles, synchronization, user accounts, plugins, cloud functionality, telemetry, analytics, network communication, automatic updates, heavy animations, extensive customization, desktop management, monitor management, or a PowerToys-like collection of features. Do not implement features "just in case."

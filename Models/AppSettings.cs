@@ -41,6 +41,8 @@ internal sealed class AppSettings
 
     public bool ShowMinimizedWindows { get; set; } = true;
 
+    public List<string> CollapsedApplicationIds { get; set; } = [];
+
     public AppTheme Theme { get; set; } = AppTheme.System;
 
     public AppLanguage Language { get; set; } = AppLanguage.System;
@@ -54,6 +56,7 @@ internal sealed class AppSettings
         ShowApplicationIcons = ShowApplicationIcons,
         ShowScreenNumber = ShowScreenNumber,
         ShowMinimizedWindows = ShowMinimizedWindows,
+        CollapsedApplicationIds = [.. CollapsedApplicationIds],
         Theme = Theme,
         Language = Language
     };

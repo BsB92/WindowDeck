@@ -34,7 +34,7 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         applicationIcon = WindowDeckIcon.Load();
         bool effectiveStartupState = startupManager.IsEnabled();
         string? startupSynchronizationError = SynchronizeStartupState(effectiveStartupState);
-        flyout = new Form1(settings);
+        flyout = new Form1(settings, SaveFlyoutSettings);
         flyout.FormClosed += Flyout_FormClosed;
 
         trayMenu = new ContextMenuStrip();
@@ -314,6 +314,19 @@ internal sealed class WindowDeckApplicationContext : ApplicationContext
         aboutItem.Text = LocalizationService.Get("Tray_About");
         startWithWindowsItem.Text = LocalizationService.Get("Tray_StartWithWindows");
         exitItem.Text = LocalizationService.Get("Tray_Exit");
+    }
+
+    private bool SaveFlyoutSettings(AppSettings candidate)
+    {
+        if (!settingsService.TrySave(candidate, out string? errorMessage))
+        {
+            MessageBox.Show(flyout, errorMessage, LocalizationService.Get("App_Title"),
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return false;
+        }
+
+        settings = candidate.Copy();
+        return true;
     }
 
     private string? SynchronizeStartupState(bool effectiveStartupState)

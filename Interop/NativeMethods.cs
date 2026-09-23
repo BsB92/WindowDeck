@@ -17,6 +17,7 @@ internal static class NativeMethods
     internal const uint EventSystemMinimizeStart = 0x0016;
     internal const uint EventSystemMinimizeEnd = 0x0017;
     internal const int ErrorInsufficientBuffer = 122;
+    internal const uint ProcessQueryLimitedInformation = 0x1000;
     internal const int GwlExStyle = -20;
     internal const int GclpHicon = -14;
     internal const int GclpHiconSmall = -34;
@@ -48,6 +49,7 @@ internal static class NativeMethods
     internal const uint SmtoAbortIfHung = 0x0002;
 
     internal delegate bool EnumWindowsProc(nint windowHandle, nint parameter);
+    internal delegate int PackageNameReader(nint processHandle, ref uint length, char[]? value);
     internal delegate void WinEventProc(
         nint hookHandle,
         uint eventType,
@@ -175,6 +177,30 @@ internal static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool EnumWindows(EnumWindowsProc callback, nint parameter);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool EnumChildWindows(nint parentHandle, EnumWindowsProc callback, nint parameter);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    internal static extern nint OpenProcess(uint desiredAccess, [MarshalAs(UnmanagedType.Bool)] bool inheritHandle,
+        uint processId);
+
+    [DllImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool CloseHandle(nint handle);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int GetPackageFamilyName(nint processHandle, ref uint packageFamilyNameLength,
+        [Out] char[]? packageFamilyName);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int GetPackageFullName(nint processHandle, ref uint packageFullNameLength,
+        [Out] char[]? packageFullName);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int GetPackagePathByFullName(string packageFullName, ref uint pathLength,
+        [Out] char[]? path);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

@@ -36,6 +36,7 @@ internal sealed class SettingsService
             AppSettings settings = JsonSerializer.Deserialize<AppSettings>(
                 File.ReadAllText(SettingsPath), JsonOptions) ?? new AppSettings();
             settings.Hotkey ??= new HotkeySettings();
+            settings.CollapsedApplicationIds ??= [];
             if (!Enum.IsDefined(settings.Theme)
                 || !Enum.IsDefined(settings.Language)
                 || settings.Hotkey.VirtualKey == 0

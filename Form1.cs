@@ -24,6 +24,7 @@ internal partial class Form1 : Form
     private readonly WindowActivator windowActivator = new();
     private readonly WindowActions windowActions = new();
     private readonly ApplicationIconProvider applicationIconProvider = new();
+    private readonly Func<AppSettings, bool> saveSettings;
     private AppSettings settings;
     private IReadOnlyList<WindowInfo> currentSnapshot = [];
     private bool currentSnapshotInitialized;
@@ -37,9 +38,10 @@ internal partial class Form1 : Form
     private int maximumPanelWidth;
     private ThemePalette palette;
 
-    public Form1(AppSettings settings)
+    public Form1(AppSettings settings, Func<AppSettings, bool> saveSettings)
     {
         this.settings = settings.Copy();
+        this.saveSettings = saveSettings;
         InitializeComponent();
         Icon = WindowDeckIcon.Load();
         searchTextBox.Enter += (_, _) => searchTextBox.BackColor = palette.RaisedSurface;
@@ -319,13 +321,13 @@ internal partial class Form1 : Form
 
     private void RenderWindowList()
     {
-        IReadOnlyList<IGrouping<string, WindowInfo>> groups =
+        IReadOnlyList<WindowGroup> groups =
             WindowListPresentation.Create(
                 currentSnapshot,
                 searchTextBox.Text,
                 settings.GroupByApplication,
                 settings.ShowMinimizedWindows);
-        int visibleCount = groups.Sum(group => group.Count());
+        int visibleCount = groups.Sum(group => group.Windows.Count);
 
         windowListPanel.SuspendLayout();
         try
@@ -356,13 +358,19 @@ internal partial class Form1 : Form
             }
             else
             {
-                foreach (IGrouping<string, WindowInfo> group in groups)
+                foreach (WindowGroup group in groups)
                 {
                     if (settings.GroupByApplication)
                     {
-                        windowListPanel.Controls.Add(CreateGroupHeader(group.Key));
+                        bool isCollapsed = settings.CollapsedApplicationIds.Contains(
+                            group.ApplicationId, StringComparer.OrdinalIgnoreCase);
+                        windowListPanel.Controls.Add(CreateGroupHeader(group, isCollapsed));
+                        if (isCollapsed && string.IsNullOrWhiteSpace(searchTextBox.Text))
+                        {
+                            continue;
+                        }
                     }
-                    foreach (WindowInfo window in group)
+                    foreach (WindowInfo window in group.Windows)
                     {
                         windowListPanel.Controls.Add(CreateWindowRow(window));
                     }
@@ -397,20 +405,48 @@ internal partial class Form1 : Form
         return header;
     }
 
-    private Label CreateGroupHeader(string applicationName)
+    private Button CreateGroupHeader(WindowGroup group, bool isCollapsed)
     {
-        return new Label
+        Button header = new()
         {
+            AccessibleName = group.ApplicationName,
             AutoEllipsis = true,
+            FlatStyle = FlatStyle.Flat,
             Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
             Height = 25,
             Margin = new Padding(4, 6, 4, 0),
             Padding = new Padding(5, 0, 0, 0),
             BackColor = palette.RaisedSurface,
             ForeColor = palette.Foreground,
-            Text = applicationName,
+            Text = $"{(isCollapsed ? '▶' : '▼')}  {group.ApplicationName}",
             TextAlign = ContentAlignment.MiddleLeft
         };
+        header.FlatAppearance.BorderSize = 0;
+        header.FlatAppearance.MouseOverBackColor = palette.Hover;
+        header.FlatAppearance.MouseDownBackColor = palette.Pressed;
+        header.Click += (_, _) => ToggleGroup(group.ApplicationId);
+        return header;
+    }
+
+    private void ToggleGroup(string applicationId)
+    {
+        AppSettings candidate = settings.Copy();
+        int existingIndex = candidate.CollapsedApplicationIds.FindIndex(id =>
+            id.Equals(applicationId, StringComparison.OrdinalIgnoreCase));
+        if (existingIndex >= 0)
+        {
+            candidate.CollapsedApplicationIds.RemoveAt(existingIndex);
+        }
+        else
+        {
+            candidate.CollapsedApplicationIds.Add(applicationId);
+        }
+
+        if (saveSettings(candidate))
+        {
+            settings = candidate;
+            RenderWindowList();
+        }
     }
 
     private Control CreateWindowRow(WindowInfo window)

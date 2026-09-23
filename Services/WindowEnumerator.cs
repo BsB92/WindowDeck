@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using WindowDeck.Interop;
@@ -78,49 +77,18 @@ internal sealed class WindowEnumerator
         }
 
         monitorDetector.Detect(windowHandle, out string? monitorDeviceName, out int? monitorNumber);
+        ApplicationIdentity application = ApplicationNameResolver.Resolve(windowHandle, processId);
         window = new WindowInfo(
             windowHandle,
             processId,
-            GetApplicationName(processId),
+            application.StableId,
+            application.DisplayName,
             title,
-            title,
+            WindowTitleFormatter.CreateDisplayTitle(title, application),
             monitorDeviceName,
             monitorNumber,
             NativeMethods.IsIconic(windowHandle));
         return true;
-    }
-
-    private static string GetApplicationName(uint processId)
-    {
-        try
-        {
-            using Process process = Process.GetProcessById(checked((int)processId));
-            string processName = process.ProcessName;
-            if (processName.Equals("explorer", StringComparison.OrdinalIgnoreCase))
-            {
-                return LocalizationService.Get("Application_FileExplorer");
-            }
-
-            return string.IsNullOrEmpty(processName)
-                ? LocalizationService.Get("Application_Unknown")
-                : char.ToUpperInvariant(processName[0]) + processName[1..].ToLowerInvariant();
-        }
-        catch (ArgumentException)
-        {
-            return LocalizationService.Get("Application_Unknown");
-        }
-        catch (OverflowException)
-        {
-            return LocalizationService.Get("Application_Unknown");
-        }
-        catch (InvalidOperationException)
-        {
-            return LocalizationService.Get("Application_Unknown");
-        }
-        catch (Win32Exception)
-        {
-            return LocalizationService.Get("Application_Unknown");
-        }
     }
 
     private static string? GetWindowTitle(nint windowHandle)
