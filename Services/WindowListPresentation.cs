@@ -34,7 +34,8 @@ internal static class WindowListPresentation
         }
 
         return filtered
-            .GroupBy(window => groupByApplication ? window.ApplicationName : string.Empty, DisplayComparer)
+            .GroupBy(window => groupByApplication ? window.ApplicationId : string.Empty,
+                StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 }
