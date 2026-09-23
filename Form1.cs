@@ -298,12 +298,12 @@ internal partial class Form1 : Form
             MessageBoxIcon.Information);
     }
 
-    private void RefreshWindowList()
+    private void RefreshWindowList(bool force = false)
     {
         try
         {
             IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate();
-            if (currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
+            if (!force && currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
             {
                 return;
             }
@@ -388,12 +388,13 @@ internal partial class Form1 : Form
                 }
             }
 
-            SizeWindowRows();
         }
         finally
         {
             windowListPanel.ResumeLayout();
         }
+
+        SizeWindowRows();
     }
 
     private Control CreateColumnHeader()
@@ -424,7 +425,7 @@ internal partial class Form1 : Form
     {
         TableLayoutPanel header = new()
         {
-            ColumnCount = 4,
+            ColumnCount = 5,
             Dock = DockStyle.Top,
             Height = 25,
             Margin = new Padding(4, 6, 4, 0),
@@ -432,6 +433,7 @@ internal partial class Form1 : Form
         };
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
 
@@ -457,17 +459,21 @@ internal partial class Form1 : Form
         collapseButton.Click += ToggleGroup;
         nameLabel.Click += ToggleGroup;
 
+        Button restoreButton = CreateActionButton("□", LocalizationService.Get("Flyout_RestoreAllTooltip"), false);
+        restoreButton.Click += (_, _) => RunForGroup(windows, windowActions.Restore);
         Button minimizeButton = CreateActionButton("—", LocalizationService.Get("Flyout_MinimizeAllTooltip"), false);
         minimizeButton.Click += (_, _) => RunForGroup(windows, windowActions.Minimize);
         Button closeButton = CreateActionButton("×", LocalizationService.Get("Flyout_CloseAllTooltip"), true);
         closeButton.Click += (_, _) => ConfirmAndCloseGroup(windows);
         toolTip.SetToolTip(collapseButton, collapseButton.AccessibleName);
+        toolTip.SetToolTip(restoreButton, restoreButton.AccessibleName);
         toolTip.SetToolTip(minimizeButton, minimizeButton.AccessibleName);
         toolTip.SetToolTip(closeButton, closeButton.AccessibleName);
         header.Controls.Add(collapseButton, 0, 0);
         header.Controls.Add(nameLabel, 1, 0);
-        header.Controls.Add(minimizeButton, 2, 0);
-        header.Controls.Add(closeButton, 3, 0);
+        header.Controls.Add(restoreButton, 2, 0);
+        header.Controls.Add(minimizeButton, 3, 0);
+        header.Controls.Add(closeButton, 4, 0);
         return header;
     }
 
@@ -566,7 +572,13 @@ internal partial class Form1 : Form
             button.FlatAppearance.BorderSize = active ? 2 : 1;
             button.Click += (_, _) =>
             {
-                if (!windowActions.MoveToMonitor(window, display)) ShowWindowActionFailure();
+                if (!windowActions.MoveToMonitor(window, display))
+                {
+                    ShowWindowActionFailure();
+                    return;
+                }
+
+                RefreshWindowList(force: true);
             };
             toolTip.SetToolTip(button, button.AccessibleName);
             panel.Controls.Add(button);
@@ -579,10 +591,14 @@ internal partial class Form1 : Form
         TableLayoutPanel grid = new()
         {
             ColumnCount = 5,
+            GrowStyle = TableLayoutPanelGrowStyle.FixedSize,
             Height = height,
             Margin = margin,
-            RowCount = 1
+            RowCount = 1,
+            Width = Math.Max(120, windowListPanel.ClientSize.Width
+                - SystemInformation.VerticalScrollBarWidth - 10)
         };
+        grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowApplicationIcons ? 24 : 0));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));

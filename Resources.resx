@@ -72,6 +72,8 @@
   <data name="Application_FileExplorer" xml:space="preserve"><value>File Explorer</value></data>
   <data name="Application_Unknown" xml:space="preserve"><value>Unknown application</value></data>
   <data name="Flyout_MinimizeAll" xml:space="preserve"><value>Minimize all</value></data>
+  <data name="Flyout_RestoreAll" xml:space="preserve"><value>Restore all</value></data>
+  <data name="Flyout_RestoreAllTooltip" xml:space="preserve"><value>Restore all windows</value></data>
   <data name="Flyout_CloseAll" xml:space="preserve"><value>Close all</value></data>
   <data name="Flyout_CloseAllConfirmation" xml:space="preserve"><value>Close all windows in this group?</value></data>
   <data name="Flyout_CloseAllCount" xml:space="preserve"><value>This will close {0} windows.</value></data>
