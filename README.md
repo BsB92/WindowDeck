@@ -22,6 +22,30 @@ WindowDeck is especially useful when many open windows have similar names or are
 >
 > I designed the concept, requirements, workflow, and UI, and tested and refined the application iteratively. The code was created with the help of **ChatGPT** and **OpenAI Codex**.
 
+### Screenshots
+
+#### Main window
+
+Search, group, switch, minimize, close, and move individual windows between monitors.
+
+![WindowDeck main window](docs/Screenshots/WindowDeck-main.png)
+
+#### Presentation Mode
+
+Presentation Mode lets you define an allowed group of windows for a selected presentation screen and optionally protect that screen from other windows.
+
+![WindowDeck Presentation Mode](docs/Screenshots/WindowDeck-presentation-mode.png)
+
+#### Settings
+
+Configure startup behavior, global hotkey, window list options, appearance, and language.
+
+![WindowDeck Settings](docs/Screenshots/WindowDeck-settings.png)
+
+#### About
+
+![About WindowDeck](docs/Screenshots/WindowDeck-about.png)
+
 ### Download
 
 Download the latest version from:
@@ -44,10 +68,10 @@ If you downloaded WindowDeck from the official GitHub Releases page, you can ver
 
 #### Verify the download
 
-SHA-256 for `WindowDeck.exe` version 1.1.0:
+SHA-256 for `WindowDeck.exe` version 1.2.0:
 
 ```text
-2089F68B5D9C6B42A643E02A578445C9EA53A32C487DE0EE32806FFF3BE60413
+D98D5D3115A3E2654C60A4044950AB78D5D0D13C3564C124142001E957B0AC88
 ```
 
 You can verify the downloaded file in PowerShell:
@@ -57,6 +81,7 @@ Get-FileHash .\WindowDeck.exe -Algorithm SHA256
 ```
 
 The resulting hash should match the value above.
+
 
 ### Features
 
@@ -207,7 +232,7 @@ dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64
 The output is created in:
 
 ```text
-artifacts\WindowDeck-1.1.0-win-x64
+artifacts\WindowDeck-1.2.0-win-x64
 ```
 
 The release configuration uses:
@@ -251,6 +276,30 @@ WindowDeck jest szczególnie przydatny, gdy wiele otwartych okien ma podobne naz
 >
 > Zaprojektowałem koncepcję, wymagania, sposób działania i interfejs użytkownika, a następnie iteracyjnie testowałem i dopracowywałem aplikację. Kod powstał przy wsparciu **ChatGPT** i **OpenAI Codex**.
 
+### Zrzuty ekranu
+
+#### Główne okno
+
+Wyszukiwanie, grupowanie, przełączanie, minimalizowanie, zamykanie oraz przenoszenie pojedynczych okien między monitorami.
+
+![Główne okno WindowDeck](docs/Screenshots/WindowDeck-main.png)
+
+#### Tryb prezentacji
+
+Tryb prezentacji pozwala określić grupę okien dozwolonych na wybranym ekranie prezentacji oraz opcjonalnie chronić ten ekran przed innymi oknami.
+
+![Tryb prezentacji WindowDeck](docs/Screenshots/WindowDeck-presentation-mode.png)
+
+#### Ustawienia
+
+Konfiguracja uruchamiania z systemem, globalnego skrótu, listy okien, wyglądu i języka.
+
+![Ustawienia WindowDeck](docs/Screenshots/WindowDeck-settings.png)
+
+#### O programie
+
+![O programie WindowDeck](docs/Screenshots/WindowDeck-about.png)
+
 ### Pobieranie
 
 Najnowszą wersję można pobrać tutaj:
@@ -273,10 +322,10 @@ Jeżeli pobrałeś WindowDeck z oficjalnej strony GitHub Releases, przed uruchom
 
 #### Weryfikacja pobranego pliku
 
-SHA-256 dla `WindowDeck.exe` w wersji 1.1.0:
+SHA-256 dla `WindowDeck.exe` w wersji 1.2.0:
 
 ```text
-2089F68B5D9C6B42A643E02A578445C9EA53A32C487DE0EE32806FFF3BE60413
+D98D5D3115A3E2654C60A4044950AB78D5D0D13C3564C124142001E957B0AC88
 ```
 
 Pobrany plik możesz sprawdzić w PowerShell:
@@ -436,7 +485,7 @@ dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64
 Pliki wynikowe są tworzone w:
 
 ```text
-artifacts\WindowDeck-1.1.0-win-x64
+artifacts\WindowDeck-1.2.0-win-x64
 ```
 
 Konfiguracja wydania wykorzystuje:
