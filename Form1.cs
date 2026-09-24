@@ -607,7 +607,7 @@ internal partial class Form1 : Form
             LocalizationService.Get("Flyout_RestoreAllTooltip"),
             false);
         StyleCompactActionButton(restoreButton);
-        StyleGroupActionButton(restoreButton, isCloseButton: false);
+        StyleBlueActionButton(restoreButton);
         restoreButton.Click += (_, _) => RunForGroup(windows, windowActions.Restore);
 
         Button minimizeButton = CreateActionButton(
@@ -615,7 +615,8 @@ internal partial class Form1 : Form
             LocalizationService.Get("Flyout_MinimizeAllTooltip"),
             false);
         StyleCompactActionButton(minimizeButton);
-        StyleGroupActionButton(minimizeButton, isCloseButton: false);
+        SetCenteredActionGlyph(minimizeButton, CompactGlyph.Minus);
+        StyleBlueActionButton(minimizeButton);
         minimizeButton.Click += (_, _) => RunForGroup(windows, windowActions.Minimize);
 
         Button closeButton = CreateActionButton(
@@ -623,7 +624,8 @@ internal partial class Form1 : Form
             LocalizationService.Get("Flyout_CloseAllTooltip"),
             true);
         StyleCompactActionButton(closeButton);
-        StyleGroupActionButton(closeButton, isCloseButton: true);
+        SetCenteredActionGlyph(closeButton, CompactGlyph.Close);
+        StyleCloseActionButton(closeButton);
         closeButton.Click += (_, _) => ConfirmAndCloseGroup(windows);
 
         toolTip.SetToolTip(collapseButton, collapseButton.AccessibleName);
@@ -674,13 +676,10 @@ internal partial class Form1 : Form
                 : "Flyout_AddToPresentation"),
             isCloseButton: false);
         StyleCompactActionButton(presentationButton, fontSize: 12F);
-        SetCenteredGlyph(
+        SetCenteredActionGlyph(
             presentationButton,
-            presentationMember ? "−" : "+",
-            fontSize: 12F,
-            FontStyle.Bold);
-        presentationButton.ForeColor = palette.Accent;
-        presentationButton.FlatAppearance.BorderColor = palette.Accent;
+            presentationMember ? CompactGlyph.Minus : CompactGlyph.Plus);
+        StyleBlueActionButton(presentationButton);
         presentationButton.Click += (_, _) =>
         {
             WindowIdentity identity = WindowIdentity.From(window);
@@ -706,16 +705,16 @@ internal partial class Form1 : Form
             LocalizationService.Format("Flyout_MinimizeAccessible", window.DisplayTitle),
             isCloseButton: false);
         StyleCompactActionButton(minimizeButton);
-        minimizeButton.ForeColor = palette.Accent;
-        minimizeButton.FlatAppearance.BorderColor = palette.Accent;
+        SetCenteredActionGlyph(minimizeButton, CompactGlyph.Minus);
+        StyleBlueActionButton(minimizeButton);
 
         Button closeButton = CreateActionButton(
             "×",
             LocalizationService.Format("Flyout_CloseAccessible", window.DisplayTitle),
             isCloseButton: true);
         StyleCompactActionButton(closeButton);
-        closeButton.ForeColor = palette.CloseHover;
-        closeButton.FlatAppearance.BorderColor = palette.CloseHover;
+        SetCenteredActionGlyph(closeButton, CompactGlyph.Close);
+        StyleCloseActionButton(closeButton);
 
         minimizeButton.Click += (_, _) =>
         {
@@ -945,7 +944,8 @@ internal partial class Form1 : Form
             LocalizationService.Get("Flyout_MinimizeAllTooltip"),
             false);
         StyleCompactActionButton(minimizeButton);
-        StyleGroupActionButton(minimizeButton, isCloseButton: false);
+        SetCenteredActionGlyph(minimizeButton, CompactGlyph.Minus);
+        StyleBlueActionButton(minimizeButton);
         minimizeButton.Click += (_, _) =>
         {
             if (windows.Count > 0)
@@ -961,7 +961,8 @@ internal partial class Form1 : Form
             LocalizationService.Get("Flyout_CloseAllTooltip"),
             true);
         StyleCompactActionButton(closeButton);
-        StyleGroupActionButton(closeButton, isCloseButton: true);
+        SetCenteredActionGlyph(closeButton, CompactGlyph.Close);
+        StyleCloseActionButton(closeButton);
         closeButton.Click += (_, _) =>
         {
             if (windows.Count > 0)
@@ -1339,41 +1340,114 @@ internal partial class Form1 : Form
             ? palette.CloseHover
             : palette.Hover;
 
-        if (isCloseButton)
-        {
-            button.MouseEnter += (_, _) => button.ForeColor = Color.Black;
-            button.MouseLeave += (_, _) => button.ForeColor = palette.Foreground;
-        }
-
         return button;
     }
 
-    private static void SetCenteredGlyph(
-        Button button,
-        string glyph,
-        float fontSize,
-        FontStyle fontStyle = FontStyle.Regular)
+    private enum CompactGlyph
+    {
+        Plus,
+        Minus,
+        Close
+    }
+
+    private static void SetCenteredActionGlyph(Button button, CompactGlyph glyph)
     {
         button.Text = string.Empty;
-        button.Font = new Font("Segoe UI", fontSize, fontStyle);
         button.Paint += (_, e) =>
         {
-            Rectangle glyphBounds = new(
-                0,
-                -1,
-                button.ClientSize.Width,
-                button.ClientSize.Height);
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-            TextRenderer.DrawText(
-                e.Graphics,
-                glyph,
-                button.Font,
-                glyphBounds,
-                button.ForeColor,
-                TextFormatFlags.HorizontalCenter
-                | TextFormatFlags.VerticalCenter
-                | TextFormatFlags.NoPadding
-                | TextFormatFlags.SingleLine);
+            float centerX = (button.ClientSize.Width - 1) / 2F;
+            float centerY = (button.ClientSize.Height - 1) / 2F;
+            float halfLength = glyph == CompactGlyph.Close ? 4.5F : 5F;
+
+            using Pen pen = new(button.ForeColor, 1.6F)
+            {
+                StartCap = System.Drawing.Drawing2D.LineCap.Round,
+                EndCap = System.Drawing.Drawing2D.LineCap.Round
+            };
+
+            switch (glyph)
+            {
+                case CompactGlyph.Plus:
+                    e.Graphics.DrawLine(
+                        pen,
+                        centerX - halfLength,
+                        centerY,
+                        centerX + halfLength,
+                        centerY);
+                    e.Graphics.DrawLine(
+                        pen,
+                        centerX,
+                        centerY - halfLength,
+                        centerX,
+                        centerY + halfLength);
+                    break;
+
+                case CompactGlyph.Minus:
+                    e.Graphics.DrawLine(
+                        pen,
+                        centerX - halfLength,
+                        centerY,
+                        centerX + halfLength,
+                        centerY);
+                    break;
+
+                case CompactGlyph.Close:
+                    e.Graphics.DrawLine(
+                        pen,
+                        centerX - halfLength,
+                        centerY - halfLength,
+                        centerX + halfLength,
+                        centerY + halfLength);
+                    e.Graphics.DrawLine(
+                        pen,
+                        centerX + halfLength,
+                        centerY - halfLength,
+                        centerX - halfLength,
+                        centerY + halfLength);
+                    break;
+            }
+        };
+    }
+
+    private void StyleBlueActionButton(Button button)
+    {
+        button.BackColor = palette.Surface;
+        button.ForeColor = ActiveButtonBackColor;
+        button.FlatAppearance.BorderColor = ActiveButtonBackColor;
+        button.FlatAppearance.BorderSize = 1;
+        button.FlatAppearance.MouseOverBackColor = ActiveButtonBackColor;
+        button.FlatAppearance.MouseDownBackColor = ActiveButtonBackColor;
+        button.MouseEnter += (_, _) =>
+        {
+            button.ForeColor = ActiveButtonForeColor;
+            button.Invalidate();
+        };
+        button.MouseLeave += (_, _) =>
+        {
+            button.ForeColor = ActiveButtonBackColor;
+            button.Invalidate();
+        };
+    }
+
+    private void StyleCloseActionButton(Button button)
+    {
+        button.BackColor = palette.Surface;
+        button.ForeColor = palette.CloseHover;
+        button.FlatAppearance.BorderColor = palette.CloseHover;
+        button.FlatAppearance.BorderSize = 1;
+        button.FlatAppearance.MouseOverBackColor = palette.CloseHover;
+        button.FlatAppearance.MouseDownBackColor = palette.ClosePressed;
+        button.MouseEnter += (_, _) =>
+        {
+            button.ForeColor = Color.Black;
+            button.Invalidate();
+        };
+        button.MouseLeave += (_, _) =>
+        {
+            button.ForeColor = palette.CloseHover;
+            button.Invalidate();
         };
     }
 
@@ -1390,10 +1464,14 @@ internal partial class Form1 : Form
 
     private void StyleGroupActionButton(Button button, bool isCloseButton)
     {
-        button.BackColor = palette.Surface;
-        button.ForeColor = isCloseButton ? palette.CloseHover : palette.Accent;
-        button.FlatAppearance.BorderColor = isCloseButton ? palette.CloseHover : palette.Accent;
-        button.FlatAppearance.BorderSize = 1;
+        if (isCloseButton)
+        {
+            StyleCloseActionButton(button);
+        }
+        else
+        {
+            StyleBlueActionButton(button);
+        }
     }
 
     private void ShowWindowActionFailure()
