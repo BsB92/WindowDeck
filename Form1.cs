@@ -1097,10 +1097,8 @@ internal partial class Form1 : Form
             : palette.RaisedSurface;
         presentationModeButton.ForeColor = presentationModeEnabled
             ? ActiveButtonForeColor
-            : palette.Accent;
-        presentationModeButton.FlatAppearance.BorderColor = presentationModeEnabled
-            ? ActiveButtonBackColor
-            : palette.Accent;
+            : ActiveButtonBackColor;
+        presentationModeButton.FlatAppearance.BorderColor = ActiveButtonBackColor;
         presentationModeButton.FlatAppearance.BorderSize = 1;
         presentationModeButton.FlatAppearance.MouseOverBackColor = presentationModeEnabled
             ? ActiveButtonBackColor
