@@ -671,7 +671,10 @@ internal partial class Form1 : Form
                 ? "Flyout_RemoveFromPresentation"
                 : "Flyout_AddToPresentation"),
             isCloseButton: false);
-        StyleCompactActionButton(presentationButton, fontSize: 13F);
+        StyleCompactActionButton(presentationButton, fontSize: 11F);
+        presentationButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+        presentationButton.TextAlign = ContentAlignment.MiddleCenter;
+        presentationButton.Padding = Padding.Empty;
         presentationButton.ForeColor = palette.Accent;
         presentationButton.FlatAppearance.BorderColor = palette.Accent;
         presentationButton.Click += (_, _) =>
@@ -775,7 +778,7 @@ internal partial class Form1 : Form
                 BackColor = active ? palette.Accent : palette.RaisedSurface,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
-                ForeColor = active ? Color.White : palette.Foreground,
+                ForeColor = active ? Color.Black : palette.Foreground,
                 Margin = new Padding(0, 0, MonitorButtonGap, MonitorButtonGap),
                 Size = new Size(MonitorButtonSize, MonitorButtonSize),
                 TabStop = !active,
@@ -786,8 +789,8 @@ internal partial class Form1 : Form
             button.FlatAppearance.BorderColor = active ? palette.Accent : palette.Border;
             button.FlatAppearance.MouseOverBackColor = palette.Accent;
             button.FlatAppearance.MouseDownBackColor = palette.Pressed;
-            button.MouseEnter += (_, _) => button.ForeColor = Color.White;
-            button.MouseLeave += (_, _) => button.ForeColor = active ? Color.White : palette.Foreground;
+            button.MouseEnter += (_, _) => button.ForeColor = Color.Black;
+            button.MouseLeave += (_, _) => button.ForeColor = active ? Color.Black : palette.Foreground;
             button.Click += (_, _) =>
             {
                 if (active)
@@ -906,7 +909,7 @@ internal partial class Form1 : Form
         protectionButton.Dock = DockStyle.Fill;
         protectionButton.Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8F, FontStyle.Bold);
         protectionButton.Margin = new Padding(6, 2, 6, 2);
-        protectionButton.ForeColor = presentationLocked ? Color.White : Color.Goldenrod;
+        protectionButton.ForeColor = presentationLocked ? Color.Black : Color.Goldenrod;
         protectionButton.BackColor = presentationLocked ? palette.Accent : palette.Surface;
         protectionButton.FlatAppearance.BorderColor = presentationLocked
             ? palette.Accent
@@ -935,8 +938,13 @@ internal partial class Form1 : Form
             false);
         StyleCompactActionButton(minimizeButton);
         StyleGroupActionButton(minimizeButton, isCloseButton: false);
-        minimizeButton.Enabled = windows.Count > 0;
-        minimizeButton.Click += (_, _) => RunForGroup(windows, windowActions.Minimize);
+        minimizeButton.Click += (_, _) =>
+        {
+            if (windows.Count > 0)
+            {
+                RunForGroup(windows, windowActions.Minimize);
+            }
+        };
         toolTip.SetToolTip(minimizeButton, minimizeButton.AccessibleName);
         header.Controls.Add(minimizeButton, 3, 2);
 
@@ -946,8 +954,13 @@ internal partial class Form1 : Form
             true);
         StyleCompactActionButton(closeButton);
         StyleGroupActionButton(closeButton, isCloseButton: true);
-        closeButton.Enabled = windows.Count > 0;
-        closeButton.Click += (_, _) => ConfirmAndCloseGroup(windows);
+        closeButton.Click += (_, _) =>
+        {
+            if (windows.Count > 0)
+            {
+                ConfirmAndCloseGroup(windows);
+            }
+        };
         toolTip.SetToolTip(closeButton, closeButton.AccessibleName);
         header.Controls.Add(closeButton, 4, 2);
 
@@ -973,7 +986,7 @@ internal partial class Form1 : Form
                     Enabled = !presentationLocked,
                     FlatStyle = FlatStyle.Flat,
                     Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
-                    ForeColor = selected ? Color.White : palette.Foreground,
+                    ForeColor = selected ? Color.Black : palette.Foreground,
                     Margin = new Padding(0, 0, MonitorButtonGap, 0),
                     Size = new Size(MonitorButtonSize, MonitorButtonSize),
                     Text = number.ToString(),
@@ -1074,7 +1087,7 @@ internal partial class Form1 : Form
             ? palette.Accent
             : palette.RaisedSurface;
         presentationModeButton.ForeColor = presentationModeEnabled
-            ? Color.White
+            ? Color.Black
             : palette.Accent;
         presentationModeButton.FlatAppearance.BorderColor = palette.Accent;
         presentationModeButton.FlatAppearance.BorderSize = 1;
@@ -1318,7 +1331,7 @@ internal partial class Form1 : Form
 
         if (isCloseButton)
         {
-            button.MouseEnter += (_, _) => button.ForeColor = Color.White;
+            button.MouseEnter += (_, _) => button.ForeColor = Color.Black;
             button.MouseLeave += (_, _) => button.ForeColor = palette.Foreground;
         }
 
@@ -1331,7 +1344,9 @@ internal partial class Form1 : Form
         button.Dock = DockStyle.None;
         button.Font = new Font("Segoe UI Symbol", fontSize, FontStyle.Regular);
         button.Margin = Padding.Empty;
+        button.Padding = Padding.Empty;
         button.Size = new Size(CompactActionButtonSize, CompactActionButtonSize);
+        button.TextAlign = ContentAlignment.MiddleCenter;
     }
 
     private void StyleGroupActionButton(Button button, bool isCloseButton)
