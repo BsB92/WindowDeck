@@ -105,9 +105,11 @@ namespace WindowDeck
             helpButton.Size = new Size(38, 34);
             settingsButton.Anchor = AnchorStyles.None;
             settingsButton.FlatStyle = FlatStyle.Flat;
-            settingsButton.Font = new Font("Segoe UI Symbol", 12F, FontStyle.Regular);
+            settingsButton.Font = new Font("Segoe MDL2 Assets", 12F, FontStyle.Regular);
             settingsButton.Margin = new Padding(3);
+            settingsButton.Padding = Padding.Empty;
             settingsButton.Size = new Size(38, 34);
+            settingsButton.TextAlign = ContentAlignment.MiddleCenter;
             //
             // Form1
             //
