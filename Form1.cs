@@ -517,8 +517,8 @@ internal partial class Form1 : Form
         Label screenHeader = new()
         {
             Dock = DockStyle.Fill,
-            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Regular),
-            ForeColor = palette.SecondaryForeground,
+            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
+            ForeColor = palette.Foreground,
             Margin = Padding.Empty,
             Text = LocalizationService.Get("Flyout_Screen"),
             TextAlign = ContentAlignment.MiddleCenter
@@ -654,6 +654,14 @@ internal partial class Form1 : Form
             "—",
             LocalizationService.Format("Flyout_MinimizeAccessible", window.DisplayTitle),
             isCloseButton: false);
+        minimizeButton.ForeColor = palette.Accent;
+        minimizeButton.FlatAppearance.BorderColor = palette.Accent;
+        Button closeButton = CreateActionButton(
+            "×",
+            LocalizationService.Format("Flyout_CloseAccessible", window.DisplayTitle),
+            isCloseButton: true);
+        closeButton.ForeColor = palette.CloseHover;
+        closeButton.FlatAppearance.BorderColor = palette.CloseHover;
         minimizeButton.Click += (_, _) =>
         {
             if (!windowActions.Minimize(window))
@@ -662,10 +670,6 @@ internal partial class Form1 : Form
             }
         };
 
-        Button closeButton = CreateActionButton(
-            "×",
-            LocalizationService.Format("Flyout_CloseAccessible", window.DisplayTitle),
-            isCloseButton: true);
         closeButton.Click += (_, _) =>
         {
             if (!windowActions.RequestClose(window))
@@ -977,10 +981,13 @@ internal partial class Form1 : Form
             : palette.RaisedSurface;
         presentationModeButton.ForeColor = presentationModeEnabled
             ? Color.White
-            : palette.SecondaryForeground;
-        presentationModeButton.FlatAppearance.BorderColor = presentationModeEnabled
+            : palette.Accent;
+        presentationModeButton.FlatAppearance.BorderColor = palette.Accent;
+        presentationModeButton.FlatAppearance.BorderSize = 1;
+        presentationModeButton.FlatAppearance.MouseOverBackColor = presentationModeEnabled
             ? palette.Accent
-            : palette.Border;
+            : palette.Hover;
+        presentationModeButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
     }
 
     private void TryActivatePresentationProtection()
@@ -1161,8 +1168,10 @@ internal partial class Form1 : Form
         presentationModeButton.FlatAppearance.BorderColor = palette.Border;
         presentationModeButton.FlatAppearance.BorderSize = 1;
         UpdatePresentationModeVisual();
-        helpButton.FlatAppearance.BorderColor = palette.Border;
-        settingsButton.FlatAppearance.BorderColor = palette.Border;
+        helpButton.FlatAppearance.BorderColor = palette.SecondaryForeground;
+        settingsButton.FlatAppearance.BorderColor = palette.SecondaryForeground;
+        helpButton.FlatAppearance.BorderSize = 1;
+        settingsButton.FlatAppearance.BorderSize = 1;
         helpButton.FlatAppearance.MouseOverBackColor = palette.Hover;
         settingsButton.FlatAppearance.MouseOverBackColor = palette.Hover;
         helpButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
