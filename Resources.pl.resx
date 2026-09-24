@@ -56,11 +56,11 @@
 Jak używać:
 1. Kliknij Tryb prezentacji na dole WindowDeck.
 2. Kliknij + przy każdym oknie, które chcesz dopuścić na udostępnianym ekranie. Te okna pojawią się w Grupie prezentacji.
-3. W nagłówku Grupy prezentacji przy Ekran wybierz numer ekranu, który zamierzasz udostępniać.
-4. Kliknij Włącz ochronę. Jeżeli na wybranym ekranie znajdują się już inne okna, WindowDeck pokaże je przed włączeniem ochrony. Każde z nich możesz przenieść na inny ekran, dodać przyciskiem + do Grupy prezentacji albo użyć Przenieś wszystkie do, aby przenieść wszystkie konfliktujące okna razem.
+3. W sekcji Ekran prezentacji wybierz numer ekranu, który zamierzasz udostępniać.
+4. W sekcji Ochrona kliknij Włącz. Jeżeli na wybranym ekranie znajdują się już inne okna, WindowDeck pokaże je przed włączeniem ochrony. Każde z nich możesz przenieść na inny ekran, dodać przyciskiem + do Grupy prezentacji albo użyć Przenieś wszystkie do, aby przenieść wszystkie konfliktujące okna razem.
 5. Zatwierdź okno dialogowe. Ochrona jest teraz aktywna. Jeżeli na ekranie prezentacji pojawi się inne widoczne okno, którego nie ma w Grupie prezentacji, WindowDeck automatycznie przeniesie je na inny ekran.
 
-Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz używać ich na innych ekranach. Kliknij Wyłącz ochronę, aby wyłączyć ochronę. Wyłączenie Trybu prezentacji czyści tymczasową Grupę prezentacji i wybór ekranu dla tej sesji; przeniesione wcześniej okna nie są automatycznie przenoszone z powrotem.</value></data>
+Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz używać ich na innych ekranach. W sekcji Ochrona kliknij Wyłącz, aby wyłączyć ochronę. Wyłączenie Trybu prezentacji czyści tymczasową Grupę prezentacji i wybór ekranu dla tej sesji; przeniesione wcześniej okna nie są automatycznie przenoszone z powrotem.</value></data>
   <data name="Help_TrayHeading" xml:space="preserve"><value>Działanie zasobnika</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>Przycisk X WindowDeck oraz Esc ukrywają panel. WindowDeck nadal działa w zasobniku. Aby zakończyć aplikację, użyj Zasobnik &gt; Zakończ.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Ustawienia</value></data>
