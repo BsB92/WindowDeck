@@ -11,31 +11,44 @@ internal sealed class WindowEnumerator
 {
     private readonly uint currentProcessId = (uint)Environment.ProcessId;
     private readonly MonitorDetector monitorDetector = new();
+    private readonly ApplicationNameResolver applicationNameResolver = new();
 
     public IReadOnlyList<WindowInfo> Enumerate()
     {
         List<WindowInfo> windows = [];
-        ApplicationNameResolver applicationNameResolver = new();
         monitorDetector.RefreshDisplayMapping();
+        applicationNameResolver.BeginEnumeration();
 
-        bool succeeded = NativeMethods.EnumWindows((windowHandle, _) =>
-            {
-                if (TryCreateWindowInfo(windowHandle, applicationNameResolver, out WindowInfo? window))
-                {
-                    windows.Add(window);
-                }
-
-                return true;
-            },
-            0);
-
-        if (!succeeded)
+        try
         {
-            int error = Marshal.GetLastWin32Error();
-            throw new Win32Exception(error, LocalizationService.Get("Message_EnumerationFailed"));
-        }
+            bool succeeded = NativeMethods.EnumWindows((windowHandle, _) =>
+                {
+                    if (TryCreateWindowInfo(windowHandle, applicationNameResolver, out WindowInfo? window))
+                    {
+                        windows.Add(window);
+                    }
 
-        return windows;
+                    return true;
+                },
+                0);
+
+            if (!succeeded)
+            {
+                int error = Marshal.GetLastWin32Error();
+                throw new Win32Exception(error, LocalizationService.Get("Message_EnumerationFailed"));
+            }
+
+            return windows;
+        }
+        finally
+        {
+            applicationNameResolver.EndEnumeration();
+        }
+    }
+
+    public void ResetApplicationMetadataCache()
+    {
+        applicationNameResolver.ClearCache();
     }
 
     private bool TryCreateWindowInfo(
