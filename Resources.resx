@@ -99,4 +99,5 @@
   <data name="Flyout_PresentationResolveAll" xml:space="preserve"><value>Choose an action for every window before locking the presentation screen.</value></data>
   <data name="Flyout_CollapseAll" xml:space="preserve"><value>Collapse all groups</value></data>
   <data name="Flyout_ExpandAll" xml:space="preserve"><value>Expand all groups</value></data>
+  <data name="Flyout_PresentationProtection" xml:space="preserve"><value>Protection</value></data>
 </root>
