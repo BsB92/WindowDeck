@@ -36,7 +36,7 @@
   <data name="Flyout_Search" xml:space="preserve"><value>Wyszukaj okna</value></data>
   <data name="Flyout_NoWindows" xml:space="preserve"><value>Nie znaleziono okien</value></data>
   <data name="Flyout_NoMatches" xml:space="preserve"><value>Brak pasujących okien</value></data>
-  <data name="Flyout_Screen" xml:space="preserve"><value>Monitor</value></data>
+  <data name="Flyout_Screen" xml:space="preserve"><value>Ekran</value></data>
   <data name="Flyout_MinimizeAccessible" xml:space="preserve"><value>Minimalizuj {0}</value></data>
   <data name="Flyout_CloseAccessible" xml:space="preserve"><value>Zamknij {0}</value></data>
   <data name="Window_Unavailable" xml:space="preserve"><value>Wybrane okno nie jest już dostępne.</value></data>
