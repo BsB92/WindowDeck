@@ -202,14 +202,14 @@ internal sealed class PresentationConflictForm : Form
             AccessibleName = LocalizationService.Get("Flyout_AddToPresentation"),
             BackColor = palette.Surface,
             FlatStyle = FlatStyle.Flat,
-            ForeColor = palette.Accent,
+            ForeColor = ActiveButtonBackColor,
             Font = new Font("Segoe UI", 11F, FontStyle.Bold),
             Margin = new Padding(3, 5, 3, 5),
             Size = new Size(32, 32),
             Text = "+",
             UseVisualStyleBackColor = false
         };
-        addButton.FlatAppearance.BorderColor = palette.Accent;
+        addButton.FlatAppearance.BorderColor = ActiveButtonBackColor;
         addButton.FlatAppearance.BorderSize = 1;
         addButton.FlatAppearance.MouseOverBackColor = palette.Hover;
         addButton.Click += (_, _) =>
@@ -305,7 +305,7 @@ internal sealed class PresentationConflictForm : Form
         Button addButton = addButtons[identity];
         addButton.Text = allowed ? "✓" : "+";
         addButton.BackColor = allowed ? ActiveButtonBackColor : palette.Surface;
-        addButton.ForeColor = allowed ? ActiveButtonForeColor : palette.Accent;
+        addButton.ForeColor = allowed ? ActiveButtonForeColor : ActiveButtonBackColor;
 
         foreach (MonitorDisplay display in targetDisplays)
         {
