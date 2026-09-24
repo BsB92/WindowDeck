@@ -673,8 +673,8 @@ internal partial class Form1 : Form
                 ? "Flyout_RemoveFromPresentation"
                 : "Flyout_AddToPresentation"),
             isCloseButton: false);
-        StyleCompactActionButton(presentationButton, fontSize: 11F);
-        presentationButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+        StyleCompactActionButton(presentationButton, fontSize: 12F);
+        presentationButton.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
         presentationButton.TextAlign = ContentAlignment.MiddleCenter;
         presentationButton.Padding = Padding.Empty;
         presentationButton.ForeColor = palette.Accent;
@@ -1086,12 +1086,14 @@ internal partial class Form1 : Form
         }
 
         presentationModeButton.BackColor = presentationModeEnabled
-            ? palette.Accent
+            ? ActiveButtonBackColor
             : palette.RaisedSurface;
         presentationModeButton.ForeColor = presentationModeEnabled
-            ? Color.Black
+            ? ActiveButtonForeColor
             : palette.Accent;
-        presentationModeButton.FlatAppearance.BorderColor = palette.Accent;
+        presentationModeButton.FlatAppearance.BorderColor = presentationModeEnabled
+            ? ActiveButtonBackColor
+            : palette.Accent;
         presentationModeButton.FlatAppearance.BorderSize = 1;
         presentationModeButton.FlatAppearance.MouseOverBackColor = presentationModeEnabled
             ? ActiveButtonBackColor
