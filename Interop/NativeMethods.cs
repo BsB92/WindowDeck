@@ -36,6 +36,7 @@ internal static class NativeMethods
     internal const int SwMaximize = 3;
     internal const uint SwpNoActivate = 0x0010;
     internal const uint SwpNoZOrder = 0x0004;
+    internal const uint WmSetRedraw = 0x000B;
     internal const uint WmSysCommand = 0x0112;
     internal static readonly nint ScClose = 0xF060;
     internal const uint WmGetIcon = 0x007F;
@@ -309,6 +310,13 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool SetForegroundWindow(nint windowHandle);
+
+    [DllImport("user32.dll")]
+    internal static extern nint SendMessage(
+        nint windowHandle,
+        uint message,
+        nint wParam,
+        nint lParam);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int GetWindowText(nint windowHandle, StringBuilder text, int maximumCount);
