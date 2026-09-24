@@ -84,4 +84,19 @@
   <data name="Flyout_CloseAllTooltip" xml:space="preserve"><value>Close all windows</value></data>
   <data name="Flyout_CollapseGroup" xml:space="preserve"><value>Collapse group</value></data>
   <data name="Flyout_ExpandGroup" xml:space="preserve"><value>Expand group</value></data>
+
+  <data name="Flyout_AddToPresentation" xml:space="preserve"><value>Add to Presentation group</value></data>
+  <data name="Flyout_RemoveFromPresentation" xml:space="preserve"><value>Remove from Presentation group</value></data>
+  <data name="Flyout_PresentationGroup" xml:space="preserve"><value>Presentation group</value></data>
+  <data name="Flyout_PresentationLock" xml:space="preserve"><value>Lock presentation screen</value></data>
+  <data name="Flyout_PresentationUnlock" xml:space="preserve"><value>Unlock presentation screen</value></data>
+  <data name="Flyout_PresentationRequiresTwoScreens" xml:space="preserve"><value>Presentation Mode requires at least two screens.</value></data>
+  <data name="Flyout_PresentationProtectionFailed" xml:space="preserve"><value>WindowDeck could not keep the presentation screen protected. Protection was turned off.</value></data>
+  <data name="Flyout_PresentationConflictsTitle" xml:space="preserve"><value>Prepare presentation screen</value></data>
+  <data name="Flyout_PresentationConflictsHeading" xml:space="preserve"><value>Screen {0} contains windows outside the Presentation group.</value></data>
+  <data name="Flyout_PresentationConflictsInstruction" xml:space="preserve"><value>Add each window to the Presentation group or choose a screen to move it to.</value></data>
+  <data name="Flyout_MoveAllTo" xml:space="preserve"><value>Move all to:</value></data>
+  <data name="Flyout_PresentationResolveAll" xml:space="preserve"><value>Choose an action for every window before locking the presentation screen.</value></data>
+  <data name="Flyout_CollapseAll" xml:space="preserve"><value>Collapse all groups</value></data>
+  <data name="Flyout_ExpandAll" xml:space="preserve"><value>Expand all groups</value></data>
 </root>
