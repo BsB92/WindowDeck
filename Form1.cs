@@ -369,7 +369,7 @@ internal partial class Form1 : Form
         {
             HashSet<Control> cachedRows = windowRowCache.Values
                 .Select(entry => entry.Control)
-                .ToHashSet(ReferenceEqualityComparer.Instance);
+                .ToHashSet<Control>(ReferenceEqualityComparer.Instance);
             foreach (Control control in windowListPanel.Controls.Cast<Control>().ToArray())
             {
                 if (!cachedRows.Contains(control))
