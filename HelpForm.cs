@@ -11,6 +11,7 @@ internal sealed class HelpForm : Form
         ("Help_OpeningHeading", "Help_OpeningText"),
         ("Help_FindingHeading", "Help_FindingText"),
         ("Help_ActionsHeading", "Help_ActionsText"),
+        ("Help_PresentationHeading", "Help_PresentationText"),
         ("Help_TrayHeading", "Help_TrayText"),
         ("Help_SettingsHeading", "Help_SettingsText")
     ];
