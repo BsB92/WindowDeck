@@ -179,4 +179,19 @@ Each grouped application header is a container with independent collapse, minimi
 
 When more than one display is connected, each window row shows localized, wrapping monitor buttons using the existing Windows display numbering. Selecting one moves that exact HWND to the target work area while preserving its restored size and relative position where possible and retaining minimized or maximized state. A single-display system shows no monitor buttons.
 
-A fixed flyout command bar provides access to the existing Help and Settings windows. It also reserves a disabled, localized Presentation Mode control marked as coming soon; Presentation Mode itself is not implemented.
+A fixed flyout command bar provides access to the existing Help and Settings windows.
+
+Presentation Mode is an in-session feature for reserving one connected display for a selected allow-list of windows:
+- Enabling Presentation Mode creates a special Presentation group above the normal application groups.
+- Each normal window row gets a small add control. Adding a window moves its WindowDeck entry into the Presentation group without moving the external window itself.
+- Presentation-group membership is tracked by exact HWND plus process ID and exists only for the current WindowDeck process.
+- The Presentation group lets the user choose the reserved display using the existing Windows display numbering. Presentation-group windows may remain on any monitor; membership means they are allowed on the reserved display, not that they must stay there.
+- Locking the Presentation group scans visible, non-minimized windows currently on the selected reserved display. If windows outside the Presentation group are present, WindowDeck shows a confirmation/configuration dialog before protection is activated.
+- In that dialog, each conflicting window must either be added to the Presentation group or assigned another display. A Move all to action can assign one destination display to all conflicting windows. Cancel leaves protection inactive.
+- After successful confirmation, the reserved display is protected. Visible windows outside the Presentation group that later appear on the reserved display are moved to a non-reserved fallback display. If WindowDeck cannot maintain protection, it disables the lock instead of pretending protection is active.
+- Unlocking stops reservation enforcement without leaving Presentation Mode. Disabling Presentation Mode clears the in-session Presentation group and reservation state.
+- Presentation Mode requires at least two active displays.
+
+When grouping is enabled, right-clicking the window list provides localized Collapse all groups and Expand all groups actions. These actions reuse the existing in-memory collapse state and do not persist it across application restarts.
+
+Individual row Minimize and Close controls have a subtle visible border in both light and dark appearance modes so that they read clearly as buttons without adding a heavy visual treatment.
