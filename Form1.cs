@@ -674,9 +674,11 @@ internal partial class Form1 : Form
                 : "Flyout_AddToPresentation"),
             isCloseButton: false);
         StyleCompactActionButton(presentationButton, fontSize: 12F);
-        presentationButton.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-        presentationButton.TextAlign = ContentAlignment.MiddleCenter;
-        presentationButton.Padding = Padding.Empty;
+        SetCenteredGlyph(
+            presentationButton,
+            presentationMember ? "−" : "+",
+            fontSize: 12F,
+            FontStyle.Bold);
         presentationButton.ForeColor = palette.Accent;
         presentationButton.FlatAppearance.BorderColor = palette.Accent;
         presentationButton.Click += (_, _) =>
@@ -911,13 +913,17 @@ internal partial class Form1 : Form
         protectionButton.Dock = DockStyle.Fill;
         protectionButton.Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8F, FontStyle.Bold);
         protectionButton.Margin = new Padding(6, 2, 6, 2);
-        protectionButton.ForeColor = presentationLocked ? Color.Black : Color.Goldenrod;
-        protectionButton.BackColor = presentationLocked ? palette.Accent : palette.Surface;
+        protectionButton.ForeColor = presentationLocked
+            ? ActiveButtonForeColor
+            : Color.Goldenrod;
+        protectionButton.BackColor = presentationLocked
+            ? ActiveButtonBackColor
+            : palette.Surface;
         protectionButton.FlatAppearance.BorderColor = presentationLocked
-            ? palette.Accent
+            ? ActiveButtonBackColor
             : Color.Goldenrod;
         protectionButton.FlatAppearance.MouseOverBackColor = presentationLocked
-            ? palette.Accent
+            ? ActiveButtonBackColor
             : palette.Hover;
         protectionButton.Click += (_, _) =>
         {
@@ -1340,6 +1346,35 @@ internal partial class Form1 : Form
         }
 
         return button;
+    }
+
+    private static void SetCenteredGlyph(
+        Button button,
+        string glyph,
+        float fontSize,
+        FontStyle fontStyle = FontStyle.Regular)
+    {
+        button.Text = string.Empty;
+        button.Font = new Font("Segoe UI", fontSize, fontStyle);
+        button.Paint += (_, e) =>
+        {
+            Rectangle glyphBounds = new(
+                0,
+                -1,
+                button.ClientSize.Width,
+                button.ClientSize.Height);
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                glyph,
+                button.Font,
+                glyphBounds,
+                button.ForeColor,
+                TextFormatFlags.HorizontalCenter
+                | TextFormatFlags.VerticalCenter
+                | TextFormatFlags.NoPadding
+                | TextFormatFlags.SingleLine);
+        };
     }
 
     private static void StyleCompactActionButton(Button button, float fontSize = 10F)
