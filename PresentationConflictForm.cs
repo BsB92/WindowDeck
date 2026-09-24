@@ -303,7 +303,7 @@ internal sealed class PresentationConflictForm : Form
         Button addButton = addButtons[identity];
         addButton.Text = allowed ? "✓" : "+";
         addButton.BackColor = allowed ? palette.Accent : palette.Surface;
-        addButton.ForeColor = allowed ? Color.White : palette.Accent;
+        addButton.ForeColor = allowed ? Color.Black : palette.Accent;
 
         foreach (MonitorDisplay display in targetDisplays)
         {
