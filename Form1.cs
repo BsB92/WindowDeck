@@ -24,6 +24,8 @@ internal partial class Form1 : Form
     private const int MonitorButtonSize = 26;
     private const int MonitorButtonGap = 3;
     private const int MonitorActionGap = 10;
+    private static Color ActiveButtonBackColor => SystemColors.Highlight;
+    private static Color ActiveButtonForeColor => Color.Black;
     private readonly WindowEnumerator windowEnumerator = new();
     private readonly WindowActivator windowActivator = new();
     private readonly WindowActions windowActions = new();
@@ -775,7 +777,7 @@ internal partial class Form1 : Form
             Button button = new()
             {
                 AccessibleName = LocalizationService.Format("Flyout_MoveToScreen", display.Number),
-                BackColor = active ? palette.Accent : palette.RaisedSurface,
+                BackColor = active ? ActiveButtonBackColor : palette.RaisedSurface,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
                 ForeColor = active ? Color.Black : palette.Foreground,
@@ -786,8 +788,8 @@ internal partial class Form1 : Form
                 UseVisualStyleBackColor = false
             };
             button.FlatAppearance.BorderSize = active ? 2 : 1;
-            button.FlatAppearance.BorderColor = active ? palette.Accent : palette.Border;
-            button.FlatAppearance.MouseOverBackColor = palette.Accent;
+            button.FlatAppearance.BorderColor = active ? ActiveButtonBackColor : palette.Border;
+            button.FlatAppearance.MouseOverBackColor = ActiveButtonBackColor;
             button.FlatAppearance.MouseDownBackColor = palette.Pressed;
             button.MouseEnter += (_, _) => button.ForeColor = Color.Black;
             button.MouseLeave += (_, _) => button.ForeColor = active ? Color.Black : palette.Foreground;
@@ -982,7 +984,7 @@ internal partial class Form1 : Form
                 Button monitorButton = new()
                 {
                     AccessibleName = LocalizationService.Format("Flyout_MoveToScreen", number),
-                    BackColor = selected ? palette.Accent : palette.Surface,
+                    BackColor = selected ? ActiveButtonBackColor : palette.Surface,
                     Enabled = !presentationLocked,
                     FlatStyle = FlatStyle.Flat,
                     Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
@@ -992,9 +994,9 @@ internal partial class Form1 : Form
                     Text = number.ToString(),
                     UseVisualStyleBackColor = false
                 };
-                monitorButton.FlatAppearance.BorderColor = selected ? palette.Accent : palette.Border;
+                monitorButton.FlatAppearance.BorderColor = selected ? ActiveButtonBackColor : palette.Border;
                 monitorButton.FlatAppearance.BorderSize = selected ? 2 : 1;
-                monitorButton.FlatAppearance.MouseOverBackColor = palette.Accent;
+                monitorButton.FlatAppearance.MouseOverBackColor = ActiveButtonBackColor;
                 monitorButton.Click += (_, _) =>
                 {
                     presentationMonitorNumber = number;
@@ -1092,7 +1094,7 @@ internal partial class Form1 : Form
         presentationModeButton.FlatAppearance.BorderColor = palette.Accent;
         presentationModeButton.FlatAppearance.BorderSize = 1;
         presentationModeButton.FlatAppearance.MouseOverBackColor = presentationModeEnabled
-            ? palette.Accent
+            ? ActiveButtonBackColor
             : palette.Hover;
         presentationModeButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
     }
