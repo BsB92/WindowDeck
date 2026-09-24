@@ -83,6 +83,7 @@ internal partial class Form1 : Form
         ApplyTheme();
         if (languageChanged)
         {
+            windowEnumerator.ResetApplicationMetadataCache();
             currentSnapshotInitialized = false;
             RefreshWindowList();
         }
