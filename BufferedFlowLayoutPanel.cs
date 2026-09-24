@@ -9,8 +9,7 @@ internal sealed class BufferedFlowLayoutPanel : FlowLayoutPanel
         DoubleBuffered = true;
         SetStyle(
             ControlStyles.AllPaintingInWmPaint
-            | ControlStyles.OptimizedDoubleBuffer
-            | ControlStyles.UserPaint,
+            | ControlStyles.OptimizedDoubleBuffer,
             true);
         UpdateStyles();
     }
