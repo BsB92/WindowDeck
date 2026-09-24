@@ -92,7 +92,6 @@ namespace WindowDeck
             // bottom bar buttons
             //
             presentationModeButton.Anchor = AnchorStyles.Top | AnchorStyles.Left;
-            presentationModeButton.Enabled = false;
             presentationModeButton.FlatStyle = FlatStyle.Flat;
             presentationModeButton.Location = new Point(0, 4);
             presentationModeButton.Size = new Size(180, 30);
