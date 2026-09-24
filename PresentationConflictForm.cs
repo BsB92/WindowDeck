@@ -6,6 +6,8 @@ namespace WindowDeck;
 
 internal sealed class PresentationConflictForm : Form
 {
+    private static Color ActiveButtonBackColor => SystemColors.Highlight;
+    private static Color ActiveButtonForeColor => Color.Black;
     private const int MonitorButtonSize = 30;
     private readonly ThemePalette palette;
     private readonly IReadOnlyList<WindowInfo> windows;
@@ -302,17 +304,17 @@ internal sealed class PresentationConflictForm : Form
         bool allowed = AllowedWindows.Contains(identity);
         Button addButton = addButtons[identity];
         addButton.Text = allowed ? "✓" : "+";
-        addButton.BackColor = allowed ? palette.Accent : palette.Surface;
-        addButton.ForeColor = allowed ? Color.Black : palette.Accent;
+        addButton.BackColor = allowed ? ActiveButtonBackColor : palette.Surface;
+        addButton.ForeColor = allowed ? ActiveButtonForeColor : palette.Accent;
 
         foreach (MonitorDisplay display in targetDisplays)
         {
             int number = display.Number!.Value;
             Button button = monitorButtons[(identity, number)];
             bool selected = MoveTargets.TryGetValue(identity, out int target) && target == number;
-            button.BackColor = selected ? palette.Accent : palette.Surface;
-            button.ForeColor = selected ? Color.White : palette.Foreground;
-            button.FlatAppearance.BorderColor = selected ? palette.Accent : palette.Border;
+            button.BackColor = selected ? ActiveButtonBackColor : palette.Surface;
+            button.ForeColor = selected ? ActiveButtonForeColor : palette.Foreground;
+            button.FlatAppearance.BorderColor = selected ? ActiveButtonBackColor : palette.Border;
         }
     }
 
