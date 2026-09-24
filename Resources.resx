@@ -36,7 +36,7 @@
   <data name="Flyout_Search" xml:space="preserve"><value>Search windows</value></data>
   <data name="Flyout_NoWindows" xml:space="preserve"><value>No windows found</value></data>
   <data name="Flyout_NoMatches" xml:space="preserve"><value>No matching windows</value></data>
-  <data name="Flyout_Screen" xml:space="preserve"><value>Screen</value></data>
+  <data name="Flyout_Screen" xml:space="preserve"><value>Monitor</value></data>
   <data name="Flyout_MinimizeAccessible" xml:space="preserve"><value>Minimize {0}</value></data>
   <data name="Flyout_CloseAccessible" xml:space="preserve"><value>Close {0}</value></data>
   <data name="Window_Unavailable" xml:space="preserve"><value>The selected window is no longer available.</value></data>
