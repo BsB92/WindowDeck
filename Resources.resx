@@ -49,7 +49,18 @@
   <data name="Help_FindingHeading" xml:space="preserve"><value>Finding windows</value></data>
   <data name="Help_FindingText" xml:space="preserve"><value>Type in Search windows to filter by application or visible window/document title. Windows can be grouped by application. When multiple screens are connected, numbered buttons show the current screen and move that exact window to another screen with one click.</value></data>
   <data name="Help_ActionsHeading" xml:space="preserve"><value>Window actions</value></data>
-  <data name="Help_ActionsText" xml:space="preserve"><value>Click a title or row to activate that exact window. The — button minimizes that window. The × button sends one normal close request to that exact window; the application may still show its usual Save, Don't Save, or Cancel dialog. Group headers provide separate collapse, minimize-all, and confirmed close-all actions.</value></data>
+  <data name="Help_ActionsText" xml:space="preserve"><value>Click a title or row to activate that exact window. The — button minimizes that window. The × button sends one normal close request to that exact window; the application may still show its usual Save, Don't Save, or Cancel dialog. Group headers provide separate collapse, restore-all, minimize-all, and confirmed close-all actions. Right-click the window list to collapse or expand all application groups.</value></data>
+  <data name="Help_PresentationHeading" xml:space="preserve"><value>Presentation Mode</value></data>
+  <data name="Help_PresentationText" xml:space="preserve"><value>Presentation Mode helps keep one screen clean while you share it, for example in Microsoft Teams. The selected screen becomes the presentation screen, and the Presentation group is an allow-list of windows that are permitted to appear there. Adding a window to the group does not automatically move it to the presentation screen — it only gives that window permission to remain there.
+
+How to use it:
+1. Click Presentation Mode at the bottom of WindowDeck.
+2. Click + next to every window that you want to allow on the shared screen. Those windows appear in the Presentation group.
+3. Under Presentation screen, select the screen that you intend to share.
+4. Under Protection, click Enable. If other windows are already on that screen, WindowDeck shows them before protection is enabled. Move each one to another screen, add it to the Presentation group with +, or use Move all to to move all conflicting windows together.
+5. Confirm the dialog. Protection is now active. If another visible window that is not in the Presentation group appears on the presentation screen, WindowDeck automatically moves it to another screen.
+
+The allowed windows do not have to stay on the presentation screen; they may still be used on other screens. Under Protection, click Disable to turn protection off. Turning Presentation Mode off clears the temporary Presentation group and screen selection for that session; windows that were moved are not automatically moved back.</value></data>
   <data name="Help_TrayHeading" xml:space="preserve"><value>Tray behavior</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>WindowDeck's X button and Esc hide the flyout. WindowDeck keeps running in the tray. To shut down the application, use Tray &gt; Exit.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Settings</value></data>
@@ -84,4 +95,36 @@
   <data name="Flyout_CloseAllTooltip" xml:space="preserve"><value>Close all windows</value></data>
   <data name="Flyout_CollapseGroup" xml:space="preserve"><value>Collapse group</value></data>
   <data name="Flyout_ExpandGroup" xml:space="preserve"><value>Expand group</value></data>
+
+  <data name="Flyout_AddToPresentation" xml:space="preserve"><value>Add to Presentation group</value></data>
+  <data name="Flyout_RemoveFromPresentation" xml:space="preserve"><value>Remove from Presentation group</value></data>
+  <data name="Flyout_PresentationGroup" xml:space="preserve"><value>Presentation group</value></data>
+  <data name="Flyout_PresentationLock" xml:space="preserve"><value>Lock presentation screen</value></data>
+  <data name="Flyout_PresentationUnlock" xml:space="preserve"><value>Unlock presentation screen</value></data>
+  <data name="Flyout_PresentationRequiresTwoScreens" xml:space="preserve"><value>Presentation Mode requires at least two screens.</value></data>
+  <data name="Flyout_PresentationProtectionFailed" xml:space="preserve"><value>WindowDeck could not keep the presentation screen protected. Protection was turned off.</value></data>
+  <data name="Flyout_PresentationConflictsTitle" xml:space="preserve"><value>Prepare presentation screen</value></data>
+  <data name="Flyout_PresentationConflictsHeading" xml:space="preserve"><value>Screen {0} contains windows outside the Presentation group.</value></data>
+  <data name="Flyout_PresentationConflictsInstruction" xml:space="preserve"><value>Add each window to the Presentation group or choose a screen to move it to.</value></data>
+  <data name="Flyout_MoveAllTo" xml:space="preserve"><value>Move all to:</value></data>
+  <data name="Flyout_PresentationResolveAll" xml:space="preserve"><value>Choose an action for every window before locking the presentation screen.</value></data>
+  <data name="Flyout_CollapseAll" xml:space="preserve"><value>Collapse all groups</value></data>
+  <data name="Flyout_ExpandAll" xml:space="preserve"><value>Expand all groups</value></data>
+  <data name="Flyout_PresentationProtection" xml:space="preserve"><value>Protection</value></data>
+  <data name="Flyout_PresentationColumnHeader" xml:space="preserve"><value>Add</value></data>
+  <data name="Flyout_MinimizeColumnHeader" xml:space="preserve"><value>Minimize</value></data>
+  <data name="Flyout_CloseColumnHeader" xml:space="preserve"><value>Close</value></data>
+  <data name="Flyout_RestoreShort" xml:space="preserve"><value>Restore</value></data>
+  <data name="Flyout_MinimizeShort" xml:space="preserve"><value>Minimize</value></data>
+  <data name="Flyout_CloseShort" xml:space="preserve"><value>Close</value></data>
+  <data name="Flyout_PresentationGroupHeading" xml:space="preserve"><value>Presentation group — allowed windows</value></data>
+  <data name="Flyout_PresentationScreen" xml:space="preserve"><value>Presentation screen</value></data>
+  <data name="Flyout_EnableProtection" xml:space="preserve"><value>Enable protection</value></data>
+  <data name="Flyout_DisableProtection" xml:space="preserve"><value>Disable protection</value></data>
+  <data name="Flyout_MinimizeGroup" xml:space="preserve"><value>Minimize group</value></data>
+  <data name="Flyout_CloseGroup" xml:space="preserve"><value>Close group</value></data>
+  <data name="Flyout_EnableProtectionShort" xml:space="preserve"><value>Enable</value></data>
+  <data name="Flyout_DisableProtectionShort" xml:space="preserve"><value>Disable</value></data>
+  <data name="Flyout_MinimizeGroupShort" xml:space="preserve"><value>Min.</value></data>
+  <data name="Flyout_CloseGroupShort" xml:space="preserve"><value>Close</value></data>
 </root>

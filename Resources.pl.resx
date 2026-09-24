@@ -49,7 +49,18 @@
   <data name="Help_FindingHeading" xml:space="preserve"><value>Znajdowanie okien</value></data>
   <data name="Help_FindingText" xml:space="preserve"><value>Wpisz tekst w polu Wyszukaj okna, aby filtrować według aplikacji albo widocznego tytułu okna lub dokumentu. Okna mogą być grupowane według aplikacji. Gdy podłączono wiele ekranów, ponumerowane przyciski wskazują bieżący ekran i jednym kliknięciem przenoszą dokładnie to okno na inny ekran.</value></data>
   <data name="Help_ActionsHeading" xml:space="preserve"><value>Akcje okien</value></data>
-  <data name="Help_ActionsText" xml:space="preserve"><value>Kliknij tytuł lub wiersz, aby aktywować dokładnie to okno. Przycisk — minimalizuje to okno. Przycisk × wysyła jedno normalne żądanie zamknięcia do dokładnie tego okna; aplikacja może nadal wyświetlić zwykłe okno dialogowe Zapisz, Nie zapisuj lub Anuluj. Nagłówki grup mają oddzielne akcje zwijania, minimalizowania wszystkich oraz zamykania wszystkich z potwierdzeniem.</value></data>
+  <data name="Help_ActionsText" xml:space="preserve"><value>Kliknij tytuł lub wiersz, aby aktywować dokładnie to okno. Przycisk — minimalizuje to okno. Przycisk × wysyła jedno normalne żądanie zamknięcia do dokładnie tego okna; aplikacja może nadal wyświetlić zwykłe okno dialogowe Zapisz, Nie zapisuj lub Anuluj. Nagłówki grup mają oddzielne akcje zwijania, przywracania wszystkich, minimalizowania wszystkich oraz zamykania wszystkich z potwierdzeniem. Kliknij prawym przyciskiem na liście okien, aby zwinąć lub rozwinąć wszystkie grupy aplikacji.</value></data>
+  <data name="Help_PresentationHeading" xml:space="preserve"><value>Tryb prezentacji</value></data>
+  <data name="Help_PresentationText" xml:space="preserve"><value>Tryb prezentacji pomaga utrzymać jeden ekran „czysty” podczas jego udostępniania, na przykład w Microsoft Teams. Wybrany ekran staje się ekranem prezentacji, a Grupa prezentacji jest listą okien, które mają prawo się na nim pojawiać. Dodanie okna do grupy nie przenosi go automatycznie na ekran prezentacji — oznacza tylko, że to okno może na nim pozostać.
+
+Jak używać:
+1. Kliknij Tryb prezentacji na dole WindowDeck.
+2. Kliknij + przy każdym oknie, które chcesz dopuścić na udostępnianym ekranie. Te okna pojawią się w Grupie prezentacji.
+3. W sekcji Ekran prezentacji wybierz numer ekranu, który zamierzasz udostępniać.
+4. W sekcji Ochrona kliknij Włącz. Jeżeli na wybranym ekranie znajdują się już inne okna, WindowDeck pokaże je przed włączeniem ochrony. Każde z nich możesz przenieść na inny ekran, dodać przyciskiem + do Grupy prezentacji albo użyć Przenieś wszystkie do, aby przenieść wszystkie konfliktujące okna razem.
+5. Zatwierdź okno dialogowe. Ochrona jest teraz aktywna. Jeżeli na ekranie prezentacji pojawi się inne widoczne okno, którego nie ma w Grupie prezentacji, WindowDeck automatycznie przeniesie je na inny ekran.
+
+Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz używać ich na innych ekranach. W sekcji Ochrona kliknij Wyłącz, aby wyłączyć ochronę. Wyłączenie Trybu prezentacji czyści tymczasową Grupę prezentacji i wybór ekranu dla tej sesji; przeniesione wcześniej okna nie są automatycznie przenoszone z powrotem.</value></data>
   <data name="Help_TrayHeading" xml:space="preserve"><value>Działanie zasobnika</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>Przycisk X WindowDeck oraz Esc ukrywają panel. WindowDeck nadal działa w zasobniku. Aby zakończyć aplikację, użyj Zasobnik &gt; Zakończ.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Ustawienia</value></data>
@@ -84,4 +95,36 @@
   <data name="Flyout_CloseAllTooltip" xml:space="preserve"><value>Zamknij wszystkie okna</value></data>
   <data name="Flyout_CollapseGroup" xml:space="preserve"><value>Zwiń grupę</value></data>
   <data name="Flyout_ExpandGroup" xml:space="preserve"><value>Rozwiń grupę</value></data>
+
+  <data name="Flyout_AddToPresentation" xml:space="preserve"><value>Dodaj do grupy prezentacji</value></data>
+  <data name="Flyout_RemoveFromPresentation" xml:space="preserve"><value>Usuń z grupy prezentacji</value></data>
+  <data name="Flyout_PresentationGroup" xml:space="preserve"><value>Grupa prezentacji</value></data>
+  <data name="Flyout_PresentationLock" xml:space="preserve"><value>Włącz ochronę ekranu prezentacji</value></data>
+  <data name="Flyout_PresentationUnlock" xml:space="preserve"><value>Wyłącz ochronę ekranu prezentacji</value></data>
+  <data name="Flyout_PresentationRequiresTwoScreens" xml:space="preserve"><value>Tryb prezentacji wymaga co najmniej dwóch ekranów.</value></data>
+  <data name="Flyout_PresentationProtectionFailed" xml:space="preserve"><value>Nie udało się utrzymać ochrony ekranu prezentacji. Ochrona została wyłączona.</value></data>
+  <data name="Flyout_PresentationConflictsTitle" xml:space="preserve"><value>Przygotuj ekran prezentacji</value></data>
+  <data name="Flyout_PresentationConflictsHeading" xml:space="preserve"><value>Na ekranie {0} znajdują się okna spoza grupy prezentacji.</value></data>
+  <data name="Flyout_PresentationConflictsInstruction" xml:space="preserve"><value>Dodaj okno do grupy prezentacji albo wybierz ekran, na który ma zostać przeniesione.</value></data>
+  <data name="Flyout_MoveAllTo" xml:space="preserve"><value>Przenieś wszystkie na:</value></data>
+  <data name="Flyout_PresentationResolveAll" xml:space="preserve"><value>Przed włączeniem ochrony wybierz działanie dla każdego okna.</value></data>
+  <data name="Flyout_CollapseAll" xml:space="preserve"><value>Zwiń wszystkie grupy</value></data>
+  <data name="Flyout_ExpandAll" xml:space="preserve"><value>Rozwiń wszystkie grupy</value></data>
+  <data name="Flyout_PresentationProtection" xml:space="preserve"><value>Ochrona</value></data>
+  <data name="Flyout_PresentationColumnHeader" xml:space="preserve"><value>Dodaj</value></data>
+  <data name="Flyout_MinimizeColumnHeader" xml:space="preserve"><value>Minimalizuj</value></data>
+  <data name="Flyout_CloseColumnHeader" xml:space="preserve"><value>Zamknij</value></data>
+  <data name="Flyout_RestoreShort" xml:space="preserve"><value>Przywróć</value></data>
+  <data name="Flyout_MinimizeShort" xml:space="preserve"><value>Minimalizuj</value></data>
+  <data name="Flyout_CloseShort" xml:space="preserve"><value>Zamknij</value></data>
+  <data name="Flyout_PresentationGroupHeading" xml:space="preserve"><value>Grupa prezentacji — dozwolone okna</value></data>
+  <data name="Flyout_PresentationScreen" xml:space="preserve"><value>Ekran prezentacji</value></data>
+  <data name="Flyout_EnableProtection" xml:space="preserve"><value>Włącz ochronę</value></data>
+  <data name="Flyout_DisableProtection" xml:space="preserve"><value>Wyłącz ochronę</value></data>
+  <data name="Flyout_MinimizeGroup" xml:space="preserve"><value>Minimalizuj grupę</value></data>
+  <data name="Flyout_CloseGroup" xml:space="preserve"><value>Zamknij grupę</value></data>
+  <data name="Flyout_EnableProtectionShort" xml:space="preserve"><value>Włącz</value></data>
+  <data name="Flyout_DisableProtectionShort" xml:space="preserve"><value>Wyłącz</value></data>
+  <data name="Flyout_MinimizeGroupShort" xml:space="preserve"><value>Min.</value></data>
+  <data name="Flyout_CloseGroupShort" xml:space="preserve"><value>Zam.</value></data>
 </root>
