@@ -75,6 +75,8 @@ internal sealed class HelpForm : Form
             sectionControls[index].Heading.Text = LocalizationService.Get(Sections[index].Heading);
             sectionControls[index].Text.Text = LocalizationService.Get(Sections[index].Text);
         }
+
+        UpdateTextWidths();
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -118,9 +120,9 @@ internal sealed class HelpForm : Form
             - SystemInformation.VerticalScrollBarWidth
             - 8);
 
-        foreach ((_, Label text) in sectionControls)
+        foreach (var section in sectionControls)
         {
-            text.MaximumSize = new Size(availableWidth, 0);
+            section.Text.MaximumSize = new Size(availableWidth, 0);
         }
     }
 
