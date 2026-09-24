@@ -125,4 +125,6 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Flyout_CloseGroup" xml:space="preserve"><value>Zamknij grupę</value></data>
   <data name="Flyout_EnableProtectionShort" xml:space="preserve"><value>Włącz</value></data>
   <data name="Flyout_DisableProtectionShort" xml:space="preserve"><value>Wyłącz</value></data>
+  <data name="Flyout_MinimizeGroupShort" xml:space="preserve"><value>Min.</value></data>
+  <data name="Flyout_CloseGroupShort" xml:space="preserve"><value>Zam.</value></data>
 </root>
