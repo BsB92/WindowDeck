@@ -27,6 +27,14 @@ internal partial class Form1 : Form
     private readonly MonitorDetector monitorDetector = new();
     private readonly ApplicationIconProvider applicationIconProvider = new();
     private readonly HashSet<string> collapsedApplicationIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<WindowIdentity> presentationWindowIds = [];
+    private ContextMenuStrip groupContextMenu = null!;
+    private ToolStripMenuItem collapseAllItem = null!;
+    private ToolStripMenuItem expandAllItem = null!;
+    private bool presentationModeEnabled;
+    private bool presentationLocked;
+    private int? presentationMonitorNumber;
+    private int? presentationFallbackMonitorNumber;
     private AppSettings settings;
     private IReadOnlyList<WindowInfo> currentSnapshot = [];
     private bool currentSnapshotInitialized;
@@ -53,6 +61,8 @@ internal partial class Form1 : Form
         searchTextBox.Leave += (_, _) => searchTextBox.BackColor = palette.Surface;
         settingsButton.Click += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
         helpButton.Click += (_, _) => HelpRequested?.Invoke(this, EventArgs.Empty);
+        presentationModeButton.Click += PresentationModeButton_Click;
+        InitializeGroupContextMenu();
         ApplyLocalization();
         ApplyTheme();
         PositionOnRelevantMonitor(DefaultPanelWidth);
@@ -304,6 +314,8 @@ internal partial class Form1 : Form
         try
         {
             IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate();
+            updatedSnapshot = EnforcePresentationReservation(updatedSnapshot);
+            PrunePresentationWindows(updatedSnapshot);
             if (!force && currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
             {
                 return;
@@ -329,13 +341,25 @@ internal partial class Form1 : Form
     private void RenderWindowList()
     {
         displays = monitorDetector.GetDisplays();
+        IReadOnlyList<WindowInfo> presentationWindows = presentationModeEnabled
+            ? currentSnapshot
+                .Where(window => presentationWindowIds.Contains(WindowIdentity.From(window)))
+                .OrderBy(window => window.ApplicationName, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(window => window.DisplayTitle, StringComparer.CurrentCultureIgnoreCase)
+                .ToArray()
+            : [];
+        IReadOnlyList<WindowInfo> regularSnapshot = presentationModeEnabled
+            ? currentSnapshot
+                .Where(window => !presentationWindowIds.Contains(WindowIdentity.From(window)))
+                .ToArray()
+            : currentSnapshot;
         IReadOnlyList<IGrouping<string, WindowInfo>> groups =
             WindowListPresentation.Create(
-                currentSnapshot,
+                regularSnapshot,
                 searchTextBox.Text,
                 settings.GroupByApplication,
                 settings.ShowMinimizedWindows);
-        int visibleCount = groups.Sum(group => group.Count());
+        int visibleCount = groups.Sum(group => group.Count()) + presentationWindows.Count;
         bool searchActive = searchTextBox.Text.Trim().Length > 0;
 
         windowListPanel.SuspendLayout();
@@ -348,9 +372,18 @@ internal partial class Form1 : Form
 
             windowListPanel.Controls.Clear();
 
+            if (presentationModeEnabled)
+            {
+                windowListPanel.Controls.Add(CreatePresentationGroupHeader(presentationWindows));
+                foreach (WindowInfo presentationWindow in presentationWindows)
+                {
+                    windowListPanel.Controls.Add(CreateWindowRow(presentationWindow, presentationMember: true));
+                }
+            }
+
             windowListPanel.Controls.Add(CreateColumnHeader());
 
-            if (visibleCount == 0)
+            if (visibleCount == 0 && !presentationModeEnabled)
             {
                 Label emptyLabel = new()
                 {
@@ -384,7 +417,7 @@ internal partial class Form1 : Form
                     }
                     foreach (WindowInfo window in group)
                     {
-                        windowListPanel.Controls.Add(CreateWindowRow(window));
+                        windowListPanel.Controls.Add(CreateWindowRow(window, presentationMember: false));
                     }
                 }
             }
@@ -413,7 +446,7 @@ internal partial class Form1 : Form
 
         if (settings.ShowScreenNumber)
         {
-            header.Controls.Add(screenHeader, 4, 0);
+            header.Controls.Add(screenHeader, 5, 0);
         }
         return header;
     }
@@ -427,6 +460,7 @@ internal partial class Form1 : Form
         TableLayoutPanel header = new()
         {
             ColumnCount = 5,
+            ContextMenuStrip = groupContextMenu,
             Dock = DockStyle.Top,
             Height = 31,
             Margin = new Padding(4, 8, 4, 2),
@@ -482,12 +516,13 @@ internal partial class Form1 : Form
         return header;
     }
 
-    private Control CreateWindowRow(WindowInfo window)
+    private Control CreateWindowRow(WindowInfo window, bool presentationMember)
     {
         int monitorRows = displays.Count > 1 ? (displays.Count + 3) / 4 : 1;
         int monitorButtonPitch = MonitorButtonSize + MonitorButtonGap;
         TableLayoutPanel row = CreateListGrid(Math.Max(32, monitorRows * monitorButtonPitch), new Padding(4, 1, 4, 1));
         row.BackColor = palette.Surface;
+        row.ContextMenuStrip = groupContextMenu;
 
         Button titleButton = new()
         {
@@ -506,6 +541,34 @@ internal partial class Form1 : Form
         titleButton.FlatAppearance.MouseOverBackColor = palette.Hover;
         titleButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
         titleButton.Click += (_, _) => ActivateWindow(window);
+
+        Button presentationButton = CreateActionButton(
+            presentationMember ? "−" : "+",
+            LocalizationService.Get(presentationMember
+                ? "Flyout_RemoveFromPresentation"
+                : "Flyout_AddToPresentation"),
+            isCloseButton: false);
+        presentationButton.ForeColor = palette.Accent;
+        presentationButton.FlatAppearance.BorderColor = palette.Accent;
+        presentationButton.Click += (_, _) =>
+        {
+            WindowIdentity identity = WindowIdentity.From(window);
+            if (presentationMember)
+            {
+                presentationWindowIds.Remove(identity);
+            }
+            else
+            {
+                presentationWindowIds.Add(identity);
+            }
+
+            RenderWindowList();
+            if (presentationLocked)
+            {
+                RefreshWindowList(force: true);
+            }
+        };
+        toolTip.SetToolTip(presentationButton, presentationButton.AccessibleName);
 
         Button minimizeButton = CreateActionButton(
             "—",
@@ -544,11 +607,15 @@ internal partial class Form1 : Form
             row.Controls.Add(applicationIcon, 0, 0);
         }
         row.Controls.Add(titleButton, 1, 0);
-        row.Controls.Add(minimizeButton, 2, 0);
-        row.Controls.Add(closeButton, 3, 0);
+        if (presentationModeEnabled)
+        {
+            row.Controls.Add(presentationButton, 2, 0);
+        }
+        row.Controls.Add(minimizeButton, 3, 0);
+        row.Controls.Add(closeButton, 4, 0);
         if (settings.ShowScreenNumber && displays.Count > 1)
         {
-            row.Controls.Add(CreateMonitorButtons(window), 4, 0);
+            row.Controls.Add(CreateMonitorButtons(window), 5, 0);
         }
         return row;
     }
@@ -608,7 +675,7 @@ internal partial class Form1 : Form
     {
         TableLayoutPanel grid = new()
         {
-            ColumnCount = 5,
+            ColumnCount = 6,
             GrowStyle = TableLayoutPanelGrowStyle.FixedSize,
             Height = height,
             Margin = margin,
@@ -619,6 +686,7 @@ internal partial class Form1 : Form
         grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowApplicationIcons ? 24 : 0));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, presentationModeEnabled ? ActionColumnWidth : 0));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         int monitorWidth = settings.ShowScreenNumber && displays.Count > 1
@@ -626,6 +694,342 @@ internal partial class Form1 : Form
             : 0;
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, monitorWidth));
         return grid;
+    }
+
+    private Control CreatePresentationGroupHeader(IReadOnlyList<WindowInfo> windows)
+    {
+        int monitorRows = displays.Count > 1 ? (displays.Count + 3) / 4 : 1;
+        int monitorWidth = displays.Count > 1
+            ? (MonitorButtonSize + MonitorButtonGap) * Math.Min(4, displays.Count)
+            : 0;
+        TableLayoutPanel header = new()
+        {
+            ColumnCount = 6,
+            ContextMenuStrip = groupContextMenu,
+            Height = Math.Max(34, monitorRows * (MonitorButtonSize + MonitorButtonGap)),
+            Margin = new Padding(4, 8, 4, 4),
+            BackColor = palette.RaisedSurface,
+            Width = Math.Max(120, windowListPanel.ClientSize.Width
+                - SystemInformation.VerticalScrollBarWidth - 10)
+        };
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, monitorWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+
+        Label nameLabel = new()
+        {
+            AutoEllipsis = true,
+            Dock = DockStyle.Fill,
+            Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
+            ForeColor = palette.Foreground,
+            Margin = new Padding(8, 0, 6, 0),
+            Text = LocalizationService.Get("Flyout_PresentationGroup"),
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+        header.Controls.Add(nameLabel, 0, 0);
+
+        if (displays.Count > 1)
+        {
+            FlowLayoutPanel monitorPanel = new()
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                Margin = Padding.Empty,
+                WrapContents = true
+            };
+            foreach (MonitorDisplay display in displays)
+            {
+                int number = display.Number!.Value;
+                bool selected = number == presentationMonitorNumber;
+                Button monitorButton = new()
+                {
+                    AccessibleName = LocalizationService.Format("Flyout_MoveToScreen", number),
+                    BackColor = selected ? palette.Accent : palette.Surface,
+                    Enabled = !presentationLocked,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
+                    ForeColor = selected ? Color.White : palette.Foreground,
+                    Margin = new Padding(0, 0, MonitorButtonGap, MonitorButtonGap),
+                    Size = new Size(MonitorButtonSize, MonitorButtonSize),
+                    Text = number.ToString(),
+                    UseVisualStyleBackColor = false
+                };
+                monitorButton.FlatAppearance.BorderColor = selected ? palette.Accent : palette.Border;
+                monitorButton.FlatAppearance.BorderSize = selected ? 2 : 1;
+                monitorButton.FlatAppearance.MouseOverBackColor = palette.Accent;
+                monitorButton.Click += (_, _) =>
+                {
+                    presentationMonitorNumber = number;
+                    presentationFallbackMonitorNumber = displays
+                        .FirstOrDefault(candidate => candidate.Number != number)?.Number;
+                    RenderWindowList();
+                };
+                toolTip.SetToolTip(monitorButton, monitorButton.AccessibleName);
+                monitorPanel.Controls.Add(monitorButton);
+            }
+            header.Controls.Add(monitorPanel, 1, 0);
+        }
+
+        Button lockButton = CreateActionButton(
+            presentationLocked ? "🔒" : "🔓",
+            LocalizationService.Get(presentationLocked
+                ? "Flyout_PresentationUnlock"
+                : "Flyout_PresentationLock"),
+            false);
+        lockButton.ForeColor = presentationLocked ? palette.Accent : palette.Foreground;
+        lockButton.FlatAppearance.BorderColor = presentationLocked ? palette.Accent : palette.Border;
+        lockButton.Click += (_, _) =>
+        {
+            if (presentationLocked)
+            {
+                presentationLocked = false;
+                RenderWindowList();
+            }
+            else
+            {
+                TryActivatePresentationProtection();
+            }
+        };
+        toolTip.SetToolTip(lockButton, lockButton.AccessibleName);
+        header.Controls.Add(lockButton, 2, 0);
+
+        Button restoreButton = CreateActionButton("□", LocalizationService.Get("Flyout_RestoreAllTooltip"), false);
+        StyleGroupActionButton(restoreButton, isCloseButton: false);
+        restoreButton.Enabled = windows.Count > 0;
+        restoreButton.Click += (_, _) => RunForGroup(windows, windowActions.Restore);
+        header.Controls.Add(restoreButton, 3, 0);
+
+        Button minimizeButton = CreateActionButton("—", LocalizationService.Get("Flyout_MinimizeAllTooltip"), false);
+        StyleGroupActionButton(minimizeButton, isCloseButton: false);
+        minimizeButton.Enabled = windows.Count > 0;
+        minimizeButton.Click += (_, _) => RunForGroup(windows, windowActions.Minimize);
+        header.Controls.Add(minimizeButton, 4, 0);
+
+        Button closeButton = CreateActionButton("×", LocalizationService.Get("Flyout_CloseAllTooltip"), true);
+        StyleGroupActionButton(closeButton, isCloseButton: true);
+        closeButton.Enabled = windows.Count > 0;
+        closeButton.Click += (_, _) => ConfirmAndCloseGroup(windows);
+        header.Controls.Add(closeButton, 5, 0);
+
+        toolTip.SetToolTip(restoreButton, restoreButton.AccessibleName);
+        toolTip.SetToolTip(minimizeButton, minimizeButton.AccessibleName);
+        toolTip.SetToolTip(closeButton, closeButton.AccessibleName);
+        return header;
+    }
+
+    private void PresentationModeButton_Click(object? sender, EventArgs e)
+    {
+        displays = monitorDetector.GetDisplays();
+        if (!presentationModeEnabled && displays.Count < 2)
+        {
+            MessageBox.Show(
+                this,
+                LocalizationService.Get("Flyout_PresentationRequiresTwoScreens"),
+                LocalizationService.Get("App_Title"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
+
+        presentationModeEnabled = !presentationModeEnabled;
+        if (presentationModeEnabled)
+        {
+            string currentDeviceName = Screen.FromControl(this).DeviceName;
+            presentationMonitorNumber = displays
+                .FirstOrDefault(display =>
+                    string.Equals(display.DeviceName, currentDeviceName, StringComparison.OrdinalIgnoreCase))
+                ?.Number
+                ?? displays.First().Number;
+            presentationFallbackMonitorNumber = displays
+                .FirstOrDefault(display => display.Number != presentationMonitorNumber)?.Number;
+        }
+        else
+        {
+            presentationLocked = false;
+            presentationMonitorNumber = null;
+            presentationFallbackMonitorNumber = null;
+            presentationWindowIds.Clear();
+        }
+
+        UpdatePresentationModeVisual();
+        RenderWindowList();
+    }
+
+    private void InitializeGroupContextMenu()
+    {
+        groupContextMenu = new ContextMenuStrip(components);
+        collapseAllItem = new ToolStripMenuItem();
+        expandAllItem = new ToolStripMenuItem();
+        collapseAllItem.Click += (_, _) =>
+        {
+            collapsedApplicationIds.UnionWith(
+                currentSnapshot.Select(window => window.ApplicationId));
+            RenderWindowList();
+        };
+        expandAllItem.Click += (_, _) =>
+        {
+            collapsedApplicationIds.Clear();
+            RenderWindowList();
+        };
+        groupContextMenu.Items.AddRange([collapseAllItem, expandAllItem]);
+        groupContextMenu.Opening += (_, e) =>
+        {
+            e.Cancel = !settings.GroupByApplication;
+            collapseAllItem.Enabled = currentSnapshot.Count > 0;
+            expandAllItem.Enabled = collapsedApplicationIds.Count > 0;
+        };
+        windowListPanel.ContextMenuStrip = groupContextMenu;
+    }
+
+    private void UpdatePresentationModeVisual()
+    {
+        if (presentationModeButton is null)
+        {
+            return;
+        }
+
+        presentationModeButton.BackColor = presentationModeEnabled
+            ? palette.Accent
+            : palette.RaisedSurface;
+        presentationModeButton.ForeColor = presentationModeEnabled
+            ? Color.White
+            : palette.SecondaryForeground;
+        presentationModeButton.FlatAppearance.BorderColor = presentationModeEnabled
+            ? palette.Accent
+            : palette.Border;
+    }
+
+    private void TryActivatePresentationProtection()
+    {
+        if (!presentationModeEnabled || presentationMonitorNumber is not int reservedMonitor)
+        {
+            return;
+        }
+
+        displays = monitorDetector.GetDisplays();
+        if (displays.Count < 2
+            || displays.All(display => display.Number != reservedMonitor))
+        {
+            MessageBox.Show(
+                this,
+                LocalizationService.Get("Flyout_PresentationRequiresTwoScreens"),
+                LocalizationService.Get("App_Title"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
+
+        WindowInfo[] foreignWindows = currentSnapshot
+            .Where(window => !window.IsMinimized
+                && window.MonitorNumber == reservedMonitor
+                && !presentationWindowIds.Contains(WindowIdentity.From(window)))
+            .ToArray();
+
+        presentationFallbackMonitorNumber ??= displays
+            .FirstOrDefault(display => display.Number != reservedMonitor)?.Number;
+
+        if (foreignWindows.Length > 0)
+        {
+            using PresentationConflictForm dialog = new(
+                foreignWindows,
+                displays,
+                reservedMonitor,
+                settings.Theme);
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            presentationWindowIds.UnionWith(dialog.AllowedWindows);
+            presentationFallbackMonitorNumber = dialog.PreferredFallbackMonitorNumber
+                ?? presentationFallbackMonitorNumber;
+
+            bool success = true;
+            foreach ((WindowIdentity identity, int targetNumber) in dialog.MoveTargets)
+            {
+                WindowInfo? window = currentSnapshot.FirstOrDefault(candidate =>
+                    WindowIdentity.From(candidate) == identity);
+                MonitorDisplay? target = displays.FirstOrDefault(display =>
+                    display.Number == targetNumber);
+                if (window is null || target is null || !windowActions.MoveToMonitor(window, target))
+                {
+                    success = false;
+                }
+            }
+
+            if (!success)
+            {
+                ShowWindowActionFailure();
+                RenderWindowList();
+                return;
+            }
+        }
+
+        presentationLocked = true;
+        RefreshWindowList(force: true);
+    }
+
+    private IReadOnlyList<WindowInfo> EnforcePresentationReservation(
+        IReadOnlyList<WindowInfo> snapshot)
+    {
+        if (!presentationLocked || presentationMonitorNumber is not int reservedMonitor)
+        {
+            return snapshot;
+        }
+
+        displays = monitorDetector.GetDisplays();
+        MonitorDisplay? fallback = displays.FirstOrDefault(display =>
+            display.Number == presentationFallbackMonitorNumber
+            && display.Number != reservedMonitor)
+            ?? displays.FirstOrDefault(display => display.Number != reservedMonitor);
+        if (fallback is null
+            || displays.All(display => display.Number != reservedMonitor))
+        {
+            DisablePresentationProtection(showMessage: true);
+            return snapshot;
+        }
+
+        bool movedAny = false;
+        foreach (WindowInfo window in snapshot.Where(window =>
+                     !window.IsMinimized
+                     && window.MonitorNumber == reservedMonitor
+                     && !presentationWindowIds.Contains(WindowIdentity.From(window))))
+        {
+            if (!windowActions.MoveToMonitor(window, fallback))
+            {
+                DisablePresentationProtection(showMessage: true);
+                return snapshot;
+            }
+
+            movedAny = true;
+        }
+
+        return movedAny ? windowEnumerator.Enumerate() : snapshot;
+    }
+
+    private void DisablePresentationProtection(bool showMessage)
+    {
+        presentationLocked = false;
+        if (showMessage && Visible)
+        {
+            MessageBox.Show(
+                this,
+                LocalizationService.Get("Flyout_PresentationProtectionFailed"),
+                LocalizationService.Get("App_Title"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+    }
+
+    private void PrunePresentationWindows(IReadOnlyList<WindowInfo> snapshot)
+    {
+        HashSet<WindowIdentity> current = snapshot
+            .Select(WindowIdentity.From)
+            .ToHashSet();
+        presentationWindowIds.RemoveWhere(identity => !current.Contains(identity));
     }
 
     private void RunForGroup(IEnumerable<WindowInfo> windows, Func<WindowInfo, bool> action)
@@ -675,6 +1079,7 @@ internal partial class Form1 : Form
         settingsButton.ForeColor = palette.Foreground;
         presentationModeButton.FlatAppearance.BorderColor = palette.Border;
         presentationModeButton.FlatAppearance.BorderSize = 1;
+        UpdatePresentationModeVisual();
         helpButton.FlatAppearance.BorderColor = palette.Border;
         settingsButton.FlatAppearance.BorderColor = palette.Border;
         helpButton.FlatAppearance.MouseOverBackColor = palette.Hover;
@@ -695,7 +1100,9 @@ internal partial class Form1 : Form
         settingsButton.AccessibleName = LocalizationService.Get("Tray_Settings");
         toolTip.SetToolTip(helpButton, helpButton.AccessibleName);
         toolTip.SetToolTip(settingsButton, settingsButton.AccessibleName);
-        toolTip.SetToolTip(presentationModeButton, LocalizationService.Get("Flyout_ComingSoon"));
+        toolTip.SetToolTip(presentationModeButton, LocalizationService.Get("Flyout_PresentationMode"));
+        collapseAllItem.Text = LocalizationService.Get("Flyout_CollapseAll");
+        expandAllItem.Text = LocalizationService.Get("Flyout_ExpandAll");
     }
 
     private Button CreateActionButton(
@@ -716,7 +1123,8 @@ internal partial class Form1 : Form
             Text = text,
             UseVisualStyleBackColor = false
         };
-        button.FlatAppearance.BorderSize = 0;
+        button.FlatAppearance.BorderColor = palette.Border;
+        button.FlatAppearance.BorderSize = 1;
         button.FlatAppearance.MouseDownBackColor = isCloseButton
             ? palette.ClosePressed
             : palette.Pressed;
