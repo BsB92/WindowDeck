@@ -18,7 +18,9 @@ internal partial class Form1 : Form
     private const int WmWindowPositionChanging = 0x0046;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
-    private const int ActionColumnWidth = 34;
+    private const int ActionColumnWidth = 68;
+    private const int PresentationColumnWidth = 84;
+    private const int GroupActionColumnWidth = 92;
     private const int MonitorButtonSize = 26;
     private const int MonitorButtonGap = 3;
     private readonly WindowEnumerator windowEnumerator = new();
@@ -513,21 +515,35 @@ internal partial class Form1 : Form
 
     private Control CreateColumnHeader()
     {
-        TableLayoutPanel header = CreateListGrid(24, new Padding(4, 1, 4, 0));
-        Label screenHeader = new()
+        TableLayoutPanel header = CreateListGrid(30, new Padding(4, 1, 4, 2));
+        header.BackColor = palette.Background;
+
+        Label CreateHeaderLabel(string resourceKey)
         {
-            Dock = DockStyle.Fill,
-            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
-            ForeColor = palette.Foreground,
-            Margin = Padding.Empty,
-            Text = LocalizationService.Get("Flyout_Screen"),
-            TextAlign = ContentAlignment.MiddleCenter
-        };
+            return new Label
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8F, FontStyle.Bold),
+                ForeColor = palette.SecondaryForeground,
+                Margin = Padding.Empty,
+                Text = LocalizationService.Get(resourceKey),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+        }
+
+        if (presentationModeEnabled)
+        {
+            header.Controls.Add(CreateHeaderLabel("Flyout_PresentationColumnHeader"), 2, 0);
+        }
+
+        header.Controls.Add(CreateHeaderLabel("Flyout_MinimizeColumnHeader"), 3, 0);
+        header.Controls.Add(CreateHeaderLabel("Flyout_CloseColumnHeader"), 4, 0);
 
         if (settings.ShowScreenNumber)
         {
-            header.Controls.Add(screenHeader, 5, 0);
+            header.Controls.Add(CreateHeaderLabel("Flyout_Screen"), 5, 0);
         }
+
         return header;
     }
 
@@ -542,18 +558,20 @@ internal partial class Form1 : Form
             ColumnCount = 5,
             ContextMenuStrip = groupContextMenu,
             Dock = DockStyle.Top,
-            Height = 31,
+            Height = 34,
             Margin = new Padding(4, 8, 4, 2),
             BackColor = palette.RaisedSurface,
         };
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, GroupActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, GroupActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, GroupActionColumnWidth));
 
-        Button collapseButton = CreateActionButton(visuallyCollapsed ? "▶" : "▼",
-            LocalizationService.Get(visuallyCollapsed ? "Flyout_ExpandGroup" : "Flyout_CollapseGroup"), false);
+        Button collapseButton = CreateActionButton(
+            visuallyCollapsed ? "▶" : "▼",
+            LocalizationService.Get(visuallyCollapsed ? "Flyout_ExpandGroup" : "Flyout_CollapseGroup"),
+            false);
         Label nameLabel = new()
         {
             AutoEllipsis = true,
@@ -570,24 +588,46 @@ internal partial class Form1 : Form
             {
                 collapsedApplicationIds.Add(applicationId);
             }
+
             RenderWindowList();
         }
         collapseButton.Click += ToggleGroup;
         nameLabel.Click += ToggleGroup;
 
-        Button restoreButton = CreateActionButton("□", LocalizationService.Get("Flyout_RestoreAllTooltip"), false);
-        StyleGroupActionButton(restoreButton, isCloseButton: false);
+        Button CreateGroupTextButton(string textKey, string accessibleKey, bool close)
+        {
+            Button button = CreateActionButton(
+                LocalizationService.Get(textKey),
+                LocalizationService.Get(accessibleKey),
+                close);
+            button.Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8F, FontStyle.Bold);
+            StyleGroupActionButton(button, close);
+            return button;
+        }
+
+        Button restoreButton = CreateGroupTextButton(
+            "Flyout_RestoreShort",
+            "Flyout_RestoreAllTooltip",
+            close: false);
         restoreButton.Click += (_, _) => RunForGroup(windows, windowActions.Restore);
-        Button minimizeButton = CreateActionButton("—", LocalizationService.Get("Flyout_MinimizeAllTooltip"), false);
-        StyleGroupActionButton(minimizeButton, isCloseButton: false);
+
+        Button minimizeButton = CreateGroupTextButton(
+            "Flyout_MinimizeShort",
+            "Flyout_MinimizeAllTooltip",
+            close: false);
         minimizeButton.Click += (_, _) => RunForGroup(windows, windowActions.Minimize);
-        Button closeButton = CreateActionButton("×", LocalizationService.Get("Flyout_CloseAllTooltip"), true);
-        StyleGroupActionButton(closeButton, isCloseButton: true);
+
+        Button closeButton = CreateGroupTextButton(
+            "Flyout_CloseShort",
+            "Flyout_CloseAllTooltip",
+            close: true);
         closeButton.Click += (_, _) => ConfirmAndCloseGroup(windows);
+
         toolTip.SetToolTip(collapseButton, collapseButton.AccessibleName);
         toolTip.SetToolTip(restoreButton, restoreButton.AccessibleName);
         toolTip.SetToolTip(minimizeButton, minimizeButton.AccessibleName);
         toolTip.SetToolTip(closeButton, closeButton.AccessibleName);
+
         header.Controls.Add(collapseButton, 0, 0);
         header.Controls.Add(nameLabel, 1, 0);
         header.Controls.Add(restoreButton, 2, 0);
@@ -770,7 +810,9 @@ internal partial class Form1 : Form
         grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, settings.ShowApplicationIcons ? 24 : 0));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, presentationModeEnabled ? ActionColumnWidth : 0));
+        grid.ColumnStyles.Add(new ColumnStyle(
+            SizeType.Absolute,
+            presentationModeEnabled ? PresentationColumnWidth : 0));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         int monitorWidth = settings.ShowScreenNumber && displays.Count > 1
@@ -782,60 +824,55 @@ internal partial class Form1 : Form
 
     private Control CreatePresentationGroupHeader(IReadOnlyList<WindowInfo> windows)
     {
-        int monitorRows = displays.Count > 1 ? (displays.Count + 3) / 4 : 1;
-        int monitorWidth = displays.Count > 1
-            ? (MonitorButtonSize + MonitorButtonGap) * Math.Min(4, displays.Count)
-            : 0;
         TableLayoutPanel header = new()
         {
-            ColumnCount = 7,
+            ColumnCount = 1,
             ContextMenuStrip = groupContextMenu,
-            Height = Math.Max(34, monitorRows * (MonitorButtonSize + MonitorButtonGap)),
-            Margin = new Padding(4, 8, 4, 4),
+            RowCount = 2,
+            Height = 72,
+            Margin = new Padding(4, 8, 4, 6),
             BackColor = palette.RaisedSurface,
             Width = Math.Max(120, windowListPanel.ClientSize.Width
                 - SystemInformation.VerticalScrollBarWidth - 10)
         };
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 52));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, monitorWidth));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 66));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        header.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
+        header.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         Label nameLabel = new()
         {
             AutoEllipsis = true,
             Dock = DockStyle.Fill,
-            Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
+            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 9F, FontStyle.Bold),
             ForeColor = palette.Foreground,
-            Margin = new Padding(8, 0, 6, 0),
-            Text = LocalizationService.Get("Flyout_PresentationGroup"),
+            Margin = new Padding(8, 0, 8, 0),
+            Text = LocalizationService.Get("Flyout_PresentationGroupHeading"),
             TextAlign = ContentAlignment.MiddleLeft
         };
         header.Controls.Add(nameLabel, 0, 0);
 
-        Label screenLabel = new()
+        FlowLayoutPanel actions = new()
         {
             Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.LeftToRight,
+            Margin = new Padding(8, 0, 4, 4),
+            WrapContents = false
+        };
+
+        Label screenLabel = new()
+        {
+            AutoSize = false,
             Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
             ForeColor = palette.Foreground,
-            Margin = Padding.Empty,
-            Text = LocalizationService.Get("Flyout_Screen") + ":",
-            TextAlign = ContentAlignment.MiddleRight
+            Margin = new Padding(0, 4, 6, 0),
+            Size = new Size(118, 28),
+            Text = LocalizationService.Get("Flyout_PresentationScreen") + ":",
+            TextAlign = ContentAlignment.MiddleLeft
         };
-        header.Controls.Add(screenLabel, 1, 0);
+        actions.Controls.Add(screenLabel);
 
         if (displays.Count > 1)
         {
-            FlowLayoutPanel monitorPanel = new()
-            {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                Margin = new Padding(4, 0, 0, 0),
-                WrapContents = true
-            };
             foreach (MonitorDisplay display in displays)
             {
                 int number = display.Number!.Value;
@@ -848,7 +885,7 @@ internal partial class Form1 : Form
                     FlatStyle = FlatStyle.Flat,
                     Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Bold),
                     ForeColor = selected ? Color.White : palette.Foreground,
-                    Margin = new Padding(0, 0, MonitorButtonGap, MonitorButtonGap),
+                    Margin = new Padding(0, 3, MonitorButtonGap, 0),
                     Size = new Size(MonitorButtonSize, MonitorButtonSize),
                     Text = number.ToString(),
                     UseVisualStyleBackColor = false
@@ -864,31 +901,38 @@ internal partial class Form1 : Form
                     RenderWindowList();
                 };
                 toolTip.SetToolTip(monitorButton, monitorButton.AccessibleName);
-                monitorPanel.Controls.Add(monitorButton);
+                actions.Controls.Add(monitorButton);
             }
-            header.Controls.Add(monitorPanel, 2, 0);
         }
 
-        Label protectionLabel = new()
+        Button CreatePresentationTextButton(
+            string text,
+            string accessibleName,
+            int width,
+            bool close)
         {
-            Dock = DockStyle.Fill,
-            Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8.5F, FontStyle.Regular),
-            ForeColor = palette.SecondaryForeground,
-            Margin = Padding.Empty,
-            Text = LocalizationService.Get("Flyout_PresentationProtection") + ":",
-            TextAlign = ContentAlignment.MiddleRight
-        };
-        header.Controls.Add(protectionLabel, 3, 0);
+            Button button = CreateActionButton(text, accessibleName, close);
+            button.AutoSize = false;
+            button.Dock = DockStyle.None;
+            button.Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8F, FontStyle.Bold);
+            button.Margin = new Padding(8, 2, 0, 0);
+            button.Size = new Size(width, 30);
+            return button;
+        }
 
-        Button lockButton = CreateActionButton(
-            presentationLocked ? "🔒" : "🔓",
+        Button protectionButton = CreatePresentationTextButton(
+            LocalizationService.Get(presentationLocked
+                ? "Flyout_DisableProtection"
+                : "Flyout_EnableProtection"),
             LocalizationService.Get(presentationLocked
                 ? "Flyout_PresentationUnlock"
                 : "Flyout_PresentationLock"),
-            false);
-        lockButton.ForeColor = presentationLocked ? palette.Accent : palette.Foreground;
-        lockButton.FlatAppearance.BorderColor = presentationLocked ? palette.Accent : palette.Border;
-        lockButton.Click += (_, _) =>
+            112,
+            close: false);
+        protectionButton.ForeColor = presentationLocked ? Color.White : palette.Accent;
+        protectionButton.BackColor = presentationLocked ? palette.Accent : palette.Surface;
+        protectionButton.FlatAppearance.BorderColor = palette.Accent;
+        protectionButton.Click += (_, _) =>
         {
             if (presentationLocked)
             {
@@ -900,23 +944,32 @@ internal partial class Form1 : Form
                 TryActivatePresentationProtection();
             }
         };
-        toolTip.SetToolTip(lockButton, lockButton.AccessibleName);
-        header.Controls.Add(lockButton, 4, 0);
+        toolTip.SetToolTip(protectionButton, protectionButton.AccessibleName);
+        actions.Controls.Add(protectionButton);
 
-        Button minimizeButton = CreateActionButton("—", LocalizationService.Get("Flyout_MinimizeAllTooltip"), false);
+        Button minimizeButton = CreatePresentationTextButton(
+            LocalizationService.Get("Flyout_MinimizeGroup"),
+            LocalizationService.Get("Flyout_MinimizeAllTooltip"),
+            104,
+            close: false);
         StyleGroupActionButton(minimizeButton, isCloseButton: false);
         minimizeButton.Enabled = windows.Count > 0;
         minimizeButton.Click += (_, _) => RunForGroup(windows, windowActions.Minimize);
         toolTip.SetToolTip(minimizeButton, minimizeButton.AccessibleName);
-        header.Controls.Add(minimizeButton, 5, 0);
+        actions.Controls.Add(minimizeButton);
 
-        Button closeButton = CreateActionButton("×", LocalizationService.Get("Flyout_CloseAllTooltip"), true);
+        Button closeButton = CreatePresentationTextButton(
+            LocalizationService.Get("Flyout_CloseGroup"),
+            LocalizationService.Get("Flyout_CloseAllTooltip"),
+            96,
+            close: true);
         StyleGroupActionButton(closeButton, isCloseButton: true);
         closeButton.Enabled = windows.Count > 0;
         closeButton.Click += (_, _) => ConfirmAndCloseGroup(windows);
         toolTip.SetToolTip(closeButton, closeButton.AccessibleName);
-        header.Controls.Add(closeButton, 6, 0);
+        actions.Controls.Add(closeButton);
 
+        header.Controls.Add(actions, 0, 1);
         return header;
     }
 
