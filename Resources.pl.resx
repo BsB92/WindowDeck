@@ -84,4 +84,19 @@
   <data name="Flyout_CloseAllTooltip" xml:space="preserve"><value>Zamknij wszystkie okna</value></data>
   <data name="Flyout_CollapseGroup" xml:space="preserve"><value>Zwiń grupę</value></data>
   <data name="Flyout_ExpandGroup" xml:space="preserve"><value>Rozwiń grupę</value></data>
+
+  <data name="Flyout_AddToPresentation" xml:space="preserve"><value>Dodaj do grupy prezentacji</value></data>
+  <data name="Flyout_RemoveFromPresentation" xml:space="preserve"><value>Usuń z grupy prezentacji</value></data>
+  <data name="Flyout_PresentationGroup" xml:space="preserve"><value>Grupa prezentacji</value></data>
+  <data name="Flyout_PresentationLock" xml:space="preserve"><value>Włącz ochronę ekranu prezentacji</value></data>
+  <data name="Flyout_PresentationUnlock" xml:space="preserve"><value>Wyłącz ochronę ekranu prezentacji</value></data>
+  <data name="Flyout_PresentationRequiresTwoScreens" xml:space="preserve"><value>Tryb prezentacji wymaga co najmniej dwóch ekranów.</value></data>
+  <data name="Flyout_PresentationProtectionFailed" xml:space="preserve"><value>Nie udało się utrzymać ochrony ekranu prezentacji. Ochrona została wyłączona.</value></data>
+  <data name="Flyout_PresentationConflictsTitle" xml:space="preserve"><value>Przygotuj ekran prezentacji</value></data>
+  <data name="Flyout_PresentationConflictsHeading" xml:space="preserve"><value>Na ekranie {0} znajdują się okna spoza grupy prezentacji.</value></data>
+  <data name="Flyout_PresentationConflictsInstruction" xml:space="preserve"><value>Dodaj okno do grupy prezentacji albo wybierz ekran, na który ma zostać przeniesione.</value></data>
+  <data name="Flyout_MoveAllTo" xml:space="preserve"><value>Przenieś wszystkie na:</value></data>
+  <data name="Flyout_PresentationResolveAll" xml:space="preserve"><value>Przed włączeniem ochrony wybierz działanie dla każdego okna.</value></data>
+  <data name="Flyout_CollapseAll" xml:space="preserve"><value>Zwiń wszystkie grupy</value></data>
+  <data name="Flyout_ExpandAll" xml:space="preserve"><value>Rozwiń wszystkie grupy</value></data>
 </root>
