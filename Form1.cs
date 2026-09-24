@@ -27,6 +27,7 @@ internal partial class Form1 : Form
     private readonly MonitorDetector monitorDetector = new();
     private readonly ApplicationIconProvider applicationIconProvider = new();
     private readonly HashSet<string> collapsedApplicationIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<WindowIdentity, WindowRowCacheEntry> windowRowCache = [];
     private AppSettings settings;
     private IReadOnlyList<WindowInfo> currentSnapshot = [];
     private bool currentSnapshotInitialized;
@@ -40,6 +41,8 @@ internal partial class Form1 : Form
     private int maximumPanelWidth;
     private ThemePalette palette;
     private IReadOnlyList<MonitorDisplay> displays = [];
+
+    private sealed record WindowRowCacheEntry(WindowInfo Snapshot, Control Control);
 
     public event EventHandler? SettingsRequested;
     public event EventHandler? HelpRequested;
@@ -68,7 +71,16 @@ internal partial class Form1 : Form
     public void ApplySettings(AppSettings updatedSettings)
     {
         bool languageChanged = settings.Language != updatedSettings.Language;
+        bool rowAppearanceChanged = languageChanged
+            || settings.ShowApplicationIcons != updatedSettings.ShowApplicationIcons
+            || settings.ShowScreenNumber != updatedSettings.ShowScreenNumber
+            || settings.Theme != updatedSettings.Theme;
         settings = updatedSettings.Copy();
+        if (rowAppearanceChanged)
+        {
+            ClearWindowRowCache();
+        }
+
         ApplyLocalization();
         ApplyTheme();
         if (languageChanged)
@@ -91,6 +103,7 @@ internal partial class Form1 : Form
             return;
         }
 
+        ClearWindowRowCache();
         ApplyTheme();
         RenderWindowList();
     }
@@ -140,6 +153,7 @@ internal partial class Form1 : Form
         }
 
         isClosing = true;
+        ClearWindowRowCache();
         windowEventMonitor?.Dispose();
         windowEventMonitor = null;
         base.OnFormClosing(e);
@@ -329,7 +343,18 @@ internal partial class Form1 : Form
 
     private void RenderWindowList()
     {
-        displays = monitorDetector.GetDisplays();
+        IReadOnlyList<MonitorDisplay> updatedDisplays = monitorDetector.GetDisplays();
+        if (!displays.SequenceEqual(updatedDisplays))
+        {
+            displays = updatedDisplays;
+            ClearWindowRowCache();
+        }
+        else
+        {
+            displays = updatedDisplays;
+        }
+
+        PruneWindowRowCache();
         IReadOnlyList<IGrouping<string, WindowInfo>> groups =
             WindowListPresentation.Create(
                 currentSnapshot,
@@ -339,12 +364,18 @@ internal partial class Form1 : Form
         int visibleCount = groups.Sum(group => group.Count());
         bool searchActive = searchTextBox.Text.Trim().Length > 0;
 
-        windowListPanel.SuspendLayout();
+        windowListPanel.BeginUpdate();
         try
         {
+            HashSet<Control> cachedRows = windowRowCache.Values
+                .Select(entry => entry.Control)
+                .ToHashSet(ReferenceEqualityComparer.Instance);
             foreach (Control control in windowListPanel.Controls.Cast<Control>().ToArray())
             {
-                control.Dispose();
+                if (!cachedRows.Contains(control))
+                {
+                    control.Dispose();
+                }
             }
 
             windowListPanel.Controls.Clear();
@@ -385,7 +416,7 @@ internal partial class Form1 : Form
                     }
                     foreach (WindowInfo window in group)
                     {
-                        windowListPanel.Controls.Add(CreateWindowRow(window));
+                        windowListPanel.Controls.Add(GetOrCreateWindowRow(window));
                     }
                 }
             }
@@ -393,10 +424,53 @@ internal partial class Form1 : Form
         }
         finally
         {
-            windowListPanel.ResumeLayout();
+            windowListPanel.EndUpdate();
         }
 
         SizeWindowRows();
+    }
+
+    private Control GetOrCreateWindowRow(WindowInfo window)
+    {
+        WindowIdentity identity = WindowIdentity.From(window);
+        if (windowRowCache.TryGetValue(identity, out WindowRowCacheEntry? cached))
+        {
+            if (cached.Snapshot == window && !cached.Control.IsDisposed)
+            {
+                return cached.Control;
+            }
+
+            cached.Control.Dispose();
+            windowRowCache.Remove(identity);
+        }
+
+        Control row = CreateWindowRow(window);
+        windowRowCache[identity] = new WindowRowCacheEntry(window, row);
+        return row;
+    }
+
+    private void PruneWindowRowCache()
+    {
+        HashSet<WindowIdentity> activeWindows = currentSnapshot
+            .Select(WindowIdentity.From)
+            .ToHashSet();
+        foreach (WindowIdentity identity in windowRowCache.Keys
+                     .Where(identity => !activeWindows.Contains(identity))
+                     .ToArray())
+        {
+            windowRowCache[identity].Control.Dispose();
+            windowRowCache.Remove(identity);
+        }
+    }
+
+    private void ClearWindowRowCache()
+    {
+        foreach (WindowRowCacheEntry entry in windowRowCache.Values)
+        {
+            entry.Control.Dispose();
+        }
+
+        windowRowCache.Clear();
     }
 
     private Control CreateColumnHeader()
