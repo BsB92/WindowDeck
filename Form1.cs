@@ -615,7 +615,7 @@ internal partial class Form1 : Form
             LocalizationService.Get("Flyout_MinimizeAllTooltip"),
             false);
         StyleCompactActionButton(minimizeButton);
-        SetCenteredActionGlyph(minimizeButton, CompactGlyph.Minus);
+        SetCenteredActionGlyph(minimizeButton, CompactGlyph.Minimize);
         StyleBlueActionButton(minimizeButton);
         minimizeButton.Click += (_, _) => RunForGroup(windows, windowActions.Minimize);
 
@@ -705,7 +705,7 @@ internal partial class Form1 : Form
             LocalizationService.Format("Flyout_MinimizeAccessible", window.DisplayTitle),
             isCloseButton: false);
         StyleCompactActionButton(minimizeButton);
-        SetCenteredActionGlyph(minimizeButton, CompactGlyph.Minus);
+        SetCenteredActionGlyph(minimizeButton, CompactGlyph.Minimize);
         StyleBlueActionButton(minimizeButton);
 
         Button closeButton = CreateActionButton(
@@ -944,7 +944,7 @@ internal partial class Form1 : Form
             LocalizationService.Get("Flyout_MinimizeAllTooltip"),
             false);
         StyleCompactActionButton(minimizeButton);
-        SetCenteredActionGlyph(minimizeButton, CompactGlyph.Minus);
+        SetCenteredActionGlyph(minimizeButton, CompactGlyph.Minimize);
         StyleBlueActionButton(minimizeButton);
         minimizeButton.Click += (_, _) =>
         {
@@ -1345,6 +1345,7 @@ internal partial class Form1 : Form
     {
         Plus,
         Minus,
+        Minimize,
         Close
     }
 
@@ -1389,6 +1390,15 @@ internal partial class Form1 : Form
                         centerY,
                         centerX + halfLength,
                         centerY);
+                    break;
+
+                case CompactGlyph.Minimize:
+                    e.Graphics.DrawLine(
+                        pen,
+                        centerX - halfLength,
+                        centerY + 4F,
+                        centerX + halfLength,
+                        centerY + 4F);
                     break;
 
                 case CompactGlyph.Close:
