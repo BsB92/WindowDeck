@@ -111,7 +111,7 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Flyout_CollapseAll" xml:space="preserve"><value>Collapse all groups</value></data>
   <data name="Flyout_ExpandAll" xml:space="preserve"><value>Expand all groups</value></data>
   <data name="Flyout_PresentationProtection" xml:space="preserve"><value>Protection</value></data>
-  <data name="Flyout_PresentationColumnHeader" xml:space="preserve"><value>Presentation</value></data>
+  <data name="Flyout_PresentationColumnHeader" xml:space="preserve"><value>Add</value></data>
   <data name="Flyout_MinimizeColumnHeader" xml:space="preserve"><value>Minimize</value></data>
   <data name="Flyout_CloseColumnHeader" xml:space="preserve"><value>Close</value></data>
   <data name="Flyout_RestoreShort" xml:space="preserve"><value>Restore</value></data>
@@ -123,4 +123,6 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Flyout_DisableProtection" xml:space="preserve"><value>Disable protection</value></data>
   <data name="Flyout_MinimizeGroup" xml:space="preserve"><value>Minimize group</value></data>
   <data name="Flyout_CloseGroup" xml:space="preserve"><value>Close group</value></data>
+  <data name="Flyout_EnableProtectionShort" xml:space="preserve"><value>Enable</value></data>
+  <data name="Flyout_DisableProtectionShort" xml:space="preserve"><value>Disable</value></data>
 </root>
