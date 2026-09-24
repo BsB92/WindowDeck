@@ -56,11 +56,11 @@
 How to use it:
 1. Click Presentation Mode at the bottom of WindowDeck.
 2. Click + next to every window that you want to allow on the shared screen. Those windows appear in the Presentation group.
-3. In the Presentation group header, use Screen to select the screen that you intend to share.
-4. Click Enable protection. If other windows are already on that screen, WindowDeck shows them before protection is enabled. Move each one to another screen, add it to the Presentation group with +, or use Move all to to move all conflicting windows together.
+3. Under Presentation screen, select the screen that you intend to share.
+4. Under Protection, click Enable. If other windows are already on that screen, WindowDeck shows them before protection is enabled. Move each one to another screen, add it to the Presentation group with +, or use Move all to to move all conflicting windows together.
 5. Confirm the dialog. Protection is now active. If another visible window that is not in the Presentation group appears on the presentation screen, WindowDeck automatically moves it to another screen.
 
-The allowed windows do not have to stay on the presentation screen; they may still be used on other screens. Click Disable protection to turn protection off. Turning Presentation Mode off clears the temporary Presentation group and screen selection for that session; windows that were moved are not automatically moved back.</value></data>
+The allowed windows do not have to stay on the presentation screen; they may still be used on other screens. Under Protection, click Disable to turn protection off. Turning Presentation Mode off clears the temporary Presentation group and screen selection for that session; windows that were moved are not automatically moved back.</value></data>
   <data name="Help_TrayHeading" xml:space="preserve"><value>Tray behavior</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>WindowDeck's X button and Esc hide the flyout. WindowDeck keeps running in the tray. To shut down the application, use Tray &gt; Exit.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Settings</value></data>
