@@ -99,4 +99,5 @@
   <data name="Flyout_PresentationResolveAll" xml:space="preserve"><value>Przed włączeniem ochrony wybierz działanie dla każdego okna.</value></data>
   <data name="Flyout_CollapseAll" xml:space="preserve"><value>Zwiń wszystkie grupy</value></data>
   <data name="Flyout_ExpandAll" xml:space="preserve"><value>Rozwiń wszystkie grupy</value></data>
+  <data name="Flyout_PresentationProtection" xml:space="preserve"><value>Ochrona</value></data>
 </root>
