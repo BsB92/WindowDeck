@@ -5,7 +5,7 @@ namespace WindowDeck
         private System.ComponentModel.IContainer components = null!;
         private TextBox searchTextBox = null!;
         private TableLayoutPanel topBar = null!;
-        private FlowLayoutPanel windowListPanel = null!;
+        private BufferedFlowLayoutPanel windowListPanel = null!;
         private Panel bottomBar = null!;
         private Button presentationModeButton = null!;
         private Button helpButton = null!;
@@ -30,7 +30,7 @@ namespace WindowDeck
             components = new System.ComponentModel.Container();
             topBar = new TableLayoutPanel();
             searchTextBox = new TextBox();
-            windowListPanel = new FlowLayoutPanel();
+            windowListPanel = new BufferedFlowLayoutPanel();
             bottomBar = new Panel();
             presentationModeButton = new Button();
             helpButton = new Button();
