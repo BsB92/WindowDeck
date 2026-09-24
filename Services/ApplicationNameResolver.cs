@@ -17,6 +17,28 @@ internal sealed class ApplicationNameResolver
         ["ms-teams"] = "Microsoft Teams"
     };
     private readonly Dictionary<uint, ProcessMetadata> metadataCache = [];
+    private readonly HashSet<uint> metadataUsedThisEnumeration = [];
+
+    public void BeginEnumeration()
+    {
+        metadataUsedThisEnumeration.Clear();
+    }
+
+    public void EndEnumeration()
+    {
+        foreach (uint processId in metadataCache.Keys
+                     .Where(processId => !metadataUsedThisEnumeration.Contains(processId))
+                     .ToArray())
+        {
+            metadataCache.Remove(processId);
+        }
+    }
+
+    public void ClearCache()
+    {
+        metadataCache.Clear();
+        metadataUsedThisEnumeration.Clear();
+    }
 
     public ResolvedApplication Resolve(nint windowHandle, uint windowProcessId)
     {
@@ -76,6 +98,7 @@ internal sealed class ApplicationNameResolver
 
     private ProcessMetadata GetMetadata(uint processId)
     {
+        metadataUsedThisEnumeration.Add(processId);
         if (metadataCache.TryGetValue(processId, out ProcessMetadata? cached))
         {
             return cached;
