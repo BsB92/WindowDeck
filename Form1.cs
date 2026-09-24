@@ -1185,7 +1185,7 @@ internal partial class Form1 : Form
         searchTextBox.PlaceholderText = LocalizationService.Get("Flyout_Search");
         presentationModeButton.Text = LocalizationService.Get("Flyout_PresentationMode");
         helpButton.Text = "?";
-        settingsButton.Text = "⚙";
+        settingsButton.Text = "\uE713";
         helpButton.AccessibleName = LocalizationService.Get("Tray_Help");
         settingsButton.AccessibleName = LocalizationService.Get("Tray_Settings");
         toolTip.SetToolTip(helpButton, helpButton.AccessibleName);
