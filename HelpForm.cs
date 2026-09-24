@@ -16,6 +16,7 @@ internal sealed class HelpForm : Form
         ("Help_SettingsHeading", "Help_SettingsText")
     ];
 
+    private readonly Panel scrollHost;
     private readonly TableLayoutPanel content;
     private readonly List<(Label Heading, Label Text)> sectionControls = [];
     private AppTheme theme;
@@ -27,23 +28,33 @@ internal sealed class HelpForm : Form
         FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = false;
         MinimizeBox = false;
-        MinimumSize = new Size(540, 560);
-        ClientSize = new Size(650, 710);
+        MinimumSize = new Size(600, 600);
+        ClientSize = new Size(720, 760);
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = new Font("Segoe UI", 9F);
         Icon = WindowDeckIcon.Load();
 
-        content = new TableLayoutPanel
+        scrollHost = new Panel
         {
             AutoScroll = true,
+            Dock = DockStyle.Fill
+        };
+
+        content = new TableLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
             ColumnCount = 1,
-            Dock = DockStyle.Fill,
+            Dock = DockStyle.Top,
             Padding = new Padding(24, 12, 24, 20)
         };
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        Controls.Add(content);
+        scrollHost.Controls.Add(content);
+        Controls.Add(scrollHost);
+        scrollHost.Resize += (_, _) => UpdateTextWidths();
 
         foreach ((string heading, string text) in Sections) AddSection(heading, text);
+        UpdateTextWidths();
         ApplyLocalization();
         ApplyTheme();
     }
@@ -89,13 +100,28 @@ internal sealed class HelpForm : Form
         Label text = new()
         {
             AutoSize = true,
-            Dock = DockStyle.Fill,
+            Dock = DockStyle.Top,
             Margin = new Padding(0, 0, 0, 5),
-            MaximumSize = new Size(570, 0)
+            MaximumSize = new Size(640, 0)
         };
         sectionControls.Add((heading, text));
         content.Controls.Add(heading);
         content.Controls.Add(text);
+    }
+
+    private void UpdateTextWidths()
+    {
+        int availableWidth = Math.Max(
+            360,
+            scrollHost.ClientSize.Width
+            - content.Padding.Horizontal
+            - SystemInformation.VerticalScrollBarWidth
+            - 8);
+
+        foreach ((_, Label text) in sectionControls)
+        {
+            text.MaximumSize = new Size(availableWidth, 0);
+        }
     }
 
     private void ApplyTheme()
