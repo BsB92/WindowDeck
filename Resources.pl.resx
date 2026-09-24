@@ -111,7 +111,7 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Flyout_CollapseAll" xml:space="preserve"><value>Zwiń wszystkie grupy</value></data>
   <data name="Flyout_ExpandAll" xml:space="preserve"><value>Rozwiń wszystkie grupy</value></data>
   <data name="Flyout_PresentationProtection" xml:space="preserve"><value>Ochrona</value></data>
-  <data name="Flyout_PresentationColumnHeader" xml:space="preserve"><value>Prezentacja</value></data>
+  <data name="Flyout_PresentationColumnHeader" xml:space="preserve"><value>Dodaj</value></data>
   <data name="Flyout_MinimizeColumnHeader" xml:space="preserve"><value>Minimalizuj</value></data>
   <data name="Flyout_CloseColumnHeader" xml:space="preserve"><value>Zamknij</value></data>
   <data name="Flyout_RestoreShort" xml:space="preserve"><value>Przywróć</value></data>
@@ -123,4 +123,6 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Flyout_DisableProtection" xml:space="preserve"><value>Wyłącz ochronę</value></data>
   <data name="Flyout_MinimizeGroup" xml:space="preserve"><value>Minimalizuj grupę</value></data>
   <data name="Flyout_CloseGroup" xml:space="preserve"><value>Zamknij grupę</value></data>
+  <data name="Flyout_EnableProtectionShort" xml:space="preserve"><value>Włącz</value></data>
+  <data name="Flyout_DisableProtectionShort" xml:space="preserve"><value>Wyłącz</value></data>
 </root>
