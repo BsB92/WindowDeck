@@ -15,6 +15,7 @@ internal partial class Form1 : Form
     private const int HtLeft = 10;
     private const int HtBottomRight = 17;
     private const int WmNcHitTest = 0x0084;
+    private const int WmDisplayChange = 0x007E;
     private const int WmWindowPositionChanging = 0x0046;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
@@ -250,6 +251,13 @@ internal partial class Form1 : Form
         }
 
         base.WndProc(ref message);
+
+        if (message.Msg == WmDisplayChange)
+        {
+            currentSnapshotInitialized = false;
+            RequestAutomaticRefresh();
+            return;
+        }
 
         if (message.Msg != WmNcHitTest)
         {
