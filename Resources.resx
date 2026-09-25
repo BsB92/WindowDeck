@@ -22,6 +22,11 @@
   <data name="Settings_ShowApplicationIcons" xml:space="preserve"><value>Show application icons</value></data>
   <data name="Settings_ShowScreenNumber" xml:space="preserve"><value>Show screen number</value></data>
   <data name="Settings_ShowMinimizedWindows" xml:space="preserve"><value>Show minimized windows</value></data>
+  <data name="Settings_ScreenNumbering" xml:space="preserve"><value>Screen numbering</value></data>
+  <data name="Settings_ScreenNumberingHelp" xml:space="preserve"><value>Choose the Screen numbers WindowDeck uses for the currently connected screens.</value></data>
+  <data name="Settings_IdentifyScreens" xml:space="preserve"><value>Identify screens</value></data>
+  <data name="Settings_ResetScreenNumbering" xml:space="preserve"><value>Reset</value></data>
+  <data name="Settings_ScreenEntry" xml:space="preserve"><value>{0} (Windows screen {1})</value></data>
   <data name="Settings_Appearance" xml:space="preserve"><value>Appearance</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
@@ -64,7 +69,7 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Help_TrayHeading" xml:space="preserve"><value>Tray behavior</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>WindowDeck's X button and Esc hide the flyout. WindowDeck keeps running in the tray. To shut down the application, use Tray &gt; Exit.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Settings</value></data>
-  <data name="Help_SettingsText" xml:space="preserve"><value>Settings includes Start with Windows, Start minimized to tray, the configurable global hotkey, grouping by application, application icons, screen numbers, minimized windows, Appearance (System, Light, or Dark), and Language (System, English, or Polski).</value></data>
+  <data name="Help_SettingsText" xml:space="preserve"><value>Settings includes Start with Windows, Start minimized to tray, the configurable global hotkey, grouping by application, application icons, screen numbers, custom Screen numbering with Identify screens, minimized windows, Appearance (System, Light, or Dark), and Language (System, English, or Polski).</value></data>
   <data name="About_Title" xml:space="preserve"><value>About WindowDeck</value></data>
   <data name="About_Version" xml:space="preserve"><value>Version {0}</value></data>
   <data name="About_Description" xml:space="preserve"><value>A lightweight Windows utility for quickly finding and switching between open windows.</value></data>
