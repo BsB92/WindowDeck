@@ -77,7 +77,7 @@ internal sealed class MonitorDetector
         if (configurationId is not null
             && settings.ScreenNumberingConfigurations.TryGetValue(
                 configurationId,
-                out Dictionary<string, int>? savedNumbers)
+                out Dictionary<string, int> savedNumbers)
             && IsValidCustomNumbering(baseDisplays, savedNumbers))
         {
             customNumbers = savedNumbers;
