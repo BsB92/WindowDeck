@@ -89,28 +89,18 @@ internal partial class Form1 : Form
     public void ApplySettings(AppSettings updatedSettings)
     {
         bool languageChanged = settings.Language != updatedSettings.Language;
-        bool rowAppearanceChanged = languageChanged
-            || settings.ShowApplicationIcons != updatedSettings.ShowApplicationIcons
-            || settings.ShowScreenNumber != updatedSettings.ShowScreenNumber
-            || settings.Theme != updatedSettings.Theme;
         settings = updatedSettings.Copy();
-        if (rowAppearanceChanged)
-        {
-            ClearWindowRowCache();
-        }
+        ClearWindowRowCache();
 
         ApplyLocalization();
         ApplyTheme();
         if (languageChanged)
         {
             windowEnumerator.ResetApplicationMetadataCache();
-            currentSnapshotInitialized = false;
-            RefreshWindowList();
         }
-        else
-        {
-            RenderWindowList();
-        }
+
+        currentSnapshotInitialized = false;
+        RefreshWindowList(force: true);
     }
 
     public void RefreshTheme()
@@ -336,7 +326,7 @@ internal partial class Form1 : Form
     {
         try
         {
-            IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate();
+            IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate(settings);
             updatedSnapshot = EnforcePresentationReservation(updatedSnapshot);
             PrunePresentationWindows(updatedSnapshot);
             if (!force && currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
@@ -363,7 +353,7 @@ internal partial class Form1 : Form
 
     private void RenderWindowList()
     {
-        IReadOnlyList<MonitorDisplay> updatedDisplays = monitorDetector.GetDisplays();
+        IReadOnlyList<MonitorDisplay> updatedDisplays = monitorDetector.GetDisplays(settings);
         if (!displays.SequenceEqual(updatedDisplays))
         {
             displays = updatedDisplays;
@@ -1022,7 +1012,7 @@ internal partial class Form1 : Form
 
     private void PresentationModeButton_Click(object? sender, EventArgs e)
     {
-        displays = monitorDetector.GetDisplays();
+        displays = monitorDetector.GetDisplays(settings);
         if (!presentationModeEnabled && displays.Count < 2)
         {
             MessageBox.Show(
@@ -1113,7 +1103,7 @@ internal partial class Form1 : Form
             return;
         }
 
-        displays = monitorDetector.GetDisplays();
+        displays = monitorDetector.GetDisplays(settings);
         if (displays.Count < 2
             || displays.All(display => display.Number != reservedMonitor))
         {
@@ -1184,7 +1174,7 @@ internal partial class Form1 : Form
             return snapshot;
         }
 
-        displays = monitorDetector.GetDisplays();
+        displays = monitorDetector.GetDisplays(settings);
         MonitorDisplay? fallback = displays.FirstOrDefault(display =>
             display.Number == presentationFallbackMonitorNumber
             && display.Number != reservedMonitor)
@@ -1211,7 +1201,7 @@ internal partial class Form1 : Form
             movedAny = true;
         }
 
-        return movedAny ? windowEnumerator.Enumerate() : snapshot;
+        return movedAny ? windowEnumerator.Enumerate(settings) : snapshot;
     }
 
     private void DisablePresentationProtection(bool showMessage)
