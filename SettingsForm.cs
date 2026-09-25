@@ -26,16 +26,33 @@ internal sealed class SettingsForm : Form
     private readonly ComboBox theme = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
     private readonly ComboBox language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
     private readonly Func<AppSettings, (bool Success, string? ErrorMessage, bool EffectiveStartupState)> applySettings;
+    private readonly MonitorDetector screenDetector = new();
     private readonly List<(Label Label, string ResourceKey)> sectionLabels = [];
     private readonly Label hotkeyHelp;
+    private readonly Label screenNumberingHelp;
     private readonly TableLayoutPanel content;
     private readonly FlowLayoutPanel shortcut;
+    private readonly FlowLayoutPanel screenNumberingActions;
+    private readonly TableLayoutPanel screenNumberingRows;
     private readonly FlowLayoutPanel buttons;
+    private readonly Button identifyScreens;
+    private readonly Button resetScreenNumbering;
     private readonly Button cancel;
     private readonly Button ok;
+    private readonly Dictionary<string, ComboBox> screenNumberSelectors =
+        new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, int> screenNumbers =
+        new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<Label, MonitorDisplay> screenLabels = [];
+    private readonly Dictionary<string, Dictionary<string, int>> screenNumberingConfigurations;
+    private readonly IReadOnlyList<MonitorDisplay> connectedScreens;
+    private readonly string? screenConfigurationId;
+    private readonly List<ScreenIdentificationForm> identificationForms = [];
     private uint virtualKey;
     private AppTheme selectedTheme;
     private ThemePalette palette;
+    private bool updatingScreenSelectors;
+    private bool identifyingScreens;
 
     public SettingsForm(
         AppSettings currentSettings,
@@ -44,6 +61,10 @@ internal sealed class SettingsForm : Form
     {
         this.applySettings = applySettings;
         selectedTheme = currentSettings.Theme;
+        screenNumberingConfigurations = currentSettings.Copy().ScreenNumberingConfigurations;
+        connectedScreens = screenDetector.GetDisplays(currentSettings);
+        screenConfigurationId = MonitorDetector.GetConfigurationId(connectedScreens);
+
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -77,6 +98,37 @@ internal sealed class SettingsForm : Form
         content.Controls.Add(showApplicationIcons);
         content.Controls.Add(showScreenNumber);
         content.Controls.Add(showMinimizedWindows);
+
+        content.Controls.Add(CreateSectionLabel("Settings_ScreenNumbering"));
+        screenNumberingHelp = new Label { AutoSize = true, MaximumSize = new Size(450, 0) };
+        content.Controls.Add(screenNumberingHelp);
+
+        screenNumberingActions = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            WrapContents = false,
+            Margin = new Padding(0, 6, 0, 4)
+        };
+        identifyScreens = new Button { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
+        identifyScreens.Click += IdentifyScreens_Click;
+        resetScreenNumbering = new Button { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
+        resetScreenNumbering.Click += ResetScreenNumbering_Click;
+        screenNumberingActions.Controls.AddRange([identifyScreens, resetScreenNumbering]);
+        content.Controls.Add(screenNumberingActions);
+
+        screenNumberingRows = new TableLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            ColumnCount = 2,
+            Dock = DockStyle.Top,
+            Margin = new Padding(0, 2, 0, 0)
+        };
+        screenNumberingRows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        screenNumberingRows.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 72));
+        BuildScreenNumberingRows();
+        content.Controls.Add(screenNumberingRows);
+
         content.Controls.Add(CreateSectionLabel("Settings_Appearance"));
         content.Controls.Add(theme);
         content.Controls.Add(CreateSectionLabel("Settings_Language"));
@@ -135,7 +187,12 @@ internal sealed class SettingsForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) Icon?.Dispose();
+        if (disposing)
+        {
+            CloseIdentificationForms();
+            Icon?.Dispose();
+        }
+
         base.Dispose(disposing);
     }
 
@@ -155,6 +212,53 @@ internal sealed class SettingsForm : Form
         };
         sectionLabels.Add((label, resourceKey));
         return label;
+    }
+
+    private void BuildScreenNumberingRows()
+    {
+        screenNumberingRows.RowCount = connectedScreens.Count;
+        bool canCustomize = screenConfigurationId is not null
+            && connectedScreens.All(screen => screen.StableId is not null);
+
+        for (int index = 0; index < connectedScreens.Count; index++)
+        {
+            MonitorDisplay screen = connectedScreens[index];
+            Label label = new()
+            {
+                AutoSize = true,
+                Anchor = AnchorStyles.Left,
+                Margin = new Padding(0, 6, 8, 6)
+            };
+            screenLabels[label] = screen;
+            screenNumberingRows.Controls.Add(label, 0, index);
+
+            ComboBox selector = new()
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Width = 62,
+                Anchor = AnchorStyles.Right,
+                Enabled = canCustomize && screen.StableId is not null,
+                Margin = new Padding(0, 3, 0, 3)
+            };
+            selector.Items.AddRange(Enumerable.Range(1, connectedScreens.Count)
+                .Cast<object>()
+                .ToArray());
+
+            int number = screen.Number ?? screen.WindowsNumber ?? index + 1;
+            selector.SelectedItem = number;
+            if (screen.StableId is not null)
+            {
+                selector.Tag = screen.StableId;
+                screenNumberSelectors[screen.StableId] = selector;
+                screenNumbers[screen.StableId] = number;
+            }
+
+            selector.SelectedIndexChanged += ScreenNumber_SelectedIndexChanged;
+            screenNumberingRows.Controls.Add(selector, 1, index);
+        }
+
+        identifyScreens.Enabled = connectedScreens.Count > 0;
+        resetScreenNumbering.Enabled = canCustomize && connectedScreens.Count > 0;
     }
 
     private void PopulateSelections(AppTheme selectedThemeValue, AppLanguage selectedLanguageValue)
@@ -189,11 +293,23 @@ internal sealed class SettingsForm : Form
         showApplicationIcons.Text = LocalizationService.Get("Settings_ShowApplicationIcons");
         showScreenNumber.Text = LocalizationService.Get("Settings_ShowScreenNumber");
         showMinimizedWindows.Text = LocalizationService.Get("Settings_ShowMinimizedWindows");
+        screenNumberingHelp.Text = LocalizationService.Get("Settings_ScreenNumberingHelp");
+        identifyScreens.Text = LocalizationService.Get("Settings_IdentifyScreens");
+        resetScreenNumbering.Text = LocalizationService.Get("Settings_ResetScreenNumbering");
         cancel.Text = LocalizationService.Get("Common_Cancel");
         ok.Text = LocalizationService.Get("Common_OK");
+
         foreach ((Label label, string resourceKey) in sectionLabels)
         {
             label.Text = LocalizationService.Get(resourceKey);
+        }
+
+        foreach ((Label label, MonitorDisplay screen) in screenLabels)
+        {
+            label.Text = LocalizationService.Format(
+                "Settings_ScreenEntry",
+                screen.DisplayName,
+                screen.WindowsNumber ?? 0);
         }
     }
 
@@ -214,9 +330,22 @@ internal sealed class SettingsForm : Form
         content.BackColor = palette.Background;
         content.ForeColor = palette.Foreground;
         shortcut.BackColor = palette.Background;
+        screenNumberingActions.BackColor = palette.Background;
+        screenNumberingRows.BackColor = palette.Background;
         buttons.BackColor = palette.Background;
         hotkeyHelp.ForeColor = palette.SecondaryForeground;
-        foreach ((Label label, _) in sectionLabels) label.ForeColor = palette.Foreground;
+        screenNumberingHelp.ForeColor = palette.SecondaryForeground;
+
+        foreach ((Label label, _) in sectionLabels)
+        {
+            label.ForeColor = palette.Foreground;
+        }
+
+        foreach (Label label in screenLabels.Keys)
+        {
+            label.ForeColor = palette.Foreground;
+        }
+
         foreach (CheckBox checkBox in content.Controls.OfType<CheckBox>()
                      .Concat(shortcut.Controls.OfType<CheckBox>()))
         {
@@ -226,10 +355,18 @@ internal sealed class SettingsForm : Form
 
         hotkeyKey.BackColor = palette.Surface;
         hotkeyKey.ForeColor = palette.Foreground;
+        foreach (ComboBox selector in screenNumberSelectors.Values)
+        {
+            selector.BackColor = palette.Surface;
+            selector.ForeColor = palette.Foreground;
+        }
+
         theme.BackColor = palette.Surface;
         theme.ForeColor = palette.Foreground;
         language.BackColor = palette.Surface;
         language.ForeColor = palette.Foreground;
+        ThemeManager.StyleButton(identifyScreens, palette);
+        ThemeManager.StyleButton(resetScreenNumbering, palette);
         ThemeManager.StyleButton(ok, palette);
         ThemeManager.StyleButton(cancel, palette);
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
@@ -240,9 +377,179 @@ internal sealed class SettingsForm : Form
         e.Handled = true;
         e.SuppressKeyPress = true;
         Keys key = e.KeyCode;
-        if (key is Keys.ControlKey or Keys.ShiftKey or Keys.Menu or Keys.LWin or Keys.RWin) return;
+        if (key is Keys.ControlKey or Keys.ShiftKey or Keys.Menu or Keys.LWin or Keys.RWin)
+        {
+            return;
+        }
+
         virtualKey = (uint)key;
         hotkeyKey.Text = FormatKey(virtualKey);
+    }
+
+    private void ScreenNumber_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        if (updatingScreenSelectors
+            || sender is not ComboBox selector
+            || selector.Tag is not string stableId
+            || selector.SelectedItem is not int newNumber
+            || !screenNumbers.TryGetValue(stableId, out int oldNumber)
+            || newNumber == oldNumber)
+        {
+            return;
+        }
+
+        string? otherScreenId = screenNumbers
+            .Where(screen => !string.Equals(
+                screen.Key,
+                stableId,
+                StringComparison.OrdinalIgnoreCase)
+                && screen.Value == newNumber)
+            .Select(screen => screen.Key)
+            .FirstOrDefault();
+
+        updatingScreenSelectors = true;
+        try
+        {
+            screenNumbers[stableId] = newNumber;
+            if (otherScreenId is not null)
+            {
+                screenNumbers[otherScreenId] = oldNumber;
+                screenNumberSelectors[otherScreenId].SelectedItem = oldNumber;
+            }
+        }
+        finally
+        {
+            updatingScreenSelectors = false;
+        }
+    }
+
+    private async void IdentifyScreens_Click(object? sender, EventArgs e)
+    {
+        if (identifyingScreens || connectedScreens.Count == 0)
+        {
+            return;
+        }
+
+        identifyingScreens = true;
+        identifyScreens.Enabled = false;
+        CloseIdentificationForms();
+
+        try
+        {
+            foreach (MonitorDisplay screen in connectedScreens)
+            {
+                int number = screen.Number ?? screen.WindowsNumber ?? 0;
+                if (screen.StableId is not null
+                    && screenNumbers.TryGetValue(screen.StableId, out int selectedNumber))
+                {
+                    number = selectedNumber;
+                }
+
+                if (number <= 0)
+                {
+                    continue;
+                }
+
+                ScreenIdentificationForm identification =
+                    new(number, screen.WorkArea);
+                identificationForms.Add(identification);
+                identification.Show();
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(2.5));
+        }
+        finally
+        {
+            CloseIdentificationForms();
+            identifyingScreens = false;
+            if (!IsDisposed && !Disposing)
+            {
+                identifyScreens.Enabled = connectedScreens.Count > 0;
+            }
+        }
+    }
+
+    private void ResetScreenNumbering_Click(object? sender, EventArgs e)
+    {
+        updatingScreenSelectors = true;
+        try
+        {
+            foreach (MonitorDisplay screen in connectedScreens)
+            {
+                if (screen.StableId is null
+                    || screen.WindowsNumber is not int windowsNumber
+                    || !screenNumberSelectors.TryGetValue(screen.StableId, out ComboBox? selector))
+                {
+                    continue;
+                }
+
+                screenNumbers[screen.StableId] = windowsNumber;
+                selector.SelectedItem = windowsNumber;
+            }
+        }
+        finally
+        {
+            updatingScreenSelectors = false;
+        }
+    }
+
+    private void CloseIdentificationForms()
+    {
+        foreach (ScreenIdentificationForm form in identificationForms.ToArray())
+        {
+            if (!form.IsDisposed)
+            {
+                form.Close();
+                form.Dispose();
+            }
+        }
+
+        identificationForms.Clear();
+    }
+
+    private void SaveCurrentScreenNumbering()
+    {
+        if (screenConfigurationId is null
+            || connectedScreens.Count == 0
+            || connectedScreens.Any(screen => screen.StableId is null))
+        {
+            return;
+        }
+
+        Dictionary<string, int> currentNumbers =
+            new(StringComparer.OrdinalIgnoreCase);
+        bool usesWindowsNumbering = true;
+
+        foreach (MonitorDisplay screen in connectedScreens)
+        {
+            string stableId = screen.StableId!;
+            if (!screenNumbers.TryGetValue(stableId, out int number))
+            {
+                return;
+            }
+
+            currentNumbers[stableId] = number;
+            usesWindowsNumbering &= screen.WindowsNumber == number;
+        }
+
+        if (usesWindowsNumbering)
+        {
+            screenNumberingConfigurations.Remove(screenConfigurationId);
+        }
+        else
+        {
+            screenNumberingConfigurations[screenConfigurationId] = currentNumbers;
+        }
+    }
+
+    private Dictionary<string, Dictionary<string, int>> CopyScreenNumberingConfigurations()
+    {
+        return screenNumberingConfigurations.ToDictionary(
+            configuration => configuration.Key,
+            configuration => new Dictionary<string, int>(
+                configuration.Value,
+                StringComparer.OrdinalIgnoreCase),
+            StringComparer.OrdinalIgnoreCase);
     }
 
     private void Ok_Click(object? sender, EventArgs e)
@@ -260,6 +567,8 @@ internal sealed class SettingsForm : Form
             return;
         }
 
+        SaveCurrentScreenNumbering();
+
         AppSettings candidate = new()
         {
             StartWithWindows = startWithWindows.Checked,
@@ -270,7 +579,8 @@ internal sealed class SettingsForm : Form
             ShowScreenNumber = showScreenNumber.Checked,
             ShowMinimizedWindows = showMinimizedWindows.Checked,
             Theme = ((SelectionItem<AppTheme>)theme.SelectedItem!).Value,
-            Language = ((SelectionItem<AppLanguage>)language.SelectedItem!).Value
+            Language = ((SelectionItem<AppLanguage>)language.SelectedItem!).Value,
+            ScreenNumberingConfigurations = CopyScreenNumberingConfigurations()
         };
 
         (bool success, string? errorMessage, bool effectiveStartupState) = applySettings(candidate);

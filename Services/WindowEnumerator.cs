@@ -13,10 +13,10 @@ internal sealed class WindowEnumerator
     private readonly MonitorDetector monitorDetector = new();
     private readonly ApplicationNameResolver applicationNameResolver = new();
 
-    public IReadOnlyList<WindowInfo> Enumerate()
+    public IReadOnlyList<WindowInfo> Enumerate(AppSettings settings)
     {
         List<WindowInfo> windows = [];
-        monitorDetector.RefreshDisplayMapping();
+        monitorDetector.RefreshDisplayMapping(settings);
         applicationNameResolver.BeginEnumeration();
 
         try

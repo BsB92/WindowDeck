@@ -22,6 +22,11 @@
   <data name="Settings_ShowApplicationIcons" xml:space="preserve"><value>Pokaż ikony aplikacji</value></data>
   <data name="Settings_ShowScreenNumber" xml:space="preserve"><value>Pokaż numer ekranu</value></data>
   <data name="Settings_ShowMinimizedWindows" xml:space="preserve"><value>Pokaż zminimalizowane okna</value></data>
+  <data name="Settings_ScreenNumbering" xml:space="preserve"><value>Numeracja ekranów</value></data>
+  <data name="Settings_ScreenNumberingHelp" xml:space="preserve"><value>Wybierz numery ekranów używane przez WindowDeck dla aktualnie podłączonych ekranów.</value></data>
+  <data name="Settings_IdentifyScreens" xml:space="preserve"><value>Identyfikuj ekrany</value></data>
+  <data name="Settings_ResetScreenNumbering" xml:space="preserve"><value>Resetuj</value></data>
+  <data name="Settings_ScreenEntry" xml:space="preserve"><value>{0} (ekran Windows {1})</value></data>
   <data name="Settings_Appearance" xml:space="preserve"><value>Wygląd</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Język</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Anuluj</value></data>
@@ -64,7 +69,7 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Help_TrayHeading" xml:space="preserve"><value>Działanie zasobnika</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>Przycisk X WindowDeck oraz Esc ukrywają panel. WindowDeck nadal działa w zasobniku. Aby zakończyć aplikację, użyj Zasobnik &gt; Zakończ.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Ustawienia</value></data>
-  <data name="Help_SettingsText" xml:space="preserve"><value>Ustawienia obejmują uruchamianie z systemem Windows, uruchamianie zminimalizowane do zasobnika, konfigurowalny globalny skrót, grupowanie według aplikacji, ikony aplikacji, numery ekranów, zminimalizowane okna, Wygląd (System, Jasny lub Ciemny) oraz Język (System, English lub Polski).</value></data>
+  <data name="Help_SettingsText" xml:space="preserve"><value>Ustawienia obejmują uruchamianie z systemem Windows, uruchamianie zminimalizowane do zasobnika, konfigurowalny globalny skrót, grupowanie według aplikacji, ikony aplikacji, numery ekranów, własną numerację ekranów z funkcją Identyfikuj ekrany, zminimalizowane okna, Wygląd (System, Jasny lub Ciemny) oraz Język (System, English lub Polski).</value></data>
   <data name="About_Title" xml:space="preserve"><value>O WindowDeck</value></data>
   <data name="About_Version" xml:space="preserve"><value>Wersja {0}</value></data>
   <data name="About_Description" xml:space="preserve"><value>Lekka aplikacja dla systemu Windows do szybkiego znajdowania i przełączania się między otwartymi oknami.</value></data>
