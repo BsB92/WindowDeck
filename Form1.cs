@@ -555,20 +555,26 @@ internal partial class Form1 : Form
         bool visuallyCollapsed,
         IReadOnlyList<WindowInfo> windows)
     {
+        int screenControlsWidth = settings.ShowScreenNumber && displays.Count > 1
+            ? MonitorActionGap + (MonitorButtonSize + MonitorButtonGap) * Math.Min(4, displays.Count)
+            : 0;
+
         TableLayoutPanel header = new()
         {
-            ColumnCount = 5,
+            ColumnCount = 6,
             ContextMenuStrip = groupContextMenu,
-            Dock = DockStyle.Top,
             Height = 31,
             Margin = new Padding(4, 8, 4, 2),
             BackColor = palette.RaisedSurface,
+            Width = Math.Max(120, windowListPanel.ClientSize.Width
+                - SystemInformation.VerticalScrollBarWidth - 10)
         };
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, screenControlsWidth));
 
         Button collapseButton = CreateActionButton(
             visuallyCollapsed ? "▶" : "▼",
