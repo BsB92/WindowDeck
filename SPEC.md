@@ -67,7 +67,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free, open source u
 ## 9. Monitor identity and placement
 
 - Each window entry shows a small Screen badge such as `[ 1 ]`, `[ 2 ]`, or `[ 3 ]`.
-- Prefer the Windows/GDI display identifier (for example, `\\.\DISPLAY1`) and derive the displayed number from it. Do not invent arbitrary numbering when Windows supplies an identifier.
+- By default, use the Windows/GDI display numbering. When the user configures custom Screen numbering, the configured WindowDeck number replaces the Windows number everywhere in the application while the underlying Windows display identity remains unchanged.
 - Do not show monitor model names, aliases, resolutions, or extra monitor-information tooltips.
 - Update an entry's monitor when its window moves to another display.
 - Use documented APIs such as `MonitorFromWindow` and `GetMonitorInfo`.
@@ -195,3 +195,20 @@ Presentation Mode is an in-session feature for reserving one connected display f
 When grouping is enabled, right-clicking the window list provides localized Collapse all groups and Expand all groups actions. These actions reuse the existing in-memory collapse state and do not persist it across application restarts.
 
 Individual row Minimize and Close controls have a subtle visible border in both light and dark appearance modes so that they read clearly as buttons without adding a heavy visual treatment.
+
+## 23. Custom Screen numbering
+
+WindowDeck allows the user to choose the Screen numbers used by the application without changing Windows display settings.
+
+- The Settings window contains a **Screen numbering** section.
+- The section lists the currently connected screens and lets the user assign unique WindowDeck numbers `1..N`.
+- A screen-number assignment applies consistently everywhere WindowDeck shows or uses screen numbers, including window-row move buttons, the current-screen indication, Presentation Mode, and the Presentation conflict dialog.
+- The Settings section includes **Identify screens**. Clicking it temporarily shows a large WindowDeck Screen number on each connected screen, similar to Windows display identification.
+- The Settings section includes **Reset**, which restores the Windows-provided numbering for the current connected-screen configuration.
+- Custom numbering is stored locally in the existing JSON settings file.
+- WindowDeck must distinguish physical screens using a stable display identity exposed by documented Windows display APIs; model names alone are insufficient because two connected screens may have the same model name.
+- Numbering is remembered per connected-screen configuration so the same laptop can use different numbering at home and at work. Configuration switching is automatic and has no separate user-facing profile selector.
+- A previously unseen connected-screen configuration starts with Windows numbering until the user changes it.
+- If a saved screen can no longer be resolved safely, WindowDeck falls back to current Windows numbering rather than applying an uncertain assignment.
+- The feature must remain local and event-driven and must not add polling, telemetry, network access, third-party dependencies, or a general-purpose monitor-management system.
+- User-facing terminology for this feature is **Screen**, not **Monitor**.
