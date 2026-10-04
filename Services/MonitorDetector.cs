@@ -251,9 +251,13 @@ internal sealed class MonitorDetector
                     }
                 }
 
+                int windowsNumber =
+                    TryParseWindowsDisplayNumber(sourceName.ViewGdiDeviceName)
+                    ?? index + 1;
+
                 details.TryAdd(
                     sourceName.ViewGdiDeviceName,
-                    new DisplayPathDetails(index + 1, stableId, friendlyName));
+                    new DisplayPathDetails(windowsNumber, stableId, friendlyName));
             }
 
             return details;
