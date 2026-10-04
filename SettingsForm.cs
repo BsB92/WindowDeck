@@ -22,6 +22,7 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox groupByApplication = new() { AutoSize = true };
     private readonly CheckBox showApplicationIcons = new() { AutoSize = true };
     private readonly CheckBox showScreenNumber = new() { AutoSize = true };
+    private readonly CheckBox showAuxiliaryWindows = new() { AutoSize = true };
     private readonly CheckBox showMinimizedWindows = new() { AutoSize = true };
     private readonly ComboBox theme = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
     private readonly ComboBox language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
@@ -98,6 +99,7 @@ internal sealed class SettingsForm : Form
         content.Controls.Add(showApplicationIcons);
         content.Controls.Add(showScreenNumber);
         content.Controls.Add(showMinimizedWindows);
+        content.Controls.Add(showAuxiliaryWindows);
 
         content.Controls.Add(CreateSectionLabel("Settings_ScreenNumbering"));
         screenNumberingHelp = new Label { AutoSize = true, MaximumSize = new Size(450, 0) };
@@ -162,6 +164,7 @@ internal sealed class SettingsForm : Form
         showApplicationIcons.Checked = currentSettings.ShowApplicationIcons;
         showScreenNumber.Checked = currentSettings.ShowScreenNumber;
         showMinimizedWindows.Checked = currentSettings.ShowMinimizedWindows;
+        showAuxiliaryWindows.Checked = currentSettings.ShowAuxiliaryWindows;
         PopulateSelections(currentSettings.Theme, currentSettings.Language);
         theme.SelectedIndexChanged += Theme_SelectedIndexChanged;
         ApplyLocalization();
@@ -293,6 +296,7 @@ internal sealed class SettingsForm : Form
         showApplicationIcons.Text = LocalizationService.Get("Settings_ShowApplicationIcons");
         showScreenNumber.Text = LocalizationService.Get("Settings_ShowScreenNumber");
         showMinimizedWindows.Text = LocalizationService.Get("Settings_ShowMinimizedWindows");
+        showAuxiliaryWindows.Text = LocalizationService.Get("Settings_ShowAuxiliaryWindows");
         screenNumberingHelp.Text = LocalizationService.Get("Settings_ScreenNumberingHelp");
         identifyScreens.Text = LocalizationService.Get("Settings_IdentifyScreens");
         resetScreenNumbering.Text = LocalizationService.Get("Settings_ResetScreenNumbering");
@@ -578,6 +582,7 @@ internal sealed class SettingsForm : Form
             ShowApplicationIcons = showApplicationIcons.Checked,
             ShowScreenNumber = showScreenNumber.Checked,
             ShowMinimizedWindows = showMinimizedWindows.Checked,
+            ShowAuxiliaryWindows = showAuxiliaryWindows.Checked,
             Theme = ((SelectionItem<AppTheme>)theme.SelectedItem!).Value,
             Language = ((SelectionItem<AppLanguage>)language.SelectedItem!).Value,
             ScreenNumberingConfigurations = CopyScreenNumberingConfigurations()

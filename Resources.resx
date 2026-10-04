@@ -132,4 +132,9 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Flyout_DisableProtectionShort" xml:space="preserve"><value>Disable</value></data>
   <data name="Flyout_MinimizeGroupShort" xml:space="preserve"><value>Min.</value></data>
   <data name="Flyout_CloseGroupShort" xml:space="preserve"><value>Close</value></data>
+  <data name="Settings_ShowAuxiliaryWindows" xml:space="preserve"><value>Show auxiliary windows (dialogs and floating tools)</value></data>
+  <data name="Flyout_ExpandAuxiliary" xml:space="preserve"><value>Show auxiliary windows for {0} ({1})</value></data>
+  <data name="Flyout_CollapseAuxiliary" xml:space="preserve"><value>Hide auxiliary windows for {0} ({1})</value></data>
+  <data name="Help_AuxiliaryHeading" xml:space="preserve"><value>Auxiliary windows</value></data>
+  <data name="Help_AuxiliaryText" xml:space="preserve"><value>Enable Show auxiliary windows in Settings &gt; Window list to include visible dialogs and floating tool windows with a title. This option is off by default. Windows with a confirmed owner in the same process appear indented below that owner; use its arrow to collapse or expand the subgroup. Clicking the title activates the selected window. Search temporarily expands matching subgroups and retains the owner as context. Windows without a confirmed visible owner remain separate entries. Embedded or docked panels, untitled windows, and passive helper windows are not included. Close, minimize, move, and Presentation membership still apply to the individual selected window; the application may also affect its owned windows. Collapse state lasts until WindowDeck exits.</value></data>
 </root>

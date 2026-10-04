@@ -46,7 +46,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free, open source u
 ## 6. Window filtering and titles
 
 - Track normal, user-facing top-level windows, including minimized windows when the corresponding setting is enabled.
-- Appropriately exclude WindowDeck itself, hidden helper/system windows, cloaked windows, and irrelevant tool windows.
+- Appropriately exclude WindowDeck itself, hidden helper/system windows, cloaked windows, and irrelevant tool windows. The opt-in auxiliary-window behavior in section 24 is the exception for visible titled dialogs and floating tools.
 - Do not rely on one fragile heuristic where stable Windows APIs support a more robust decision.
 - Store the original external window title separately from the display title used by WindowDeck.
 - Never modify the actual title of another application's window.
@@ -212,3 +212,14 @@ WindowDeck allows the user to choose the Screen numbers used by the application 
 - If a saved screen can no longer be resolved safely, WindowDeck falls back to consecutive default WindowDeck numbering rather than applying an uncertain assignment.
 - The feature must remain local and event-driven and must not add polling, telemetry, network access, third-party dependencies, or a general-purpose monitor-management system.
 - User-facing terminology for this feature is **Screen**, not **Monitor**.
+
+## 24. Optional auxiliary windows
+
+- Settings > Window list provides a persisted Show auxiliary windows checkbox, off by default (including existing settings files).
+- When enabled, include visible, titled top-level owned/dialog and tool windows across applications. Continue excluding WindowDeck, shell, cloaked, untitled, zero-sized auxiliary and no-activate auxiliary helper windows. Do not enumerate embedded/docked controls as separate windows.
+- Resolve ownership through documented GW_OWNER relations, not process/name guessing. Follow at most 64 same-process owner links with cycle detection, including hidden/untitled intermediate owners; use the highest eligible visible owner as the subgroup root. Invalid chains or ownership that cannot be resolved safely leave the window standalone. Cross-process ownership is not grouped in this version.
+- Keep the application group; its main window row has an independent arrow to expand/collapse its auxiliary subgroup. Children are indented and initially expanded. Main titles still activate the main window. Multiple main windows in one process retain separate subgroups.
+- With application grouping off, preserve the same window subgroups in the ungrouped list. If a main owner is filtered out or placed in a different Presentation list, its auxiliary window remains a standalone visible row in its own list.
+- Search retains eligible owners for matching children and temporarily expands relevant subgroups without changing remembered collapse state. Collapse state is in-memory, tied to HWND plus PID, pruned when a window disappears, and reset at exit. Existing Collapse all/Expand all group commands include window subgroups.
+- Individual actions continue using exactly the selected HWND plus PID. No automatic propagation of Presentation membership or bulk actions is added; Windows/application-defined ownership behavior can still affect related windows.
+- Reuse existing event-driven refresh. Switching the setting immediately refreshes enumeration. Update English and Polish Settings text and Help.

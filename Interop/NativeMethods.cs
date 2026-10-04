@@ -44,6 +44,7 @@ internal static class NativeMethods
     internal const uint VkOem3 = 0xC0;
     internal const uint GwOwner = 4;
     internal const long WsExAppWindow = 0x00040000L;
+    internal const long WsExNoActivate = 0x08000000L;
     internal const long WsExToolWindow = 0x00000080L;
     internal const int ObjidWindow = 0;
     internal const int ChildidSelf = 0;

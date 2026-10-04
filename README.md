@@ -508,3 +508,9 @@ Szczegółowe zachowanie produktu i wymagania techniczne są opisane w:
 WindowDeck jest projektem open source udostępnianym na licencji [MIT](LICENSE).
 
 Copyright (c) 2026 **::BsB!::**
+
+### Auxiliary windows / Dodatkowe okna
+
+Enable **Settings > Window list > Show auxiliary windows** to include titled floating tools and dialogs. The option is off by default. Confirmed same-process owner relationships form collapsible subgroups below the main window; unassociated windows stay standalone. Embedded/docked controls and passive helpers are excluded. Search reveals matching children with their owner. Individual actions and Presentation membership remain per window.
+
+Włącz **Ustawienia > Lista okien > Pokaż dodatkowe okna**, aby wyświetlać pływające narzędzia i dialogi z tytułem. Opcja jest domyślnie wyłączona. Potwierdzone powiązania właściciela w tym samym procesie tworzą zwijane podgrupy pod głównym oknem; niepowiązane okna pozostają osobnymi wpisami. Panele osadzone lub zadokowane i pasywne okna pomocnicze są pomijane. Wyszukiwanie pokazuje pasujące okna wraz z właścicielem. Akcje i przynależność do grupy prezentacyjnej dotyczą pojedynczych okien.

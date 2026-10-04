@@ -33,6 +33,7 @@ internal partial class Form1 : Form
     private readonly MonitorDetector monitorDetector = new();
     private readonly ApplicationIconProvider applicationIconProvider = new();
     private readonly HashSet<string> collapsedApplicationIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<WindowIdentity> collapsedWindowIds = [];
     private readonly HashSet<WindowIdentity> presentationWindowIds = [];
     private readonly Dictionary<WindowIdentity, WindowRowCacheEntry> windowRowCache = [];
     private ContextMenuStrip groupContextMenu = null!;
@@ -59,6 +60,8 @@ internal partial class Form1 : Form
     private sealed record WindowRowCacheEntry(
         WindowInfo Snapshot,
         bool PresentationMember,
+        int AuxiliaryCount,
+        bool AuxiliaryCollapsed,
         Control Control);
 
     public event EventHandler? SettingsRequested;
@@ -372,6 +375,7 @@ internal partial class Form1 : Form
             displays = updatedDisplays;
         }
 
+        collapsedWindowIds.IntersectWith(currentSnapshot.Select(WindowIdentity.From));
         PruneWindowRowCache();
         IReadOnlyList<WindowInfo> presentationWindows = presentationModeEnabled
             ? currentSnapshot
@@ -413,10 +417,7 @@ internal partial class Form1 : Form
             if (presentationModeEnabled)
             {
                 windowListPanel.Controls.Add(CreatePresentationGroupHeader(presentationWindows));
-                foreach (WindowInfo presentationWindow in presentationWindows)
-                {
-                    windowListPanel.Controls.Add(GetOrCreateWindowRow(presentationWindow, presentationMember: true));
-                }
+                AddWindowFamilies(presentationWindows, presentationMember: true, searchActive: false);
             }
 
             windowListPanel.Controls.Add(CreateColumnHeader());
@@ -453,10 +454,7 @@ internal partial class Form1 : Form
                             continue;
                         }
                     }
-                    foreach (WindowInfo window in group)
-                    {
-                        windowListPanel.Controls.Add(GetOrCreateWindowRow(window, presentationMember: false));
-                    }
+                    AddWindowFamilies(group.ToArray(), presentationMember: false, searchActive);
                 }
             }
 
@@ -469,13 +467,48 @@ internal partial class Form1 : Form
         SizeWindowRows();
     }
 
-    private Control GetOrCreateWindowRow(WindowInfo window, bool presentationMember)
+    private void AddWindowFamilies(
+        IReadOnlyList<WindowInfo> windows,
+        bool presentationMember,
+        bool searchActive)
+    {
+        HashSet<WindowIdentity> visibleIds = windows.Select(WindowIdentity.From).ToHashSet();
+        ILookup<WindowIdentity, WindowInfo> auxiliaryWindows = windows
+            .Where(window => window.OwnerWindow.HasValue
+                && visibleIds.Contains(window.OwnerWindow.Value))
+            .ToLookup(window => window.OwnerWindow!.Value);
+
+        foreach (WindowInfo window in windows.Where(window => !window.OwnerWindow.HasValue
+                     || !visibleIds.Contains(window.OwnerWindow.Value)))
+        {
+            WindowIdentity identity = WindowIdentity.From(window);
+            WindowInfo[] children = auxiliaryWindows[identity].ToArray();
+            bool collapsed = !searchActive && collapsedWindowIds.Contains(identity);
+            windowListPanel.Controls.Add(GetOrCreateWindowRow(
+                window, presentationMember, children.Length, collapsed));
+            if (!collapsed)
+            {
+                foreach (WindowInfo child in children)
+                {
+                    windowListPanel.Controls.Add(GetOrCreateWindowRow(child, presentationMember));
+                }
+            }
+        }
+    }
+
+    private Control GetOrCreateWindowRow(
+        WindowInfo window,
+        bool presentationMember,
+        int auxiliaryCount = 0,
+        bool auxiliaryCollapsed = false)
     {
         WindowIdentity identity = WindowIdentity.From(window);
         if (windowRowCache.TryGetValue(identity, out WindowRowCacheEntry? cached))
         {
             if (cached.Snapshot == window
                 && cached.PresentationMember == presentationMember
+                && cached.AuxiliaryCount == auxiliaryCount
+                && cached.AuxiliaryCollapsed == auxiliaryCollapsed
                 && !cached.Control.IsDisposed)
             {
                 return cached.Control;
@@ -485,8 +518,9 @@ internal partial class Form1 : Form
             windowRowCache.Remove(identity);
         }
 
-        Control row = CreateWindowRow(window, presentationMember);
-        windowRowCache[identity] = new WindowRowCacheEntry(window, presentationMember, row);
+        Control row = CreateWindowRow(window, presentationMember, auxiliaryCount, auxiliaryCollapsed);
+        windowRowCache[identity] = new WindowRowCacheEntry(
+            window, presentationMember, auxiliaryCount, auxiliaryCollapsed, row);
         return row;
     }
 
@@ -645,7 +679,11 @@ internal partial class Form1 : Form
         return header;
     }
 
-    private Control CreateWindowRow(WindowInfo window, bool presentationMember)
+    private Control CreateWindowRow(
+        WindowInfo window,
+        bool presentationMember,
+        int auxiliaryCount,
+        bool auxiliaryCollapsed)
     {
         int monitorRows = displays.Count > 1 ? (displays.Count + 3) / 4 : 1;
         int monitorButtonPitch = MonitorButtonSize + MonitorButtonGap;
@@ -661,7 +699,7 @@ internal partial class Form1 : Form
             Dock = DockStyle.Fill,
             FlatStyle = FlatStyle.Flat,
             Margin = Padding.Empty,
-            Padding = new Padding(6, 0, 3, 0),
+            Padding = new Padding(window.OwnerWindow.HasValue ? 24 : 6, 0, 3, 0),
             Text = window.DisplayTitle,
             TextAlign = ContentAlignment.MiddleLeft,
             BackColor = palette.Surface,
@@ -749,7 +787,39 @@ internal partial class Form1 : Form
             row.Controls.Add(applicationIcon, 0, 0);
         }
 
-        row.Controls.Add(titleButton, 1, 0);
+        if (auxiliaryCount > 0)
+        {
+            TableLayoutPanel titleArea = new()
+            {
+                ColumnCount = 2,
+                RowCount = 1,
+                Dock = DockStyle.Fill,
+                Margin = Padding.Empty
+            };
+            titleArea.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 30));
+            titleArea.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            Button toggle = CreateActionButton(
+                auxiliaryCollapsed ? "▶" : "▼",
+                LocalizationService.Format(
+                    auxiliaryCollapsed ? "Flyout_ExpandAuxiliary" : "Flyout_CollapseAuxiliary",
+                    window.DisplayTitle, auxiliaryCount),
+                false);
+            StyleCompactActionButton(toggle);
+            toolTip.SetToolTip(toggle, toggle.AccessibleName);
+            toggle.Click += (_, _) =>
+            {
+                WindowIdentity identity = WindowIdentity.From(window);
+                if (!collapsedWindowIds.Remove(identity)) collapsedWindowIds.Add(identity);
+                RenderWindowList();
+            };
+            titleArea.Controls.Add(toggle, 0, 0);
+            titleArea.Controls.Add(titleButton, 1, 0);
+            row.Controls.Add(titleArea, 1, 0);
+        }
+        else
+        {
+            row.Controls.Add(titleButton, 1, 0);
+        }
         if (presentationModeEnabled)
         {
             row.Controls.Add(presentationButton, 2, 0);
@@ -1072,11 +1142,15 @@ internal partial class Form1 : Form
         {
             collapsedApplicationIds.UnionWith(
                 currentSnapshot.Select(window => window.ApplicationId));
+            collapsedWindowIds.UnionWith(currentSnapshot
+                .Where(window => window.OwnerWindow.HasValue)
+                .Select(window => window.OwnerWindow!.Value));
             RenderWindowList();
         };
         expandAllItem.Click += (_, _) =>
         {
             collapsedApplicationIds.Clear();
+            collapsedWindowIds.Clear();
             RenderWindowList();
         };
         groupContextMenu.Items.AddRange([collapseAllItem, expandAllItem]);
@@ -1084,7 +1158,7 @@ internal partial class Form1 : Form
         {
             e.Cancel = !settings.GroupByApplication;
             collapseAllItem.Enabled = currentSnapshot.Count > 0;
-            expandAllItem.Enabled = collapsedApplicationIds.Count > 0;
+            expandAllItem.Enabled = collapsedApplicationIds.Count > 0 || collapsedWindowIds.Count > 0;
         };
         windowListPanel.ContextMenuStrip = groupContextMenu;
     }

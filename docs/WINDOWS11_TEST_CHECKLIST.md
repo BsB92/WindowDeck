@@ -81,3 +81,15 @@ Run this checklist on Windows 11 after building the solution with zero errors.
 - [ ] Existing saved custom numbering remains valid after upgrading. Disconnecting/reconnecting a screen safely switches configuration without hiding connected screens.
 - [ ] When display-path metadata is unavailable, all connected screens still receive consecutive numbers; customization remains disabled if stable identities cannot be resolved.
 - [ ] Default numbers are WindowDeck numbers; matching Windows Settings Identify may require a manual assignment.
+
+## Auxiliary windows (Requires local Windows testing)
+
+- [ ] Existing settings and new installs default Show auxiliary windows to off; normal enumeration remains unchanged. Toggle on, save, restart, and confirm persistence; toggle off removes auxiliary rows immediately.
+- [ ] With two main windows in one process, each titled owned dialog/tool appears only under its confirmed owner. A nested dialog appears under the highest eligible visible owner; an unowned tool stays standalone.
+- [ ] Test Process Designer / Process Simulate and another application with detachable tools or dialogs. Embedded/docked controls, untitled helpers, zero-size and no-activate auxiliary windows stay excluded.
+- [ ] An independent arrow collapses/expands a main window subgroup; activating the main title is unchanged. Search for an auxiliary title retains its owner and temporarily reveals that child without changing remembered collapse state.
+- [ ] Open, rename, hide/show, move, close, minimize and restore an auxiliary window; the list follows the existing event-driven refresh without duplicates. Close/minimize/move target the exact selected window.
+- [ ] Test grouping off, Show minimized windows off, Collapse all/Expand all, theme/language switching, two monitors, and moving either parent or child alone into Presentation Group. A child whose parent is in another list remains accessible.
+- [ ] Read Help > Auxiliary windows in English and Polish and verify Settings checkbox text/layout at 100%, 150% and 200% DPI.
+
+Cross-platform ownership/search regression checks: `dotnet run --project tests/WindowRelationships/WindowRelationships.csproj`. These validate relationship logic; they do not replace the interactive Windows checks above.
