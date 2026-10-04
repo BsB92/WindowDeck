@@ -23,7 +23,7 @@ internal sealed class WindowEnumerator
         {
             bool succeeded = NativeMethods.EnumWindows((windowHandle, _) =>
                 {
-                    if (TryCreateWindowInfo(windowHandle, applicationNameResolver, out WindowInfo? window))
+                    if (TryCreateWindowInfo(windowHandle, applicationNameResolver, settings.ShowAuxiliaryWindows, out WindowInfo? window))
                     {
                         windows.Add(window);
                     }
@@ -38,7 +38,12 @@ internal sealed class WindowEnumerator
                 throw new Win32Exception(error, LocalizationService.Get("Message_EnumerationFailed"));
             }
 
-            return windows;
+            return settings.ShowAuxiliaryWindows
+                ? WindowOwnershipResolver.Resolve(
+                    windows,
+                    handle => NativeMethods.GetWindow(handle, NativeMethods.GwOwner),
+                    GetLiveProcessId)
+                : windows;
         }
         finally
         {
@@ -54,6 +59,7 @@ internal sealed class WindowEnumerator
     private bool TryCreateWindowInfo(
         nint windowHandle,
         ApplicationNameResolver applicationNameResolver,
+        bool showAuxiliaryWindows,
         out WindowInfo? window)
     {
         window = null;
@@ -69,14 +75,23 @@ internal sealed class WindowEnumerator
             windowHandle,
             NativeMethods.GwlExStyle).ToInt64();
 
-        if ((extendedStyle & NativeMethods.WsExToolWindow) != 0)
+        if (!showAuxiliaryWindows && (extendedStyle & NativeMethods.WsExToolWindow) != 0)
         {
             return false;
         }
 
         bool hasOwner = NativeMethods.GetWindow(windowHandle, NativeMethods.GwOwner) != 0;
         bool appearsOnTaskbar = (extendedStyle & NativeMethods.WsExAppWindow) != 0;
-        if (hasOwner && !appearsOnTaskbar)
+        if (!showAuxiliaryWindows && hasOwner && !appearsOnTaskbar)
+        {
+            return false;
+        }
+
+        if (showAuxiliaryWindows
+            && (hasOwner || (extendedStyle & NativeMethods.WsExToolWindow) != 0)
+            && ((extendedStyle & NativeMethods.WsExNoActivate) != 0
+                || !NativeMethods.GetWindowRect(windowHandle, out NativeMethods.Rect bounds)
+                || bounds.Right <= bounds.Left || bounds.Bottom <= bounds.Top))
         {
             return false;
         }
@@ -106,6 +121,15 @@ internal sealed class WindowEnumerator
             monitorNumber,
             NativeMethods.IsIconic(windowHandle));
         return true;
+    }
+
+    private static uint? GetLiveProcessId(nint handle)
+    {
+        return NativeMethods.IsWindow(handle)
+            && NativeMethods.GetWindowThreadProcessId(handle, out uint processId) != 0
+            && processId != 0
+                ? processId
+                : null;
     }
 
     private static string? GetWindowTitle(nint windowHandle)

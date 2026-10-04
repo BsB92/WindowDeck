@@ -39,6 +39,8 @@ internal sealed class AppSettings
 
     public bool ShowScreenNumber { get; set; } = true;
 
+    public bool ShowAuxiliaryWindows { get; set; } = true;
+
     public bool ShowMinimizedWindows { get; set; } = true;
 
     public AppTheme Theme { get; set; } = AppTheme.System;
@@ -56,6 +58,7 @@ internal sealed class AppSettings
         ShowApplicationIcons = ShowApplicationIcons,
         ShowScreenNumber = ShowScreenNumber,
         ShowMinimizedWindows = ShowMinimizedWindows,
+        ShowAuxiliaryWindows = ShowAuxiliaryWindows,
         Theme = Theme,
         Language = Language,
         ScreenNumberingConfigurations = ScreenNumberingConfigurations.ToDictionary(
