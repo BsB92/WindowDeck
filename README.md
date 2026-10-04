@@ -22,6 +22,10 @@ WindowDeck is especially useful when many open windows have similar names or are
 >
 > I designed the concept, requirements, workflow, and UI, and tested and refined the application iteratively. The code was created with the help of **ChatGPT** and **OpenAI Codex**.
 
+### Changes in 1.3.0
+
+Custom Screen numbering, consecutive default numbers, and auxiliary-window subgroups enabled by default. [Release notes](docs/notes/v1.3.0.md).
+
 ### Screenshots
 
 #### Main window
@@ -68,11 +72,7 @@ If you downloaded WindowDeck from the official GitHub Releases page, you can ver
 
 #### Verify the download
 
-SHA-256 for `WindowDeck.exe` version 1.2.0:
-
-```text
-D98D5D3115A3E2654C60A4044950AB78D5D0D13C3564C124142001E957B0AC88
-```
+Download `WindowDeck.exe.sha256` from the same release, or use the SHA-256 shown in that release's notes. Each checksum applies only to its matching executable.
 
 You can verify the downloaded file in PowerShell:
 
@@ -80,7 +80,7 @@ You can verify the downloaded file in PowerShell:
 Get-FileHash .\WindowDeck.exe -Algorithm SHA256
 ```
 
-The resulting hash should match the value above.
+The resulting hash should match the checksum from that same release.
 
 
 ### Features
@@ -89,6 +89,10 @@ The resulting hash should match the value above.
 - Search open windows by title
 - Optional grouping by application
 - Collapsible application groups
+- Auxiliary dialogs and floating tools in collapsible subgroups (enabled by default)
+- Custom Screen numbering remembered per connected-screen configuration
+- Identify screens and reset numbering
+- Presentation Mode with a protected presentation screen
 - Cleaner window titles and friendlier application names
 - Numbered monitor buttons for moving individual windows between screens
 - Clear indication of the monitor currently containing each window
@@ -152,6 +156,16 @@ With multiple monitors, WindowDeck shows numbered monitor buttons for each windo
 Normal, maximized, and minimized windows can be moved between monitors while preserving their appropriate window state.
 
 When WindowDeck is opened using the global hotkey, it appears on the screen containing the mouse cursor.
+
+### Custom Screen numbering
+
+In **Settings > Screen numbering**, use **Identify screens** to see WindowDeck's numbers on each connected screen, then choose unique numbers 1–N. Assignments are saved per connected-screen configuration, so home and work setups can use different numbering. **Reset** restores consecutive default WindowDeck numbers. These numbers may differ from Windows Settings Identify; assign them manually if you want them to match. Sparse internal names such as DISPLAY5/6 are not used as visible Screen numbers.
+
+### Auxiliary windows
+
+Visible dialogs and floating tools with a title are included by default. In **Settings > Window list**, disable **Show auxiliary windows** to return to the main-window-only list. A previously saved disabled choice is preserved.
+
+Confirmed same-process ownership creates a collapsible subgroup below the main window. Clicking the main title still activates that window; the arrow expands or collapses its auxiliary entries. Search temporarily reveals matching children with their owner. Windows without a confirmed visible owner remain separate entries. Embedded/docked panels and passive helpers are excluded. Individual actions and Presentation membership remain per window.
 
 ### Languages
 
@@ -226,13 +240,13 @@ The repository contains a publish profile for the Windows x64 release.
 Run:
 
 ```powershell
-dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Prepare-Release.ps1
 ```
 
 The output is created in:
 
 ```text
-artifacts\WindowDeck-1.2.0-win-x64
+artifacts\WindowDeck-1.3.0-win-x64
 ```
 
 The release configuration uses:
@@ -243,6 +257,8 @@ The release configuration uses:
 - single-file publishing
 - trimming disabled
 - NativeAOT disabled
+
+The script also generates `WindowDeck.exe.sha256` and `RELEASE_NOTES.md` for the exact published executable. Manual publishing is still available with `dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64`. Follow [the release guide](docs/RELEASE_GUIDE.md) and [the Windows checklist](docs/RELEASE_TEST_CHECKLIST.md).
 
 ### Project documentation
 
@@ -275,6 +291,10 @@ WindowDeck jest szczególnie przydatny, gdy wiele otwartych okien ma podobne naz
 > Nie jestem programistą. WindowDeck powstał jako praktyczny pomysł na rozwiązanie problemu, z którym spotykałem się w codziennej pracy.
 >
 > Zaprojektowałem koncepcję, wymagania, sposób działania i interfejs użytkownika, a następnie iteracyjnie testowałem i dopracowywałem aplikację. Kod powstał przy wsparciu **ChatGPT** i **OpenAI Codex**.
+
+### Zmiany w 1.3.0
+
+Własna numeracja ekranów, kolejne domyślne numery oraz domyślnie włączone podgrupy dodatkowych okien. [Opis wydania](docs/notes/v1.3.0.md).
 
 ### Zrzuty ekranu
 
@@ -322,11 +342,7 @@ Jeżeli pobrałeś WindowDeck z oficjalnej strony GitHub Releases, przed uruchom
 
 #### Weryfikacja pobranego pliku
 
-SHA-256 dla `WindowDeck.exe` w wersji 1.2.0:
-
-```text
-D98D5D3115A3E2654C60A4044950AB78D5D0D13C3564C124142001E957B0AC88
-```
+Pobierz `WindowDeck.exe.sha256` z tego samego wydania lub odczytaj SHA-256 z jego opisu. Każdy skrót dotyczy wyłącznie odpowiadającego mu pliku wykonywalnego.
 
 Pobrany plik możesz sprawdzić w PowerShell:
 
@@ -334,7 +350,7 @@ Pobrany plik możesz sprawdzić w PowerShell:
 Get-FileHash .\WindowDeck.exe -Algorithm SHA256
 ```
 
-Otrzymany skrót powinien być identyczny z wartością podaną powyżej.
+Otrzymany skrót powinien być identyczny z wartością z tego samego wydania.
 
 ### Funkcje
 
@@ -342,6 +358,10 @@ Otrzymany skrót powinien być identyczny z wartością podaną powyżej.
 - Wyszukiwanie otwartych okien po tytule
 - Opcjonalne grupowanie według aplikacji
 - Zwijanie i rozwijanie grup aplikacji
+- Dodatkowe dialogi i pływające narzędzia w zwijanych podgrupach (domyślnie włączone)
+- Własna numeracja ekranów zapamiętywana dla zestawu podłączonych ekranów
+- Identyfikacja ekranów i resetowanie numeracji
+- Tryb prezentacji z ochroną ekranu prezentacyjnego
 - Czytelniejsze tytuły okien i przyjaźniejsze nazwy aplikacji
 - Numerowane przyciski monitorów do przenoszenia pojedynczych okien między ekranami
 - Wyraźne oznaczenie monitora, na którym aktualnie znajduje się okno
@@ -405,6 +425,16 @@ Przy wielu monitorach WindowDeck pokazuje przy każdym oknie numerowane przycisk
 Między monitorami można przenosić okna zwykłe, zmaksymalizowane i zminimalizowane z zachowaniem odpowiedniego stanu okna.
 
 Po otwarciu WindowDeck globalnym skrótem program pojawia się na ekranie, na którym znajduje się kursor myszy.
+
+### Własna numeracja ekranów
+
+W **Ustawieniach > Numeracja ekranów** użyj **Identyfikuj ekrany**, aby zobaczyć numery WindowDeck na każdym ekranie, a następnie przypisz unikalne numery 1–N. Wybór jest zapamiętywany dla zestawu podłączonych ekranów, więc konfiguracja w domu i pracy może być inna. **Resetuj** przywraca kolejne domyślne numery WindowDeck. Mogą one różnić się od numerów funkcji Identyfikuj w ustawieniach Windows; zgodność można uzyskać przez ręczne przypisanie. Wewnętrzne nazwy typu DISPLAY5/6 nie są wyświetlane jako numery ekranów.
+
+### Dodatkowe okna
+
+Widoczne dialogi i pływające narzędzia z tytułem są domyślnie uwzględniane. W **Ustawieniach > Lista okien** wyłącz **Pokaż dodatkowe okna**, aby wrócić do listy głównych okien. Wcześniej zapisane wyłączenie pozostaje respektowane.
+
+Potwierdzone powiązanie właściciela w tym samym procesie tworzy zwijaną podgrupę pod głównym oknem. Kliknięcie tytułu nadal aktywuje główne okno, a strzałka rozwija lub zwija dodatkowe wpisy. Wyszukiwanie tymczasowo pokazuje pasujące okna razem z właścicielem. Okna bez potwierdzonego widocznego właściciela pozostają osobnymi wpisami. Panele osadzone lub zadokowane i pasywne okna pomocnicze są pomijane. Akcje i przynależność do grupy prezentacyjnej dotyczą pojedynczych okien.
 
 ### Języki
 
@@ -479,13 +509,13 @@ Repozytorium zawiera profil publikowania dla Windows x64.
 Uruchom:
 
 ```powershell
-dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Prepare-Release.ps1
 ```
 
 Pliki wynikowe są tworzone w:
 
 ```text
-artifacts\WindowDeck-1.2.0-win-x64
+artifacts\WindowDeck-1.3.0-win-x64
 ```
 
 Konfiguracja wydania wykorzystuje:
@@ -496,6 +526,8 @@ Konfiguracja wydania wykorzystuje:
 - publikowanie jako pojedynczy plik
 - wyłączone przycinanie kodu
 - wyłączone NativeAOT
+
+Skrypt tworzy również `WindowDeck.exe.sha256` i `RELEASE_NOTES.md` dla dokładnie tego pliku EXE. Nadal można użyć `dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64`. Kolejność publikacji opisuje [instrukcja wydania](docs/RELEASE_GUIDE.md), a testy [checklista Windows](docs/RELEASE_TEST_CHECKLIST.md).
 
 ### Dokumentacja projektu
 
@@ -508,9 +540,3 @@ Szczegółowe zachowanie produktu i wymagania techniczne są opisane w:
 WindowDeck jest projektem open source udostępnianym na licencji [MIT](LICENSE).
 
 Copyright (c) 2026 **::BsB!::**
-
-### Auxiliary windows / Dodatkowe okna
-
-Enable **Settings > Window list > Show auxiliary windows** to include titled floating tools and dialogs. The option is on by default and can be disabled in Settings. Confirmed same-process owner relationships form collapsible subgroups below the main window; unassociated windows stay standalone. Embedded/docked controls and passive helpers are excluded. Search reveals matching children with their owner. Individual actions and Presentation membership remain per window.
-
-Włącz **Ustawienia > Lista okien > Pokaż dodatkowe okna**, aby wyświetlać pływające narzędzia i dialogi z tytułem. Opcja jest domyślnie włączona; można ją wyłączyć w ustawieniach. Potwierdzone powiązania właściciela w tym samym procesie tworzą zwijane podgrupy pod głównym oknem; niepowiązane okna pozostają osobnymi wpisami. Panele osadzone lub zadokowane i pasywne okna pomocnicze są pomijane. Wyszukiwanie pokazuje pasujące okna wraz z właścicielem. Akcje i przynależność do grupy prezentacyjnej dotyczą pojedynczych okien.

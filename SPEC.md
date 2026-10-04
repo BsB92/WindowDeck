@@ -4,7 +4,7 @@
 
 This document is the single source of truth for WindowDeck product requirements and functional decisions. Development must be incremental and follow the stages in section 17. A task must implement only its requested stage; features must not be built speculatively.
 
-WindowDeck v1.0.0 is release-ready. Its release distribution is a Windows x64, Release, self-contained, single-file publish that does not require a preinstalled .NET runtime. Release publication remains a separate manual step.
+WindowDeck v1.3.0 is being prepared for release. Its release distribution is a Windows x64, Release, self-contained, single-file publish that does not require a preinstalled .NET runtime. Release publication remains a separate manual step.
 
 ## 2. Product purpose and boundaries
 
@@ -223,3 +223,10 @@ WindowDeck allows the user to choose the Screen numbers used by the application 
 - Search retains eligible owners for matching children and temporarily expands relevant subgroups without changing remembered collapse state. Collapse state is in-memory, tied to HWND plus PID, pruned when a window disappears, and reset at exit. Existing Collapse all/Expand all group commands include window subgroups.
 - Individual actions continue using exactly the selected HWND plus PID. No automatic propagation of Presentation membership or bulk actions is added; Windows/application-defined ownership behavior can still affect related windows.
 - Reuse existing event-driven refresh. Switching the setting immediately refreshes enumeration. Update English and Polish Settings text and Help.
+
+## 25. Release preparation
+
+- The Windows x64 publish profile derives its output directory from the project Version property.
+- `scripts/Prepare-Release.ps1` publishes the executable, calculates its SHA-256, and renders release notes from the versioned template. It does not tag, push, merge, or publish a GitHub release.
+- Publish the executable and its checksum file as GitHub Release assets; the release notes must contain the checksum of that exact executable. Do not retain a previous executable checksum as the latest-release checksum in README.
+- Test the final published executable outside Visual Studio using the current release checklist before publication.
