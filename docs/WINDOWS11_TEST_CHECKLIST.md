@@ -72,3 +72,12 @@ Run this checklist on Windows 11 after building the solution with zero errors.
 - [ ] The command bar stays at the bottom while the list and flyout height change.
 - [ ] Verify all new labels, confirmations, and tooltips with English, Polish, and System language.
 - [ ] Verify the group headers, monitor buttons, confirmation, and bottom bar with Light, Dark, and System appearance.
+
+## Screen numbering regression checks
+
+- [ ] With four connected screens whose GDI names are DISPLAY1, DISPLAY2, DISPLAY5, and DISPLAY6, Settings lists exactly four screens with default numbers 1–4, never labels them as Windows screen 5/6, and all selectors have a selected value.
+- [ ] Identify screens, window badges, move buttons, and Presentation Mode use the same resolved numbers.
+- [ ] Reset restores unique numbers 1–N; saving and restarting preserves a custom assignment for the same physical-screen configuration.
+- [ ] Existing saved custom numbering remains valid after upgrading. Disconnecting/reconnecting a screen safely switches configuration without hiding connected screens.
+- [ ] When display-path metadata is unavailable, all connected screens still receive consecutive numbers; customization remains disabled if stable identities cannot be resolved.
+- [ ] Default numbers are WindowDeck numbers; matching Windows Settings Identify may require a manual assignment.

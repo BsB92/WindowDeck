@@ -52,11 +52,15 @@ internal sealed class MonitorDetector
     public IReadOnlyList<MonitorDisplay> GetDisplays(AppSettings settings)
     {
         Dictionary<string, DisplayPathDetails> pathDetails = GetDisplayPathDetails();
+        // GDI device suffixes can be sparse (for example DISPLAY1, 2, 5, 6).
+        // Use them only for ordering, never as user-facing Screen numbers.
         MonitorDisplay[] baseDisplays = Screen.AllScreens
-            .Select(screen =>
+            .OrderBy(screen => TryParseGdiDisplayNumber(screen.DeviceName) ?? int.MaxValue)
+            .ThenBy(screen => screen.DeviceName, StringComparer.OrdinalIgnoreCase)
+            .Select((screen, index) =>
             {
                 pathDetails.TryGetValue(screen.DeviceName, out DisplayPathDetails? path);
-                int? windowsNumber = path?.WindowsNumber ?? TryParseWindowsDisplayNumber(screen.DeviceName);
+                int defaultNumber = index + 1;
                 string displayName = !string.IsNullOrWhiteSpace(path?.FriendlyName)
                     ? path.FriendlyName
                     : screen.DeviceName;
@@ -65,11 +69,10 @@ internal sealed class MonitorDetector
                     screen.DeviceName,
                     path?.StableId,
                     displayName,
-                    windowsNumber,
-                    windowsNumber,
+                    defaultNumber,
+                    defaultNumber,
                     screen.WorkingArea);
             })
-            .Where(display => display.WindowsNumber.HasValue)
             .ToArray();
 
         string? configurationId = GetConfigurationId(baseDisplays);
@@ -86,7 +89,7 @@ internal sealed class MonitorDetector
         MonitorDisplay[] resolvedDisplays = baseDisplays
             .Select(display =>
             {
-                int? number = display.WindowsNumber;
+                int? number = display.DefaultNumber;
                 if (customNumbers is not null
                     && display.StableId is not null
                     && customNumbers.TryGetValue(display.StableId, out int customNumber))
@@ -97,7 +100,7 @@ internal sealed class MonitorDetector
                 return display with { Number = number };
             })
             .OrderBy(display => display.Number ?? int.MaxValue)
-            .ThenBy(display => display.WindowsNumber ?? int.MaxValue)
+            .ThenBy(display => display.DefaultNumber ?? int.MaxValue)
             .ThenBy(display => display.DeviceName, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
@@ -158,7 +161,7 @@ internal sealed class MonitorDetector
         return true;
     }
 
-    private static int? TryParseWindowsDisplayNumber(string deviceName)
+    private static int? TryParseGdiDisplayNumber(string deviceName)
     {
         if (!deviceName.StartsWith(DisplayDevicePrefix, StringComparison.OrdinalIgnoreCase))
         {
@@ -251,13 +254,9 @@ internal sealed class MonitorDetector
                     }
                 }
 
-                int windowsNumber =
-                    TryParseWindowsDisplayNumber(sourceName.ViewGdiDeviceName)
-                    ?? index + 1;
-
                 details.TryAdd(
                     sourceName.ViewGdiDeviceName,
-                    new DisplayPathDetails(windowsNumber, stableId, friendlyName));
+                    new DisplayPathDetails(stableId, friendlyName));
             }
 
             return details;
@@ -267,7 +266,6 @@ internal sealed class MonitorDetector
     }
 
     private sealed record DisplayPathDetails(
-        int WindowsNumber,
         string? StableId,
         string? FriendlyName);
 }
@@ -276,6 +274,6 @@ internal sealed record MonitorDisplay(
     string DeviceName,
     string? StableId,
     string DisplayName,
-    int? WindowsNumber,
+    int? DefaultNumber,
     int? Number,
     Rectangle WorkArea);

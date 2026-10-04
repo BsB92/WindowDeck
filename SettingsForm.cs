@@ -244,7 +244,7 @@ internal sealed class SettingsForm : Form
                 .Cast<object>()
                 .ToArray());
 
-            int number = screen.Number ?? screen.WindowsNumber ?? index + 1;
+            int number = screen.Number ?? screen.DefaultNumber ?? index + 1;
             selector.SelectedItem = number;
             if (screen.StableId is not null)
             {
@@ -309,7 +309,7 @@ internal sealed class SettingsForm : Form
             label.Text = LocalizationService.Format(
                 "Settings_ScreenEntry",
                 screen.DisplayName,
-                screen.WindowsNumber ?? 0);
+                screen.DefaultNumber ?? 0);
         }
     }
 
@@ -438,7 +438,7 @@ internal sealed class SettingsForm : Form
         {
             foreach (MonitorDisplay screen in connectedScreens)
             {
-                int number = screen.Number ?? screen.WindowsNumber ?? 0;
+                int number = screen.Number ?? screen.DefaultNumber ?? 0;
                 if (screen.StableId is not null
                     && screenNumbers.TryGetValue(screen.StableId, out int selectedNumber))
                 {
@@ -477,14 +477,14 @@ internal sealed class SettingsForm : Form
             foreach (MonitorDisplay screen in connectedScreens)
             {
                 if (screen.StableId is null
-                    || screen.WindowsNumber is not int windowsNumber
+                    || screen.DefaultNumber is not int defaultNumber
                     || !screenNumberSelectors.TryGetValue(screen.StableId, out ComboBox? selector))
                 {
                     continue;
                 }
 
-                screenNumbers[screen.StableId] = windowsNumber;
-                selector.SelectedItem = windowsNumber;
+                screenNumbers[screen.StableId] = defaultNumber;
+                selector.SelectedItem = defaultNumber;
             }
         }
         finally
@@ -518,7 +518,7 @@ internal sealed class SettingsForm : Form
 
         Dictionary<string, int> currentNumbers =
             new(StringComparer.OrdinalIgnoreCase);
-        bool usesWindowsNumbering = true;
+        bool usesDefaultNumbering = true;
 
         foreach (MonitorDisplay screen in connectedScreens)
         {
@@ -529,10 +529,10 @@ internal sealed class SettingsForm : Form
             }
 
             currentNumbers[stableId] = number;
-            usesWindowsNumbering &= screen.WindowsNumber == number;
+            usesDefaultNumbering &= screen.DefaultNumber == number;
         }
 
-        if (usesWindowsNumbering)
+        if (usesDefaultNumbering)
         {
             screenNumberingConfigurations.Remove(screenConfigurationId);
         }

@@ -26,7 +26,7 @@
   <data name="Settings_ScreenNumberingHelp" xml:space="preserve"><value>Choose the Screen numbers WindowDeck uses for the currently connected screens.</value></data>
   <data name="Settings_IdentifyScreens" xml:space="preserve"><value>Identify screens</value></data>
   <data name="Settings_ResetScreenNumbering" xml:space="preserve"><value>Reset</value></data>
-  <data name="Settings_ScreenEntry" xml:space="preserve"><value>{0} (Windows screen {1})</value></data>
+  <data name="Settings_ScreenEntry" xml:space="preserve"><value>{0} (default screen {1})</value></data>
   <data name="Settings_Appearance" xml:space="preserve"><value>Appearance</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
