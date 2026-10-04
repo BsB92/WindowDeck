@@ -39,7 +39,7 @@ internal sealed class AppSettings
 
     public bool ShowScreenNumber { get; set; } = true;
 
-    public bool ShowAuxiliaryWindows { get; set; } = false;
+    public bool ShowAuxiliaryWindows { get; set; } = true;
 
     public bool ShowMinimizedWindows { get; set; } = true;
 

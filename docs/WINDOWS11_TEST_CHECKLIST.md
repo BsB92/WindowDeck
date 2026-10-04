@@ -84,7 +84,7 @@ Run this checklist on Windows 11 after building the solution with zero errors.
 
 ## Auxiliary windows (Requires local Windows testing)
 
-- [ ] Existing settings and new installs default Show auxiliary windows to off; normal enumeration remains unchanged. Toggle on, save, restart, and confirm persistence; toggle off removes auxiliary rows immediately.
+- [ ] New installs and settings that omit ShowAuxiliaryWindows default to on. Explicitly saved false stays off after upgrading/restarting. Toggle off, save, restart, and confirm persistence; auxiliary rows disappear immediately and legacy enumeration returns.
 - [ ] With two main windows in one process, each titled owned dialog/tool appears only under its confirmed owner. A nested dialog appears under the highest eligible visible owner; an unowned tool stays standalone.
 - [ ] Test Process Designer / Process Simulate and another application with detachable tools or dialogs. Embedded/docked controls, untitled helpers, zero-size and no-activate auxiliary windows stay excluded.
 - [ ] An independent arrow collapses/expands a main window subgroup; activating the main title is unchanged. Search for an auxiliary title retains its owner and temporarily reveals that child without changing remembered collapse state.

@@ -215,7 +215,7 @@ WindowDeck allows the user to choose the Screen numbers used by the application 
 
 ## 24. Optional auxiliary windows
 
-- Settings > Window list provides a persisted Show auxiliary windows checkbox, off by default (including existing settings files).
+- Settings > Window list provides a persisted Show auxiliary windows checkbox, on by default for new installs and settings files that omit the property. Explicitly saved false values remain respected.
 - When enabled, include visible, titled top-level owned/dialog and tool windows across applications. Continue excluding WindowDeck, shell, cloaked, untitled, zero-sized auxiliary and no-activate auxiliary helper windows. Do not enumerate embedded/docked controls as separate windows.
 - Resolve ownership through documented GW_OWNER relations, not process/name guessing. Follow at most 64 same-process owner links with cycle detection, including hidden/untitled intermediate owners; use the highest eligible visible owner as the subgroup root. Invalid chains or ownership that cannot be resolved safely leave the window standalone. Cross-process ownership is not grouped in this version.
 - Keep the application group; its main window row has an independent arrow to expand/collapse its auxiliary subgroup. Children are indented and initially expanded. Main titles still activate the main window. Multiple main windows in one process retain separate subgroups.
