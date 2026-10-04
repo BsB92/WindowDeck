@@ -45,6 +45,8 @@ internal sealed class AppSettings
 
     public AppLanguage Language { get; set; } = AppLanguage.System;
 
+    public Dictionary<string, Dictionary<string, int>> ScreenNumberingConfigurations { get; set; } = [];
+
     public AppSettings Copy() => new()
     {
         StartWithWindows = StartWithWindows,
@@ -55,6 +57,12 @@ internal sealed class AppSettings
         ShowScreenNumber = ShowScreenNumber,
         ShowMinimizedWindows = ShowMinimizedWindows,
         Theme = Theme,
-        Language = Language
+        Language = Language,
+        ScreenNumberingConfigurations = ScreenNumberingConfigurations.ToDictionary(
+            configuration => configuration.Key,
+            configuration => new Dictionary<string, int>(
+                configuration.Value,
+                StringComparer.OrdinalIgnoreCase),
+            StringComparer.OrdinalIgnoreCase)
     };
 }

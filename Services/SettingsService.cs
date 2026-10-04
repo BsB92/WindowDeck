@@ -36,6 +36,24 @@ internal sealed class SettingsService
             AppSettings settings = JsonSerializer.Deserialize<AppSettings>(
                 File.ReadAllText(SettingsPath), JsonOptions) ?? new AppSettings();
             settings.Hotkey ??= new HotkeySettings();
+            settings.ScreenNumberingConfigurations ??= [];
+            if (settings.ScreenNumberingConfigurations.Any(configuration =>
+                    string.IsNullOrWhiteSpace(configuration.Key)
+                    || configuration.Value is null
+                    || configuration.Value.Any(screen =>
+                        string.IsNullOrWhiteSpace(screen.Key) || screen.Value <= 0)
+                    || configuration.Value.Values.Distinct().Count() != configuration.Value.Count))
+            {
+                throw new JsonException("The settings file contains invalid Screen numbering values.");
+            }
+
+            settings.ScreenNumberingConfigurations = settings.ScreenNumberingConfigurations.ToDictionary(
+                configuration => configuration.Key,
+                configuration => new Dictionary<string, int>(
+                    configuration.Value,
+                    StringComparer.OrdinalIgnoreCase),
+                StringComparer.OrdinalIgnoreCase);
+
             if (!Enum.IsDefined(settings.Theme)
                 || !Enum.IsDefined(settings.Language)
                 || settings.Hotkey.VirtualKey == 0

@@ -136,6 +136,26 @@ internal static class NativeMethods
         internal string? ViewGdiDeviceName;
     }
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct DisplayConfigTargetDeviceName
+    {
+        internal uint Type;
+        internal uint Size;
+        internal LocallyUniqueIdentifier AdapterId;
+        internal uint Id;
+        internal uint Flags;
+        internal uint OutputTechnology;
+        internal ushort EdidManufactureId;
+        internal ushort EdidProductCodeId;
+        internal uint ConnectorInstance;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+        internal string? MonitorFriendlyDeviceName;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        internal string? MonitorDevicePath;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct Rect
     {
@@ -370,6 +390,10 @@ internal static class NativeMethods
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     internal static extern int DisplayConfigGetDeviceInfo(
         ref DisplayConfigSourceDeviceName requestPacket);
+
+    [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo", CharSet = CharSet.Unicode)]
+    internal static extern int DisplayConfigGetDeviceInfo(
+        ref DisplayConfigTargetDeviceName requestPacket);
 
     [DllImport("user32.dll", EntryPoint = "GetWindowLongW")]
     private static extern int GetWindowLong32(nint windowHandle, int index);

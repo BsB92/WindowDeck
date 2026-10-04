@@ -67,7 +67,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free, open source u
 ## 9. Monitor identity and placement
 
 - Each window entry shows a small Screen badge such as `[ 1 ]`, `[ 2 ]`, or `[ 3 ]`.
-- Prefer the Windows/GDI display identifier (for example, `\\.\DISPLAY1`) and derive the displayed number from it. Do not invent arbitrary numbering when Windows supplies an identifier.
+- By default, assign consecutive WindowDeck Screen numbers `1..N` to the currently connected screens, ordered by GDI device number and then device name. GDI device suffixes can be sparse and must not be displayed as Windows Identify numbers. When the user configures custom Screen numbering, the configured WindowDeck number replaces the default number everywhere in the application while the underlying Windows display identity remains unchanged.
 - Do not show monitor model names, aliases, resolutions, or extra monitor-information tooltips.
 - Update an entry's monitor when its window moves to another display.
 - Use documented APIs such as `MonitorFromWindow` and `GetMonitorInfo`.
@@ -177,7 +177,7 @@ Stage 13 adds native, DPI-aware Help and About windows to the existing applicati
 
 Each grouped application header is a container with independent collapse, minimize-all, and close-all controls. Group actions operate on the exact currently displayed window handles; closing a group always requires localized confirmation. Collapse state remains process-memory-only, and search retains its temporary expansion behavior.
 
-When more than one display is connected, each window row shows localized, wrapping monitor buttons using the existing Windows display numbering. Selecting one moves that exact HWND to the target work area while preserving its restored size and relative position where possible and retaining minimized or maximized state. A single-display system shows no monitor buttons.
+When more than one display is connected, each window row shows localized, wrapping monitor buttons using the resolved WindowDeck Screen numbering. Selecting one moves that exact HWND to the target work area while preserving its restored size and relative position where possible and retaining minimized or maximized state. A single-display system shows no monitor buttons.
 
 A fixed flyout command bar provides access to the existing Help and Settings windows.
 
@@ -185,7 +185,7 @@ Presentation Mode is an in-session feature for reserving one connected display f
 - Enabling Presentation Mode creates a special Presentation group above the normal application groups.
 - Each normal window row gets a small add control. Adding a window moves its WindowDeck entry into the Presentation group without moving the external window itself.
 - Presentation-group membership is tracked by exact HWND plus process ID and exists only for the current WindowDeck process.
-- The Presentation group lets the user choose the reserved display using the existing Windows display numbering. Presentation-group windows may remain on any monitor; membership means they are allowed on the reserved display, not that they must stay there.
+- The Presentation group lets the user choose the reserved display using the resolved WindowDeck Screen numbering. Presentation-group windows may remain on any monitor; membership means they are allowed on the reserved display, not that they must stay there.
 - Locking the Presentation group scans visible, non-minimized windows currently on the selected reserved display. If windows outside the Presentation group are present, WindowDeck shows a confirmation/configuration dialog before protection is activated.
 - In that dialog, each conflicting window must either be added to the Presentation group or assigned another display. A Move all to action can assign one destination display to all conflicting windows. Cancel leaves protection inactive.
 - After successful confirmation, the reserved display is protected. Visible windows outside the Presentation group that later appear on the reserved display are moved to a non-reserved fallback display. If WindowDeck cannot maintain protection, it disables the lock instead of pretending protection is active.
@@ -195,3 +195,20 @@ Presentation Mode is an in-session feature for reserving one connected display f
 When grouping is enabled, right-clicking the window list provides localized Collapse all groups and Expand all groups actions. These actions reuse the existing in-memory collapse state and do not persist it across application restarts.
 
 Individual row Minimize and Close controls have a subtle visible border in both light and dark appearance modes so that they read clearly as buttons without adding a heavy visual treatment.
+
+## 23. Custom Screen numbering
+
+WindowDeck allows the user to choose the Screen numbers used by the application without changing Windows display settings.
+
+- The Settings window contains a **Screen numbering** section.
+- The section lists the currently connected screens and lets the user assign unique WindowDeck numbers `1..N`.
+- A screen-number assignment applies consistently everywhere WindowDeck shows or uses screen numbers, including window-row move buttons, the current-screen indication, Presentation Mode, and the Presentation conflict dialog.
+- The Settings section includes **Identify screens**. Clicking it temporarily shows a large WindowDeck Screen number on each connected screen, similar to Windows display identification.
+- The Settings section includes **Reset**, which restores the consecutive default WindowDeck numbering for the current connected-screen configuration.
+- Custom numbering is stored locally in the existing JSON settings file.
+- WindowDeck must distinguish physical screens using a stable display identity exposed by documented Windows display APIs; model names alone are insufficient because two connected screens may have the same model name.
+- Numbering is remembered per connected-screen configuration so the same laptop can use different numbering at home and at work. Configuration switching is automatic and has no separate user-facing profile selector.
+- A previously unseen connected-screen configuration starts with consecutive default WindowDeck numbering until the user changes it.
+- If a saved screen can no longer be resolved safely, WindowDeck falls back to consecutive default WindowDeck numbering rather than applying an uncertain assignment.
+- The feature must remain local and event-driven and must not add polling, telemetry, network access, third-party dependencies, or a general-purpose monitor-management system.
+- User-facing terminology for this feature is **Screen**, not **Monitor**.

@@ -15,6 +15,7 @@ internal partial class Form1 : Form
     private const int HtLeft = 10;
     private const int HtBottomRight = 17;
     private const int WmNcHitTest = 0x0084;
+    private const int WmDisplayChange = 0x007E;
     private const int WmWindowPositionChanging = 0x0046;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
@@ -89,28 +90,18 @@ internal partial class Form1 : Form
     public void ApplySettings(AppSettings updatedSettings)
     {
         bool languageChanged = settings.Language != updatedSettings.Language;
-        bool rowAppearanceChanged = languageChanged
-            || settings.ShowApplicationIcons != updatedSettings.ShowApplicationIcons
-            || settings.ShowScreenNumber != updatedSettings.ShowScreenNumber
-            || settings.Theme != updatedSettings.Theme;
         settings = updatedSettings.Copy();
-        if (rowAppearanceChanged)
-        {
-            ClearWindowRowCache();
-        }
+        ClearWindowRowCache();
 
         ApplyLocalization();
         ApplyTheme();
         if (languageChanged)
         {
             windowEnumerator.ResetApplicationMetadataCache();
-            currentSnapshotInitialized = false;
-            RefreshWindowList();
         }
-        else
-        {
-            RenderWindowList();
-        }
+
+        currentSnapshotInitialized = false;
+        RefreshWindowList(force: true);
     }
 
     public void RefreshTheme()
@@ -261,6 +252,13 @@ internal partial class Form1 : Form
 
         base.WndProc(ref message);
 
+        if (message.Msg == WmDisplayChange)
+        {
+            currentSnapshotInitialized = false;
+            RequestAutomaticRefresh();
+            return;
+        }
+
         if (message.Msg != WmNcHitTest)
         {
             return;
@@ -336,7 +334,7 @@ internal partial class Form1 : Form
     {
         try
         {
-            IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate();
+            IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate(settings);
             updatedSnapshot = EnforcePresentationReservation(updatedSnapshot);
             PrunePresentationWindows(updatedSnapshot);
             if (!force && currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
@@ -363,7 +361,7 @@ internal partial class Form1 : Form
 
     private void RenderWindowList()
     {
-        IReadOnlyList<MonitorDisplay> updatedDisplays = monitorDetector.GetDisplays();
+        IReadOnlyList<MonitorDisplay> updatedDisplays = monitorDetector.GetDisplays(settings);
         if (!displays.SequenceEqual(updatedDisplays))
         {
             displays = updatedDisplays;
@@ -557,20 +555,26 @@ internal partial class Form1 : Form
         bool visuallyCollapsed,
         IReadOnlyList<WindowInfo> windows)
     {
+        int screenControlsWidth = settings.ShowScreenNumber && displays.Count > 1
+            ? MonitorActionGap + (MonitorButtonSize + MonitorButtonGap) * Math.Min(4, displays.Count)
+            : 0;
+
         TableLayoutPanel header = new()
         {
-            ColumnCount = 5,
+            ColumnCount = 6,
             ContextMenuStrip = groupContextMenu,
-            Dock = DockStyle.Top,
             Height = 31,
             Margin = new Padding(4, 8, 4, 2),
             BackColor = palette.RaisedSurface,
+            Width = Math.Max(120, windowListPanel.ClientSize.Width
+                - SystemInformation.VerticalScrollBarWidth - 10)
         };
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, ActionColumnWidth));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, screenControlsWidth));
 
         Button collapseButton = CreateActionButton(
             visuallyCollapsed ? "▶" : "▼",
@@ -1022,7 +1026,7 @@ internal partial class Form1 : Form
 
     private void PresentationModeButton_Click(object? sender, EventArgs e)
     {
-        displays = monitorDetector.GetDisplays();
+        displays = monitorDetector.GetDisplays(settings);
         if (!presentationModeEnabled && displays.Count < 2)
         {
             MessageBox.Show(
@@ -1113,7 +1117,7 @@ internal partial class Form1 : Form
             return;
         }
 
-        displays = monitorDetector.GetDisplays();
+        displays = monitorDetector.GetDisplays(settings);
         if (displays.Count < 2
             || displays.All(display => display.Number != reservedMonitor))
         {
@@ -1184,7 +1188,7 @@ internal partial class Form1 : Form
             return snapshot;
         }
 
-        displays = monitorDetector.GetDisplays();
+        displays = monitorDetector.GetDisplays(settings);
         MonitorDisplay? fallback = displays.FirstOrDefault(display =>
             display.Number == presentationFallbackMonitorNumber
             && display.Number != reservedMonitor)
@@ -1211,7 +1215,7 @@ internal partial class Form1 : Form
             movedAny = true;
         }
 
-        return movedAny ? windowEnumerator.Enumerate() : snapshot;
+        return movedAny ? windowEnumerator.Enumerate(settings) : snapshot;
     }
 
     private void DisablePresentationProtection(bool showMessage)
