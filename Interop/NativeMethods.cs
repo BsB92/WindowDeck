@@ -35,7 +35,10 @@ internal static class NativeMethods
     internal const int SwMinimize = 6;
     internal const int SwMaximize = 3;
     internal const uint SwpNoActivate = 0x0010;
+    internal const uint SwpNoMove = 0x0002;
+    internal const uint SwpNoSize = 0x0001;
     internal const uint SwpNoZOrder = 0x0004;
+    internal static readonly nint HwndTopMost = -1;
     internal const uint WmSetRedraw = 0x000B;
     internal const uint WmSysCommand = 0x0112;
     internal static readonly nint ScClose = 0xF060;
