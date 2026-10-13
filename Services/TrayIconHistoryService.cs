@@ -118,14 +118,14 @@ internal static class TrayIconHistoryService
         }
 
         string candidate = rawPath.Trim().Trim('"');
-        if (!Path.IsPathFullyQualified(candidate)
-            || !string.Equals(Path.GetFileName(candidate), "WindowDeck.exe", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
         try
         {
+            if (!Path.IsPathFullyQualified(candidate)
+                || !string.Equals(Path.GetFileName(candidate), "WindowDeck.exe", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
             return Path.GetFullPath(candidate);
         }
         catch (Exception error) when (error is ArgumentException or NotSupportedException or PathTooLongException)
