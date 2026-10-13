@@ -24,6 +24,33 @@ upgrades. Avoid launching successive versioned copies in `artifacts` for
 everyday use. Visual Studio debug runs can still create temporary history
 entries: Windows owns this history, not WindowDeck.
 
+## Built-in cleanup for WindowDeck 1.4.0 and later
+
+In **WindowDeck > Settings > Maintenance**, choose
+**Remove old WindowDeck taskbar entries…** (Polish:
+**Usuń stare wpisy WindowDeck z paska zadań…**).
+
+1. The dialog lists the executable paths of Windows notification icon history
+   entries pointing to **other** locations named WindowDeck.exe. Entries
+   for the currently running EXE, and entries for other applications, remain
+   untouched.
+2. Review the paths and choose **Remove old entries**, or **Cancel** to do
+   nothing. Before removal WindowDeck exports **all** selected registry keys
+   to separate .reg backups under
+   %LocalAppData%\WindowDeck\TrayIconBackups\<timestamp>\.
+3. Close and reopen Windows Taskbar Settings. If it still displays old entries,
+   sign out of Windows and back in, then inspect the list.
+
+No administrator permission, separate script or developer tool is needed. This
+button does **not** run automatically on application update.
+
+**Limitations:** If Windows has multiple history entries for the **same path**
+as the running EXE, the application intentionally preserves all of them rather
+than guessing which entry is active. A debug build run from another directory
+may consider a release EXE's history eligible, so carefully review the listed
+paths. Registry data may differ between Windows versions; this behavior
+requires testing on actual Windows 11 machines.
+
 ## Optional cleanup of WindowDeck entries only
 
 The helper `scripts\Clear-WindowDeckTrayHistory.ps1` reads the current user's
