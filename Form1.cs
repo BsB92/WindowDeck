@@ -125,6 +125,7 @@ internal partial class Form1 : Form
         base.OnShown(e);
         RefreshWindowList();
         EnsureMonitoringStarted();
+        EnsureTopmostZOrder();
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -192,6 +193,23 @@ internal partial class Form1 : Form
         RefreshWindowList();
         Show();
         Activate();
+        EnsureTopmostZOrder();
+    }
+
+    private void EnsureTopmostZOrder()
+    {
+        if (!Visible || !IsHandleCreated)
+        {
+            return;
+        }
+
+        // TopMost is also set in the designer. Reassert the Z-order when opening
+        // the flyout or activating an external window without stealing focus.
+        NativeMethods.SetWindowPos(
+            Handle,
+            NativeMethods.HwndTopMost,
+            0, 0, 0, 0,
+            NativeMethods.SwpNoMove | NativeMethods.SwpNoSize | NativeMethods.SwpNoActivate);
     }
 
     public void ExitApplication()
@@ -285,6 +303,7 @@ internal partial class Form1 : Form
         switch (result)
         {
             case WindowActivationResult.Activated:
+                EnsureTopmostZOrder();
                 break;
             case WindowActivationResult.WindowUnavailable:
                 ShowActivationFailure(
