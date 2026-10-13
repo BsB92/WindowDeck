@@ -26,6 +26,7 @@ internal sealed class WindowEventMonitor : IDisposable
     private readonly NativeMethods.WinEventProc callback;
     private readonly System.Threading.Timer debounceTimer;
     private readonly List<nint> hookHandles = [];
+    private bool refreshPending;
     private bool disposed;
 
     private WindowEventMonitor(Action refreshRequested)
@@ -114,8 +115,11 @@ internal sealed class WindowEventMonitor : IDisposable
 
         lock (syncRoot)
         {
-            if (!disposed)
+            if (!disposed && !refreshPending)
             {
+                // A fixed throttle prevents continuous window activity from indefinitely
+                // postponing the next list refresh. Later events can schedule another pass.
+                refreshPending = true;
                 debounceTimer.Change(DebounceMilliseconds, Timeout.Infinite);
             }
         }
@@ -129,6 +133,8 @@ internal sealed class WindowEventMonitor : IDisposable
             {
                 return;
             }
+
+            refreshPending = false;
         }
 
         refreshRequested();
