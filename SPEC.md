@@ -56,6 +56,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free, open source u
 
 - The default order is application, then A–Z by displayed window/document name.
 - Within an Excel group, for example, `176011_BOM_Round2.xlsx` precedes `176011_Calculation_Round2.xlsx`, which precedes `176011_Manpower_Round2.xlsx`.
+- On every refresh, render the complete group and row order as a consistent list; cached/reused window rows must not appear above their application group or between unrelated groups while reflowing.
 - Do not add unnecessary alternative sorting systems in v1.
 
 ## 8. Activation and panel focus behavior
