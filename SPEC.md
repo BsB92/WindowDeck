@@ -111,6 +111,15 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free, open source u
 - The Settings UI also contains **Language** choices `System`, `English`, and `Polski`; the default is `System`. This value is persisted in the existing `settings.json`, and a missing value in an older file means `System`. Language and Appearance are independent settings.
 - Localization uses application-owned `.resx` resources and `ResourceManager`, with English base resources and Polish satellite resources. A central localization service owns the selected language, effective UI culture, supported-language definitions, and fallback to English. For `System`, a Windows UI culture beginning with `pl` selects Polish; every other current culture selects English. Adding a future language should primarily require its culture resource file, translations, and one entry in the central supported-language definition rather than form-specific culture logic.
 
+### Tray icon history maintenance (WindowDeck 1.4)
+
+- Settings provides a localized **Maintenance > Remove old WindowDeck taskbar entries** action for every user of a release executable; it must not depend on developer scripts or tooling.
+- The action is **manual only**: list historical Windows notification-area records whose executable path resolves to a different WindowDeck.exe from the currently running one. Preserve all records for other executables and for the current executable path, even if they cannot be distinguished further.
+- Show the exact full paths and number of eligible entries in a confirmation dialog before proceeding. Cancel makes no changes.
+- Export every selected current-user registry record into a user-accessible local backup before removing any. If backup or revalidation fails, do not delete anything. Do not restart Explorer or change tray visibility preferences automatically.
+- Explain that Windows may cache the personalization UI and that sign-out/sign-in may be needed. If Windows changes or uses an unknown registry layout, report that there are no safely recognized entries rather than broadening the deletion rule.
+- Use built-in Windows/.NET functionality, no administrator privileges, external dependencies, automatic cleanup, or deletion of other apps' history.
+
 ## 14. Start with Windows
 
 - `Start WindowDeck with Windows` is disabled by default.
