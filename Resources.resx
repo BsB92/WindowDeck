@@ -69,7 +69,7 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Help_TrayHeading" xml:space="preserve"><value>Tray behavior</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>WindowDeck's X button and Esc hide the flyout. WindowDeck keeps running in the tray. To shut down the application, use Tray &gt; Exit.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Settings</value></data>
-  <data name="Help_SettingsText" xml:space="preserve"><value>Settings includes Start with Windows, Start minimized to tray, the configurable global hotkey, grouping by application, application icons, screen numbers, custom Screen numbering with Identify screens, minimized windows, Appearance (System, Light, or Dark), and Language (System, English, or Polski).</value></data>
+  <data name="Help_SettingsText" xml:space="preserve"><value>Settings includes Start with Windows, Start minimized to tray, the configurable global hotkey, grouping by application, application icons, screen numbers, custom Screen numbering with Identify screens, minimized windows, Appearance (System, Light, or Dark), and Language (System, English, or Polski). Maintenance also provides a manual button to review and remove old WindowDeck taskbar icon entries with a backup; the current executable is preserved.</value></data>
   <data name="About_Title" xml:space="preserve"><value>About WindowDeck</value></data>
   <data name="About_Version" xml:space="preserve"><value>Version {0}</value></data>
   <data name="About_Description" xml:space="preserve"><value>A lightweight Windows utility for quickly finding and switching between open windows.</value></data>
