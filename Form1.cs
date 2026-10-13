@@ -384,18 +384,10 @@ internal partial class Form1 : Form
     private void RenderWindowList()
     {
         IReadOnlyList<MonitorDisplay> updatedDisplays = monitorDetector.GetDisplays(settings);
-        if (!displays.SequenceEqual(updatedDisplays))
-        {
-            displays = updatedDisplays;
-            ClearWindowRowCache();
-        }
-        else
-        {
-            displays = updatedDisplays;
-        }
+        bool displaysChanged = !displays.SequenceEqual(updatedDisplays);
+        displays = updatedDisplays;
 
         collapsedWindowIds.IntersectWith(currentSnapshot.Select(WindowIdentity.From));
-        PruneWindowRowCache();
         IReadOnlyList<WindowInfo> presentationWindows = presentationModeEnabled
             ? currentSnapshot
                 .Where(window => presentationWindowIds.Contains(WindowIdentity.From(window)))
@@ -420,26 +412,25 @@ internal partial class Form1 : Form
         windowListPanel.BeginUpdate();
         try
         {
-            HashSet<Control> cachedRows = windowRowCache.Values
-                .Select(entry => entry.Control)
-                .ToHashSet<Control>(ReferenceEqualityComparer.Instance);
-            foreach (Control control in windowListPanel.Controls.Cast<Control>().ToArray())
+            // Build a complete ordered list before replacing the visible controls.
+            // Reusing cached rows during incremental additions can otherwise leave
+            // the flow layout temporarily mixing old and new group positions.
+            if (displaysChanged)
             {
-                if (!cachedRows.Contains(control))
-                {
-                    control.Dispose();
-                }
+                ClearWindowRowCache();
             }
 
-            windowListPanel.Controls.Clear();
+            PruneWindowRowCache();
+            List<Control> orderedControls = [];
 
             if (presentationModeEnabled)
             {
-                windowListPanel.Controls.Add(CreatePresentationGroupHeader(presentationWindows));
-                AddWindowFamilies(presentationWindows, presentationMember: true, searchActive: false);
+                orderedControls.Add(CreatePresentationGroupHeader(presentationWindows));
+                AddWindowFamilies(presentationWindows, presentationMember: true,
+                    searchActive: false, orderedControls);
             }
 
-            windowListPanel.Controls.Add(CreateColumnHeader());
+            orderedControls.Add(CreateColumnHeader());
 
             if (visibleCount == 0 && !presentationModeEnabled)
             {
@@ -454,7 +445,7 @@ internal partial class Form1 : Form
                     TextAlign = ContentAlignment.MiddleCenter
                 };
                 emptyLabel.ForeColor = palette.SecondaryForeground;
-                windowListPanel.Controls.Add(emptyLabel);
+                orderedControls.Add(emptyLabel);
             }
             else
             {
@@ -463,7 +454,7 @@ internal partial class Form1 : Form
                     if (settings.GroupByApplication)
                     {
                         bool collapsed = collapsedApplicationIds.Contains(group.Key);
-                        windowListPanel.Controls.Add(CreateGroupHeader(
+                        orderedControls.Add(CreateGroupHeader(
                             group.Key,
                             group.First().ApplicationName,
                             collapsed && !searchActive,
@@ -473,10 +464,25 @@ internal partial class Form1 : Form
                             continue;
                         }
                     }
-                    AddWindowFamilies(group.ToArray(), presentationMember: false, searchActive);
+
+                    AddWindowFamilies(group.ToArray(), presentationMember: false,
+                        searchActive, orderedControls);
                 }
             }
 
+            HashSet<Control> cachedRows = windowRowCache.Values
+                .Select(entry => entry.Control)
+                .ToHashSet<Control>(ReferenceEqualityComparer.Instance);
+            foreach (Control control in windowListPanel.Controls.Cast<Control>().ToArray())
+            {
+                if (!cachedRows.Contains(control))
+                {
+                    control.Dispose();
+                }
+            }
+
+            windowListPanel.Controls.Clear();
+            windowListPanel.Controls.AddRange(orderedControls.ToArray());
         }
         finally
         {
@@ -489,7 +495,8 @@ internal partial class Form1 : Form
     private void AddWindowFamilies(
         IReadOnlyList<WindowInfo> windows,
         bool presentationMember,
-        bool searchActive)
+        bool searchActive,
+        ICollection<Control> orderedControls)
     {
         HashSet<WindowIdentity> visibleIds = windows.Select(WindowIdentity.From).ToHashSet();
         ILookup<WindowIdentity, WindowInfo> auxiliaryWindows = windows
@@ -503,13 +510,13 @@ internal partial class Form1 : Form
             WindowIdentity identity = WindowIdentity.From(window);
             WindowInfo[] children = auxiliaryWindows[identity].ToArray();
             bool collapsed = !searchActive && collapsedWindowIds.Contains(identity);
-            windowListPanel.Controls.Add(GetOrCreateWindowRow(
+            orderedControls.Add(GetOrCreateWindowRow(
                 window, presentationMember, children.Length, collapsed));
             if (!collapsed)
             {
                 foreach (WindowInfo child in children)
                 {
-                    windowListPanel.Controls.Add(GetOrCreateWindowRow(child, presentationMember));
+                    orderedControls.Add(GetOrCreateWindowRow(child, presentationMember));
                 }
             }
         }
