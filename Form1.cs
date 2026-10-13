@@ -427,7 +427,7 @@ internal partial class Form1 : Form
             {
                 orderedControls.Add(CreatePresentationGroupHeader(presentationWindows));
                 AddWindowFamilies(presentationWindows, presentationMember: true,
-                    searchActive: false, orderedControls);
+                    searchActive: false, orderedControls: orderedControls);
             }
 
             orderedControls.Add(CreateColumnHeader());
@@ -466,7 +466,7 @@ internal partial class Form1 : Form
                     }
 
                     AddWindowFamilies(group.ToArray(), presentationMember: false,
-                        searchActive, orderedControls);
+                        searchActive: searchActive, orderedControls: orderedControls);
                 }
             }
 
