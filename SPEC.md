@@ -38,7 +38,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free, open source u
 
 - At startup, perform one initial top-level window enumeration with `EnumWindows`.
 - After the initial enumeration, normal updates must be driven by `SetWinEventHook` events, including window creation, destruction, title changes, show, hide, and location changes.
-- Coalesce bursts of events with a debounce interval of approximately 100–200 ms.
+- Coalesce bursts of events within approximately 100–200 ms. Continuous event activity must not postpone window-list refreshes indefinitely.
 - Never continuously poll all windows with a timer. Re-running `EnumWindows` is allowed only when genuinely needed to restore consistent state.
 - Keep event callbacks safe and lightweight, and marshal work appropriately to the application/UI context.
 - Idle CPU usage should be practically 0%.
@@ -78,6 +78,7 @@ WindowDeck must be fast, stable, event-driven, Windows-only, free, open source u
 - The panel must behave like a Windows 11 flyout rather than an ordinary application window.
 - It slides from the right side of the active monitor and occupies almost all available height, preferably ending above the taskbar.
 - It is an overlay: it must not reserve work area, resize other windows, or behave as a dock/AppBar.
+- The visible flyout stays in the topmost Z-order band when opened and after it activates an external window, without taking focus back from that window. Normal Windows Z-order rules for other topmost or privileged windows still apply.
 - Initial width is approximately 600–750 px. The user can resize it by dragging its left edge, and the selected width is persisted.
 - Full document names take priority. Use ellipsis only when text genuinely does not fit the available space.
 - The panel is hidden by `Esc` or its `X` button. The `X` hides the application to the tray rather than terminating it.
