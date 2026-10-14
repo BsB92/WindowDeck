@@ -109,33 +109,90 @@ internal sealed class SavedWindowSetCaptureForm : Form
             windowList.Controls.Add(groupHeader);
             foreach (SavedWindowEntry window in group)
             {
-                string suffix = window.Kind == SavedWindowKind.Unsupported
-                    ? "  " + LocalizationService.Get("Sets_Unsupported")
-                    : string.Empty;
+                FlowLayoutPanel row = new()
+                {
+                    WrapContents = false,
+                    AutoSize = false,
+                    Height = 35,
+                    Width = 645,
+                    Margin = new Padding(3, 1, 3, 1),
+                    BackColor = palette.Surface
+                };
                 CheckBox check = new()
                 {
                     Checked = true,
                     AutoSize = false,
-                    Width = 645,
+                    Width = 477,
                     Height = 32,
                     AutoEllipsis = true,
-                    Text = window.WindowTitle + suffix,
-                    ForeColor = window.Kind == SavedWindowKind.Unsupported
-                        ? palette.SecondaryForeground : palette.Foreground,
+                    ForeColor = palette.Foreground,
                     BackColor = palette.Surface,
-                    Margin = new Padding(3, 1, 3, 1)
+                    Margin = Padding.Empty
                 };
+                Button chooseFile = CreateButton("Sets_ChooseFile", palette);
+                chooseFile.AutoSize = false;
+                chooseFile.Width = 157;
+                chooseFile.Height = 31;
+                chooseFile.Margin = new Padding(6, 1, 0, 0);
+                ToolTip fileTip = new();
+                fileTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
+
+                void UpdateRow()
+                {
+                    string status = window.Kind switch
+                    {
+                        SavedWindowKind.Unsupported => LocalizationService.Get("Sets_Unsupported"),
+                        SavedWindowKind.Application => LocalizationService.Get("Sets_ProgramOnly"),
+                        _ => LocalizationService.Get("Sets_DocumentLinked")
+                    };
+                    check.Text = window.WindowTitle + "  " + status;
+                    fileTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
+                }
+
+                chooseFile.Click += (_, _) =>
+                {
+                    using OpenFileDialog picker = new()
+                    {
+                        Title = LocalizationService.Get("Sets_ChooseFile"),
+                        Filter = LocalizationService.Get("Sets_AllFilesFilter"),
+                        CheckFileExists = true,
+                        Multiselect = false
+                    };
+                    if (picker.ShowDialog(this) != DialogResult.OK)
+                    {
+                        return;
+                    }
+                    if (!SavedWindowCaptureService.IsSupportedDocument(
+                            SavedWindowKind.DocumentFile, picker.FileName))
+                    {
+                        MessageBox.Show(this, LocalizationService.Get("Sets_UnsafeFile"),
+                            Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    window.Kind = SavedWindowKind.DocumentFile;
+                    window.ResourcePath = picker.FileName;
+                    UpdateRow();
+                };
+                UpdateRow();
                 entries.Add((check, window));
-                windowList.Controls.Add(check);
+                row.Controls.Add(check);
+                row.Controls.Add(chooseFile);
+                windowList.Controls.Add(row);
             }
         }
         windowList.Resize += (_, _) =>
         {
-            int width = Math.Max(180, windowList.ClientSize.Width
+            int width = Math.Max(240, windowList.ClientSize.Width
                 - SystemInformation.VerticalScrollBarWidth - 22);
             foreach (Control child in windowList.Controls)
             {
                 child.Width = width;
+                if (child is FlowLayoutPanel fileRow)
+                {
+                    CheckBox check = fileRow.Controls.OfType<CheckBox>().First();
+                    Button chooseFile = fileRow.Controls.OfType<Button>().First();
+                    check.Width = Math.Max(140, width - chooseFile.Width - 10);
+                }
             }
         };
         layout.Controls.Add(windowList, 0, 2);
