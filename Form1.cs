@@ -1373,7 +1373,7 @@ internal partial class Form1 : Form
     {
         try
         {
-            using SavedWindowSetsForm dialog = new(settings);
+            using SavedWindowSetsForm dialog = new(settings, Bounds, Screen.FromControl(this).WorkingArea);
             dialog.ShowDialog(this);
             RefreshWindowList(force: true);
         }
