@@ -145,4 +145,30 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Settings_TrayCleanupNone" xml:space="preserve"><value>Nie znaleziono starych wpisów WindowDeck na pasku zadań. Wpis uruchomionej wersji zostaje zachowany.</value></data>
   <data name="Settings_TrayCleanupSuccess" xml:space="preserve"><value>Usunięto {0} historycznych wpisów WindowDeck. Folder kopii zapasowych: {1}&#10;&#10;Jeśli stare wpisy są nadal widoczne w personalizacji paska zadań, wyloguj się i zaloguj ponownie do Windows.</value></data>
   <data name="Settings_TrayCleanupFailed" xml:space="preserve"><value>Nie udało się wyczyścić starych wpisów paska zadań. {0}</value></data>
+  <data name="Sets_Button" xml:space="preserve"><value>Zestawy okien</value></data>
+  <data name="Sets_Title" xml:space="preserve"><value>Zapisane zestawy okien</value></data>
+  <data name="Sets_Introduction" xml:space="preserve"><value>Zapisz wybrane okna pod własną nazwą i później otwórz obsługiwane dokumenty oraz foldery.</value></data>
+  <data name="Sets_CaptureTitle" xml:space="preserve"><value>Zapisz otwarte okna</value></data>
+  <data name="Sets_Name" xml:space="preserve"><value>Nazwa zestawu</value></data>
+  <data name="Sets_DefaultName" xml:space="preserve"><value>Mój zestaw okien</value></data>
+  <data name="Sets_SelectAll" xml:space="preserve"><value>Zaznacz wszystkie</value></data>
+  <data name="Sets_DeselectAll" xml:space="preserve"><value>Odznacz wszystkie</value></data>
+  <data name="Sets_Unsupported" xml:space="preserve"><value>(nie można odtworzyć automatycznie)</value></data>
+  <data name="Sets_Save" xml:space="preserve"><value>Zapisz zestaw</value></data>
+  <data name="Sets_SaveCurrent" xml:space="preserve"><value>Zapisz obecne…</value></data>
+  <data name="Sets_Open" xml:space="preserve"><value>Otwórz zestaw</value></data>
+  <data name="Sets_Update" xml:space="preserve"><value>Aktualizuj zestaw…</value></data>
+  <data name="Sets_Rename" xml:space="preserve"><value>Zmień nazwę</value></data>
+  <data name="Sets_Delete" xml:space="preserve"><value>Usuń</value></data>
+  <data name="Sets_Close" xml:space="preserve"><value>Zamknij</value></data>
+  <data name="Sets_NoSets" xml:space="preserve"><value>Brak zapisanych zestawów. Kliknij „Zapisz obecne”, aby utworzyć pierwszy.</value></data>
+  <data name="Sets_WindowsCount" xml:space="preserve"><value>Liczba okien: {0}</value></data>
+  <data name="Sets_NameRequired" xml:space="preserve"><value>Podaj nazwę zestawu.</value></data>
+  <data name="Sets_NoSelection" xml:space="preserve"><value>Zaznacz przynajmniej jedno okno.</value></data>
+  <data name="Sets_NoWindows" xml:space="preserve"><value>Nie ma okien, które można zapisać.</value></data>
+  <data name="Sets_NameExists" xml:space="preserve"><value>Zestaw o takiej nazwie już istnieje. Wpisz inną nazwę lub zaktualizuj istniejący zestaw.</value></data>
+  <data name="Sets_ConfirmUpdate" xml:space="preserve"><value>Zastąpić okna zapisane w zestawie „{0}” aktualnie wybranymi?</value></data>
+  <data name="Sets_ConfirmDelete" xml:space="preserve"><value>Usunąć zapisany zestaw „{0}”? Nie zamknie to żadnych otwartych okien.</value></data>
+  <data name="Sets_RestoreSummary" xml:space="preserve"><value>Wysłano polecenia otwarcia: {0}&#10;Już otwarte lub wcześniej uruchomione: {1}&#10;Nieobsługiwane automatycznie: {2}&#10;Brakujące pliki lub foldery: {3}&#10;Błędy uruchamiania: {4}&#10;&#10;Nie zamknięto żadnego z obecnie otwartych okien. Otwieranie dokumentów może jeszcze trwać.</value></data>
+  <data name="Sets_Error" xml:space="preserve"><value>Nie udało się wykonać operacji na zestawach okien. {0}</value></data>
 </root>
