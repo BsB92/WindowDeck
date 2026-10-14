@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Security;
 using WindowDeck.Interop;
 using WindowDeck.Localization;
 using WindowDeck.Models;
@@ -26,6 +28,7 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox showMinimizedWindows = new() { AutoSize = true };
     private readonly ComboBox theme = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
     private readonly ComboBox language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
+    private readonly Button cleanOldTrayIcons = new() { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
     private readonly Func<AppSettings, (bool Success, string? ErrorMessage, bool EffectiveStartupState)> applySettings;
     private readonly MonitorDetector screenDetector = new();
     private readonly List<(Label Label, string ResourceKey)> sectionLabels = [];
@@ -135,6 +138,9 @@ internal sealed class SettingsForm : Form
         content.Controls.Add(theme);
         content.Controls.Add(CreateSectionLabel("Settings_Language"));
         content.Controls.Add(language);
+        content.Controls.Add(CreateSectionLabel("Settings_Maintenance"));
+        cleanOldTrayIcons.Click += CleanOldTrayIcons_Click;
+        content.Controls.Add(cleanOldTrayIcons);
 
         buttons = new FlowLayoutPanel
         {
@@ -300,6 +306,7 @@ internal sealed class SettingsForm : Form
         screenNumberingHelp.Text = LocalizationService.Get("Settings_ScreenNumberingHelp");
         identifyScreens.Text = LocalizationService.Get("Settings_IdentifyScreens");
         resetScreenNumbering.Text = LocalizationService.Get("Settings_ResetScreenNumbering");
+        cleanOldTrayIcons.Text = LocalizationService.Get("Settings_TrayCleanupButton");
         cancel.Text = LocalizationService.Get("Common_Cancel");
         ok.Text = LocalizationService.Get("Common_OK");
 
@@ -371,9 +378,50 @@ internal sealed class SettingsForm : Form
         language.ForeColor = palette.Foreground;
         ThemeManager.StyleButton(identifyScreens, palette);
         ThemeManager.StyleButton(resetScreenNumbering, palette);
+        ThemeManager.StyleButton(cleanOldTrayIcons, palette);
         ThemeManager.StyleButton(ok, palette);
         ThemeManager.StyleButton(cancel, palette);
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
+    }
+
+    private void CleanOldTrayIcons_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            IReadOnlyList<TrayIconHistoryEntry> entries = TrayIconHistoryService.GetOldEntries();
+            if (entries.Count == 0)
+            {
+                MessageBox.Show(this, LocalizationService.Get("Settings_TrayCleanupNone"), Text,
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            using TrayIconCleanupForm confirmation = new(entries, selectedTheme);
+            if (confirmation.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            cleanOldTrayIcons.Enabled = false;
+            try
+            {
+                string backupDirectory = TrayIconHistoryService.RemoveOldEntries(entries);
+                MessageBox.Show(this,
+                    LocalizationService.Format("Settings_TrayCleanupSuccess", entries.Count, backupDirectory),
+                    Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            finally
+            {
+                cleanOldTrayIcons.Enabled = true;
+            }
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException
+            or SecurityException or Win32Exception or ArgumentException or InvalidOperationException)
+        {
+            MessageBox.Show(this,
+                LocalizationService.Format("Settings_TrayCleanupFailed", error.Message),
+                Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     private void HotkeyKey_KeyDown(object? sender, KeyEventArgs e)
