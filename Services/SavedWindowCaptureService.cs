@@ -32,9 +32,16 @@ internal sealed class SavedWindowCaptureService
         {
             using Process instance = Process.GetProcessById(checked((int)window.ProcessId));
             process = instance.ProcessName;
+            string executable = instance.MainModule?.FileName ?? string.Empty;
+            if (IsSupportedExecutable(executable))
+            {
+                entry.ExecutablePath = executable;
+                entry.Kind = SavedWindowKind.Application;
+            }
         }
         catch (Exception error) when (error is ArgumentException
-            or InvalidOperationException or System.ComponentModel.Win32Exception)
+            or InvalidOperationException or System.ComponentModel.Win32Exception
+            or System.IO.IOException or UnauthorizedAccessException)
         {
             return entry;
         }
@@ -81,6 +88,22 @@ internal sealed class SavedWindowCaptureService
         return entry;
     }
 
+    public static bool IsSupportedExecutable(string? path)
+    {
+        try
+        {
+            return !string.IsNullOrWhiteSpace(path)
+                && Path.IsPathFullyQualified(path)
+                && string.Equals(Path.GetExtension(path), ".exe",
+                    StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception error) when (error is ArgumentException or NotSupportedException
+            or PathTooLongException)
+        {
+            return false;
+        }
+    }
+
     public static bool IsSupportedDocument(SavedWindowKind kind, string? path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -104,7 +127,7 @@ internal sealed class SavedWindowCaptureService
             return false;
         }
 
-        if (kind == SavedWindowKind.ExplorerFolder)
+        if (kind is SavedWindowKind.ExplorerFolder or SavedWindowKind.DocumentFile)
         {
             return true;
         }
