@@ -145,4 +145,30 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Settings_TrayCleanupNone" xml:space="preserve"><value>No old WindowDeck taskbar entries were found. The currently running copy is preserved.</value></data>
   <data name="Settings_TrayCleanupSuccess" xml:space="preserve"><value>Removed {0} historical WindowDeck entries. Backup folder: {1}&#10;&#10;Sign out of Windows and sign back in if Taskbar personalization still shows stale entries.</value></data>
   <data name="Settings_TrayCleanupFailed" xml:space="preserve"><value>The old taskbar entries could not be cleaned up. {0}</value></data>
+  <data name="Sets_Button" xml:space="preserve"><value>Saved sets</value></data>
+  <data name="Sets_Title" xml:space="preserve"><value>Saved window sets</value></data>
+  <data name="Sets_Introduction" xml:space="preserve"><value>Save a named selection of windows, then reopen supported documents and folders later.</value></data>
+  <data name="Sets_CaptureTitle" xml:space="preserve"><value>Save current windows</value></data>
+  <data name="Sets_Name" xml:space="preserve"><value>Set name</value></data>
+  <data name="Sets_DefaultName" xml:space="preserve"><value>My window set</value></data>
+  <data name="Sets_SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="Sets_DeselectAll" xml:space="preserve"><value>Deselect all</value></data>
+  <data name="Sets_Unsupported" xml:space="preserve"><value>(cannot restore automatically)</value></data>
+  <data name="Sets_Save" xml:space="preserve"><value>Save set</value></data>
+  <data name="Sets_SaveCurrent" xml:space="preserve"><value>Save current…</value></data>
+  <data name="Sets_Open" xml:space="preserve"><value>Open set</value></data>
+  <data name="Sets_Update" xml:space="preserve"><value>Update set…</value></data>
+  <data name="Sets_Rename" xml:space="preserve"><value>Rename</value></data>
+  <data name="Sets_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Sets_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Sets_NoSets" xml:space="preserve"><value>No saved sets yet. Choose Save current to create one.</value></data>
+  <data name="Sets_WindowsCount" xml:space="preserve"><value>Windows: {0}</value></data>
+  <data name="Sets_NameRequired" xml:space="preserve"><value>Enter a name for this set.</value></data>
+  <data name="Sets_NoSelection" xml:space="preserve"><value>Select at least one window.</value></data>
+  <data name="Sets_NoWindows" xml:space="preserve"><value>There are no eligible windows to save.</value></data>
+  <data name="Sets_NameExists" xml:space="preserve"><value>A set with that name already exists. Choose another name or update the existing set.</value></data>
+  <data name="Sets_ConfirmUpdate" xml:space="preserve"><value>Replace the saved windows in &quot;{0}&quot; with the current selection?</value></data>
+  <data name="Sets_ConfirmDelete" xml:space="preserve"><value>Delete the saved set &quot;{0}&quot;? This will not close any open windows.</value></data>
+  <data name="Sets_RestoreSummary" xml:space="preserve"><value>Opening requests sent: {0}&#10;Already open or previously requested: {1}&#10;Cannot restore automatically: {2}&#10;Missing files or folders: {3}&#10;Failed to launch: {4}&#10;&#10;No currently open windows were closed. The application may take time to finish opening documents.</value></data>
+  <data name="Sets_Error" xml:space="preserve"><value>Could not complete the saved-sets action. {0}</value></data>
 </root>
