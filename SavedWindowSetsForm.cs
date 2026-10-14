@@ -19,7 +19,7 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly TextBox details;
     private List<SavedWindowSet> savedSets;
 
-    public SavedWindowSetsForm(AppSettings settings)
+    public SavedWindowSetsForm(AppSettings settings, Rectangle windowDeckBounds, Rectangle workingArea)
     {
         this.settings = settings.Copy();
         savedSets = store.Load();
@@ -27,10 +27,18 @@ internal sealed class SavedWindowSetsForm : Form
 
         Text = LocalizationService.Get("Sets_Title");
         Icon = WindowDeckIcon.Load();
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.Manual;
+        ShowInTaskbar = false;
+        TopMost = true;
         FormBorderStyle = FormBorderStyle.Sizable;
-        MinimumSize = new Size(700, 390);
-        ClientSize = new Size(900, 565);
+        MinimumSize = new Size(560, 390);
+        int availableLeft = Math.Max(0, windowDeckBounds.Left - workingArea.Left - 12);
+        int targetWidth = Math.Clamp(availableLeft, 560, 900);
+        ClientSize = new Size(targetWidth, Math.Min(565, Math.Max(310, workingArea.Height - 70)));
+        Location = new Point(
+            Math.Max(workingArea.Left, windowDeckBounds.Left - Width - 12),
+            Math.Clamp(windowDeckBounds.Top, workingArea.Top,
+                Math.Max(workingArea.Top, workingArea.Bottom - Height)));
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = new Font("Segoe UI", 9F);
         BackColor = palette.Background;
@@ -180,6 +188,15 @@ internal sealed class SavedWindowSetsForm : Form
             if (entry.Kind == SavedWindowKind.Unsupported)
             {
                 display.Append(' ').Append(LocalizationService.Get("Sets_Unsupported"));
+            }
+            else if (entry.Kind == SavedWindowKind.Application)
+            {
+                display.Append(' ').Append(LocalizationService.Get("Sets_ProgramOnly"));
+            }
+            if (!string.IsNullOrWhiteSpace(entry.ResourcePath))
+            {
+                display.AppendLine();
+                display.Append("    ").Append(entry.ResourcePath);
             }
             display.AppendLine();
         }
