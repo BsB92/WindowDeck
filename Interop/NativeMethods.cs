@@ -432,6 +432,15 @@ internal static class NativeMethods
         out Rect attributeValue,
         int attributeSize);
 
+    [DllImport("ole32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int CLSIDFromProgID(
+        [MarshalAs(UnmanagedType.LPWStr)] string progId, out Guid clsid);
+
+    [DllImport("oleaut32.dll")]
+    internal static extern int GetActiveObject(
+        ref Guid clsid, nint reserved,
+        [MarshalAs(UnmanagedType.IUnknown)] out object result);
+
     internal static nint GetWindowLongPtr(nint windowHandle, int index)
     {
         return nint.Size == 8
