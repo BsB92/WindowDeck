@@ -179,7 +179,24 @@ internal sealed class SavedWindowRestoreService
             };
         }
 
-        using Process? launched = Process.Start(start);
+        try
+        {
+            using Process? launched = Process.Start(start);
+        }
+        catch (Exception error) when (!start.UseShellExecute && error is
+            (Win32Exception or IOException or UnauthorizedAccessException
+                or InvalidOperationException))
+        {
+            // The original application may have been moved, unregistered or
+            // installed as a packaged app. Try the user's current association
+            // for the exact same document instead of abandoning the set.
+            using Process? launched = Process.Start(new ProcessStartInfo
+            {
+                FileName = file,
+                UseShellExecute = true
+            });
+        }
+
         recentlyRequested[key] = DateTime.UtcNow;
         openResources.Add(key);
         result.Requested++;
