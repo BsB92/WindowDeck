@@ -129,6 +129,15 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 windowList.Controls.Add(check);
             }
         }
+        windowList.Resize += (_, _) =>
+        {
+            int width = Math.Max(180, windowList.ClientSize.Width
+                - SystemInformation.VerticalScrollBarWidth - 22);
+            foreach (Control child in windowList.Controls)
+            {
+                child.Width = width;
+            }
+        };
         layout.Controls.Add(windowList, 0, 2);
 
         FlowLayoutPanel bottom = new()
