@@ -127,9 +127,24 @@ internal sealed class SavedWindowCaptureService
             return false;
         }
 
-        if (kind is SavedWindowKind.ExplorerFolder or SavedWindowKind.DocumentFile)
+        if (kind == SavedWindowKind.ExplorerFolder)
         {
             return true;
+        }
+
+        if (kind == SavedWindowKind.DocumentFile)
+        {
+            // Explicitly selected documents are opened through their associated
+            // application. Never allow launchable files or shortcuts as documents.
+            string[] blocked =
+            [
+                ".exe", ".com", ".scr", ".bat", ".cmd", ".ps1", ".psm1",
+                ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".hta",
+                ".lnk", ".url", ".msi", ".msp", ".msix", ".appx",
+                ".reg", ".cpl", ".jar", ".pif", ".scf"
+            ];
+            return extension.Length > 1
+                && !blocked.Contains(extension, StringComparer.OrdinalIgnoreCase);
         }
         return kind switch
         {
