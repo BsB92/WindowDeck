@@ -230,3 +230,37 @@ WindowDeck allows the user to choose the Screen numbers used by the application 
 - `scripts/Prepare-Release.ps1` publishes the executable, calculates its SHA-256, and renders release notes from the versioned template. It does not tag, push, merge, or publish a GitHub release.
 - Publish the executable and its checksum file as GitHub Release assets; the release notes must contain the checksum of that exact executable. Do not retain a previous executable checksum as the latest-release checksum in README.
 - Test the final published executable outside Visual Studio using the current release checklist before publication.
+
+## 26. Saved window sets (planned for v1.4.0)
+
+Allow a user to preserve and reopen a named selection of working windows after restarting Windows, without closing or disturbing windows already open at restore time.
+
+### Capture user interface
+
+- Add a clearly labeled Saved sets / Zestawy okien action to WindowDeck's main interface, reachable without entering application Settings.
+- The Save current windows flow presents a scrollable list of currently tracked user-facing windows, with application grouping, recognizable application names, window titles and **one checkbox per window**.
+- **Every available window is selected by default when the dialog opens.** Provide clear **Select all / Zaznacz wszystkie** and **Deselect all / Odznacz wszystkie** controls. The user may change individual checkboxes after using either bulk action.
+- Provide an editable, user-chosen set name and save exactly the selected window entries; reject saving an empty selection with a localized explanation. Saving is an explicit user action, never automatic on exit.
+- Multiple separate saved sets can coexist. The saved-set picker lists names and offers Open, Rename, Update and Delete actions. Overwriting or deleting an existing set requires explicit confirmation; cancel never changes the stored set.
+
+### Persistence and reopening
+
+- Save local, versioned JSON under the current user's WindowDeck application-data directory, separate from normal Settings, so sets survive closing WindowDeck and restarting Windows. No cloud services, elevated privileges or third-party dependencies.
+- A window's runtime HWND, process ID or display title alone is not a stable resource identifier across sessions. Save a **real restorable target** (such as a validated document path or browser URL, where the application provides it) alongside the visible name, application identity and support status. Do **not** pretend a title is a file path or fabricate document targets.
+- Reopening a set is **additive**: never close any currently open window, terminate an application, or replace the existing workspace. If a saved resource is already open, do not create a duplicate; it may optionally be activated or left untouched. This applies to repeated Open actions too.
+- Restart only resource types that WindowDeck can resolve reliably and safely. Show unsupported/unresolved entries in the capture or restore summary with an honest explanation; do not silently launch an application in place of a requested document or execute arbitrary commands from a saved set.
+- Preserve the set even if some resources have moved, been deleted, require authentication, or their applications are unavailable. When opening, report which resources were reopened, already open, skipped, or failed. A partial failure must not undo successfully opened resources or affect unrelated windows.
+- The initial feature does not promise unsaved document changes, transient dialogs, exact application-internal state (e.g. an Excel selection), all browser tabs, or exact screen geometry and placement. Document the supported resource types after confirming actual Windows-specific restore behavior in local tests.
+- Local JSON may contain sensitive document paths/URLs. Store it under the current user profile, without uploading or logging its contents, and do not automatically reopen any saved set on app startup.
+
+### Acceptance scenarios
+
+- Capture 10-20 windows with all checkboxes initially selected; deselect a few, save a named set and confirm it contains **only** selected entries.
+- Exercise Select all and Deselect all after individual selections, and reject a fully deselected save.
+- Save two different named sets, rename one, update another and delete one with confirmation.
+- Restart Windows with saved applications closed; Open one set and confirm supported documents/folders are reopened.
+- Open the set again with some resources already open; verify no duplicate resources and no currently open window is closed or replaced.
+- Include moved/missing documents, unsupported windows and permission/access failures; verify honest reporting and unaffected existing windows.
+- Verify both Polish and English UI, existing grouping, Presentation Mode, keyboard shortcut, notification icon and WindowDeck's lightweight idle behavior.
+
+Implementation must be incremental on a dedicated branch and **requires local Windows 11 testing** before merging. In particular, a correct file/document reopening mechanism needs separate validation per supported application rather than inferring targets from generic window titles.
