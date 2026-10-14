@@ -7,6 +7,7 @@ namespace WindowDeck;
 internal sealed class SavedWindowSetCaptureForm : Form
 {
     private readonly TextBox nameBox;
+    private readonly ToolTip fileToolTip = new();
     private readonly List<(CheckBox Check, SavedWindowEntry Entry)> entries = [];
 
     public string SetName => nameBox.Text.Trim();
@@ -134,8 +135,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 chooseFile.Width = 157;
                 chooseFile.Height = 31;
                 chooseFile.Margin = new Padding(6, 1, 0, 0);
-                ToolTip fileTip = new();
-                fileTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
+                fileToolTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
 
                 void UpdateRow()
                 {
@@ -145,8 +145,11 @@ internal sealed class SavedWindowSetCaptureForm : Form
                         SavedWindowKind.Application => LocalizationService.Get("Sets_ProgramOnly"),
                         _ => LocalizationService.Get("Sets_DocumentLinked")
                     };
-                    check.Text = window.WindowTitle + "  " + status;
-                    fileTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
+                    string fileName = !string.IsNullOrWhiteSpace(window.ResourcePath)
+                        ? " — " + Path.GetFileName(window.ResourcePath)
+                        : string.Empty;
+                    check.Text = window.WindowTitle + "  " + status + fileName;
+                    fileToolTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
                 }
 
                 chooseFile.Click += (_, _) =>
@@ -248,7 +251,11 @@ internal sealed class SavedWindowSetCaptureForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) Icon?.Dispose();
+        if (disposing)
+        {
+            fileToolTip.Dispose();
+            Icon?.Dispose();
+        }
         base.Dispose(disposing);
     }
 }
