@@ -32,18 +32,39 @@ internal sealed class SavedWindowCaptureService
         {
             using Process instance = Process.GetProcessById(checked((int)window.ProcessId));
             process = instance.ProcessName;
-            string executable = instance.MainModule?.FileName ?? string.Empty;
-            if (IsSupportedExecutable(executable))
+            try
             {
-                entry.ExecutablePath = executable;
-                entry.Kind = SavedWindowKind.Application;
+                string executable = instance.MainModule?.FileName ?? string.Empty;
+                if (IsSupportedExecutable(executable))
+                {
+                    entry.ExecutablePath = executable;
+                    entry.Kind = SavedWindowKind.Application;
+                }
+            }
+            catch (Exception error) when (error is System.ComponentModel.Win32Exception
+                or InvalidOperationException or UnauthorizedAccessException)
+            {
+                // Windows Store applications may not expose their real EXE path.
             }
         }
         catch (Exception error) when (error is ArgumentException
-            or InvalidOperationException or System.ComponentModel.Win32Exception
-            or System.IO.IOException or UnauthorizedAccessException)
+            or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             return entry;
+        }
+
+        if (entry.Kind == SavedWindowKind.Unsupported
+            && process.Equals("notepad", StringComparison.OrdinalIgnoreCase))
+        {
+            // The Windows 11 packaged Notepad process may hide its package path.
+            // The built-in system launcher is a safe fallback for program-only
+            // capture; users can still link the exact .txt file manually.
+            string systemNotepad = Path.Combine(Environment.SystemDirectory, "notepad.exe");
+            if (File.Exists(systemNotepad))
+            {
+                entry.ExecutablePath = systemNotepad;
+                entry.Kind = SavedWindowKind.Application;
+            }
         }
 
         if (process.Equals("explorer", StringComparison.OrdinalIgnoreCase))
