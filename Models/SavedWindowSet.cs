@@ -6,7 +6,9 @@ internal enum SavedWindowKind
     ExplorerFolder,
     ExcelWorkbook,
     WordDocument,
-    PowerPointPresentation
+    PowerPointPresentation,
+    DocumentFile,
+    Application
 }
 
 internal sealed class SavedWindowEntry
@@ -15,6 +17,7 @@ internal sealed class SavedWindowEntry
     public string WindowTitle { get; set; } = string.Empty;
     public SavedWindowKind Kind { get; set; }
     public string? ResourcePath { get; set; }
+    public string? ExecutablePath { get; set; }
 }
 
 internal sealed class SavedWindowSet
