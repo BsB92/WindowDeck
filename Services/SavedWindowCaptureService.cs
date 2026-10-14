@@ -83,7 +83,23 @@ internal sealed class SavedWindowCaptureService
 
     public static bool IsSupportedDocument(SavedWindowKind kind, string? path)
     {
-        if (string.IsNullOrWhiteSpace(path) || !Path.IsPathFullyQualified(path))
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        string extension;
+        try
+        {
+            if (!Path.IsPathFullyQualified(path))
+            {
+                return false;
+            }
+
+            extension = Path.GetExtension(path);
+        }
+        catch (Exception error) when (error is ArgumentException
+            or NotSupportedException or PathTooLongException)
         {
             return false;
         }
@@ -92,8 +108,6 @@ internal sealed class SavedWindowCaptureService
         {
             return true;
         }
-
-        string extension = Path.GetExtension(path);
         return kind switch
         {
             SavedWindowKind.ExcelWorkbook => extension.Equals(".xlsx", StringComparison.OrdinalIgnoreCase)
@@ -158,7 +172,8 @@ internal sealed class SavedWindowCaptureService
         {
             if (instance is not null && Marshal.IsComObject(instance))
             {
-                Marshal.ReleaseComObject(instance);
+                try { Marshal.ReleaseComObject(instance); }
+                catch (COMException) { /* Ignore released automation instances. */ }
             }
         }
 
@@ -222,7 +237,8 @@ internal sealed class SavedWindowCaptureService
         {
             if (instance is not null && Marshal.IsComObject(instance))
             {
-                Marshal.ReleaseComObject(instance);
+                try { Marshal.ReleaseComObject(instance); }
+                catch (COMException) { /* Ignore released automation instances. */ }
             }
         }
 
