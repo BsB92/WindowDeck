@@ -77,6 +77,7 @@ internal partial class Form1 : Form
         settingsButton.Click += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
         helpButton.Click += (_, _) => HelpRequested?.Invoke(this, EventArgs.Empty);
         presentationModeButton.Click += PresentationModeButton_Click;
+        savedSetsButton.Click += SavedSetsButton_Click;
         InitializeGroupContextMenu();
         ApplyLocalization();
         ApplyTheme();
@@ -1368,6 +1369,23 @@ internal partial class Form1 : Form
         }
     }
 
+    private void SavedSetsButton_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            using SavedWindowSetsForm dialog = new(settings);
+            dialog.ShowDialog(this);
+            RefreshWindowList(force: true);
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            MessageBox.Show(this,
+                LocalizationService.Format("Sets_Error", error.Message),
+                LocalizationService.Get("Sets_Title"),
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
     private void ApplyTheme()
     {
         palette = ThemeManager.Resolve(settings.Theme);
@@ -1380,9 +1398,15 @@ internal partial class Form1 : Form
         bottomBar.BackColor = palette.RaisedSurface;
         topBar.BackColor = palette.Background;
         presentationModeButton.BackColor = palette.RaisedSurface;
+        savedSetsButton.BackColor = palette.RaisedSurface;
         helpButton.BackColor = palette.RaisedSurface;
         settingsButton.BackColor = palette.RaisedSurface;
         presentationModeButton.ForeColor = palette.SecondaryForeground;
+        savedSetsButton.ForeColor = palette.Foreground;
+        savedSetsButton.FlatAppearance.BorderColor = palette.Border;
+        savedSetsButton.FlatAppearance.BorderSize = 1;
+        savedSetsButton.FlatAppearance.MouseOverBackColor = palette.Hover;
+        savedSetsButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
         helpButton.ForeColor = palette.Foreground;
         settingsButton.ForeColor = palette.Foreground;
         presentationModeButton.FlatAppearance.BorderColor = palette.Border;
@@ -1404,6 +1428,7 @@ internal partial class Form1 : Form
         Text = LocalizationService.Get("App_Title");
         searchTextBox.PlaceholderText = LocalizationService.Get("Flyout_Search");
         presentationModeButton.Text = LocalizationService.Get("Flyout_PresentationMode");
+        savedSetsButton.Text = LocalizationService.Get("Sets_Button");
         helpButton.Text = "?";
         settingsButton.Text = "\uE713";
         helpButton.AccessibleName = LocalizationService.Get("Tray_Help");
@@ -1411,6 +1436,7 @@ internal partial class Form1 : Form
         toolTip.SetToolTip(helpButton, helpButton.AccessibleName);
         toolTip.SetToolTip(settingsButton, settingsButton.AccessibleName);
         toolTip.SetToolTip(presentationModeButton, LocalizationService.Get("Flyout_PresentationMode"));
+        toolTip.SetToolTip(savedSetsButton, LocalizationService.Get("Sets_Title"));
         collapseAllItem.Text = LocalizationService.Get("Flyout_CollapseAll");
         expandAllItem.Text = LocalizationService.Get("Flyout_ExpandAll");
     }
