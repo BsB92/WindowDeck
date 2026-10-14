@@ -264,6 +264,15 @@ Allow a user to preserve and reopen a named selection of working windows after r
 - The initial feature does not promise unsaved document changes, transient dialogs, exact application-internal state (e.g. an Excel selection), all browser tabs, or exact screen geometry and placement. Document the supported resource types after confirming actual Windows-specific restore behavior in local tests.
 - Local JSON may contain sensitive document paths/URLs. Store it under the current user profile, without uploading or logging its contents, and do not automatically reopen any saved set on app startup.
 
+### Additional document and program restoration requirements (v1.4)
+
+- **Prioritize reopening the exact file**, not merely the application process, when a reliable document path has been identified. For Office document windows continue using the native window/document mapping when available. An unresolved application window may still be saved as program-only when its executable path is known.
+- In the Save current windows dialog include **Choose file / Wskaż plik** for each window. A user may explicitly attach a local document to Notepad, PDF readers (including Foxit Reader) or other applications when WindowDeck cannot get a dependable path automatically. Preserve the captured source executable so the linked document can be passed as one separate, safely quoted argument; if that executable no longer exists, fall back to the user's Windows file association. Never infer file paths from window title text.
+- Block executing script, shortcut and executable files through document linking. Program-only saved entries may start the **same validated executable**, once per restore action, but must not claim to recover tabs or application-specific state.
+- Recommend (but never require) the application's option to open each document in a separate window for PDF readers and other tab-capable programs; it may improve window-level capture, but it does not itself guarantee a restorable full document path.
+- For each missing or moved document, report its **full saved path** and continue opening the other set members. Never terminate or replace any currently open windows. Reopening is best-effort when another application instance cannot expose a document's exact path, and duplicate prevention for manually linked third-party documents is not guaranteed after the short launch-in-progress window.
+- Open the Saved window sets manager **beside WindowDeck, on its left where screen space permits**, rather than behind the main flyout. It remains visible above the flyout; the capture dialog also remains accessible.
+
 ### Acceptance scenarios
 
 - Capture 10-20 windows with all checkboxes initially selected; deselect a few, save a named set and confirm it contains **only** selected entries.
