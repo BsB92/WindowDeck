@@ -69,7 +69,7 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Help_TrayHeading" xml:space="preserve"><value>Tray behavior</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>WindowDeck's X button and Esc hide the flyout. WindowDeck keeps running in the tray. To shut down the application, use Tray &gt; Exit.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Settings</value></data>
-  <data name="Help_SettingsText" xml:space="preserve"><value>Settings includes Start with Windows, Start minimized to tray, the configurable global hotkey, grouping by application, application icons, screen numbers, custom Screen numbering with Identify screens, minimized windows, Appearance (System, Light, or Dark), and Language (System, English, or Polski).</value></data>
+  <data name="Help_SettingsText" xml:space="preserve"><value>Settings includes Start with Windows, Start minimized to tray, the configurable global hotkey, grouping by application, application icons, screen numbers, custom Screen numbering with Identify screens, minimized windows, Appearance (System, Light, or Dark), and Language (System, English, or Polski). Maintenance also provides a manual button to review and remove old WindowDeck taskbar icon entries with a backup; the current executable is preserved.</value></data>
   <data name="About_Title" xml:space="preserve"><value>About WindowDeck</value></data>
   <data name="About_Version" xml:space="preserve"><value>Version {0}</value></data>
   <data name="About_Description" xml:space="preserve"><value>A lightweight Windows utility for quickly finding and switching between open windows.</value></data>
@@ -137,4 +137,12 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Flyout_CollapseAuxiliary" xml:space="preserve"><value>Hide auxiliary windows for {0} ({1})</value></data>
   <data name="Help_AuxiliaryHeading" xml:space="preserve"><value>Auxiliary windows</value></data>
   <data name="Help_AuxiliaryText" xml:space="preserve"><value>Enable Show auxiliary windows in Settings &gt; Window list to include visible dialogs and floating tool windows with a title. This option is on by default and can be disabled in Settings. Windows with a confirmed owner in the same process appear indented below that owner; use its arrow to collapse or expand the subgroup. Clicking the title activates the selected window. Search temporarily expands matching subgroups and retains the owner as context. Windows without a confirmed visible owner remain separate entries. Embedded or docked panels, untitled windows, and passive helper windows are not included. Close, minimize, move, and Presentation membership still apply to the individual selected window; the application may also affect its owned windows. Collapse state lasts until WindowDeck exits.</value></data>
+  <data name="Settings_Maintenance" xml:space="preserve"><value>Maintenance</value></data>
+  <data name="Settings_TrayCleanupButton" xml:space="preserve"><value>Remove old WindowDeck taskbar entries…</value></data>
+  <data name="Settings_TrayCleanupDialogTitle" xml:space="preserve"><value>Clean up WindowDeck taskbar entries</value></data>
+  <data name="Settings_TrayCleanupConfirm" xml:space="preserve"><value>Found {0} historical WindowDeck tray entries from other executable locations. Review the paths below. The current executable entry will be kept. Every selected registry entry will be backed up before removal. Windows may need a sign-out for the list to refresh.</value></data>
+  <data name="Settings_TrayCleanupRemove" xml:space="preserve"><value>Remove old entries</value></data>
+  <data name="Settings_TrayCleanupNone" xml:space="preserve"><value>No old WindowDeck taskbar entries were found. The currently running copy is preserved.</value></data>
+  <data name="Settings_TrayCleanupSuccess" xml:space="preserve"><value>Removed {0} historical WindowDeck entries. Backup folder: {1}&#10;&#10;Sign out of Windows and sign back in if Taskbar personalization still shows stale entries.</value></data>
+  <data name="Settings_TrayCleanupFailed" xml:space="preserve"><value>The old taskbar entries could not be cleaned up. {0}</value></data>
 </root>
