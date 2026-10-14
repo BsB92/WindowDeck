@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Diagnostics;
+using WindowDeck.Localization;
 using WindowDeck.Models;
 
 namespace WindowDeck.Services;
@@ -15,9 +17,10 @@ internal sealed class SavedWindowRestoreResult
 
 internal sealed class SavedWindowRestoreService
 {
-    // Remember launches during this WindowDeck session to prevent pressing Open
-    // twice while an Office app is still loading the document.
-    private readonly HashSet<string> launchedThisSession = new(StringComparer.OrdinalIgnoreCase);
+    // Protect against double-clicks while programs are starting, but don't
+    // permanently mark a document open if it was closed later in the session.
+    private static readonly Dictionary<string, DateTime> recentlyRequested =
+        new(StringComparer.OrdinalIgnoreCase);
 
     public SavedWindowRestoreResult Open(SavedWindowSet set, AppSettings settings)
     {
@@ -27,79 +30,168 @@ internal sealed class SavedWindowRestoreService
 
         IReadOnlyList<WindowInfo> currentlyOpen = new WindowEnumerator().Enumerate(discoverSettings);
         SavedWindowCaptureService capture = new();
-        HashSet<string> openResources = currentlyOpen
-            .Select(capture.Capture)
-            .Where(entry => entry.Kind != SavedWindowKind.Unsupported
-                && !string.IsNullOrWhiteSpace(entry.ResourcePath))
-            .Select(entry => NormalizeResource(entry.Kind, entry.ResourcePath!))
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> openResources = new(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> openPrograms = new(StringComparer.OrdinalIgnoreCase);
+        HashSet<uint> checkedProcesses = [];
+
+        foreach (WindowInfo window in currentlyOpen)
+        {
+            try
+            {
+                SavedWindowEntry known = capture.Capture(window);
+                if (known.Kind != SavedWindowKind.Unsupported
+                    && known.Kind != SavedWindowKind.Application
+                    && SavedWindowCaptureService.IsSupportedDocument(known.Kind, known.ResourcePath))
+                {
+                    openResources.Add(NormalizeDocument(known.Kind, known.ResourcePath!));
+                }
+
+                if (checkedProcesses.Add(window.ProcessId))
+                {
+                    using Process process = Process.GetProcessById(checked((int)window.ProcessId));
+                    string? executable = process.MainModule?.FileName;
+                    if (SavedWindowCaptureService.IsSupportedExecutable(executable))
+                    {
+                        openPrograms.Add(NormalizeProgram(executable!));
+                    }
+                }
+            }
+            catch (Exception error) when (error is not OutOfMemoryException)
+            {
+                // An inaccessible process must not prevent the other resources
+                // in the user's set from reopening.
+            }
+        }
+
+        DateTime cutoff = DateTime.UtcNow.AddSeconds(-20);
+        foreach (string key in recentlyRequested.Where(pair => pair.Value < cutoff)
+                     .Select(pair => pair.Key).ToArray())
+        {
+            recentlyRequested.Remove(key);
+        }
 
         foreach (SavedWindowEntry window in set.Windows)
         {
-            if (!SavedWindowCaptureService.IsSupportedDocument(window.Kind, window.ResourcePath))
-            {
-                result.Unsupported++;
-                continue;
-            }
-
-            string path = window.ResourcePath!;
-            string key = NormalizeResource(window.Kind, path);
-            if (openResources.Contains(key) || launchedThisSession.Contains(key))
-            {
-                result.AlreadyOpen++;
-                continue;
-            }
-
-            bool exists;
             try
             {
-                exists = window.Kind == SavedWindowKind.ExplorerFolder
-                    ? Directory.Exists(path)
-                    : File.Exists(path);
-            }
-            catch (Exception error) when (error is ArgumentException or IOException
-                or UnauthorizedAccessException or NotSupportedException)
-            {
-                exists = false;
-            }
-
-            if (!exists)
-            {
-                result.Missing++;
-                result.Notes.Add(window.ApplicationName + " — " + window.WindowTitle);
-                continue;
-            }
-
-            try
-            {
-                ProcessStartInfo start = new()
+                if (window.Kind == SavedWindowKind.Application)
                 {
-                    FileName = path,
-                    UseShellExecute = true
-                };
-                using Process? process = Process.Start(start);
-                // Process.Start may return null for a shell association; lack of
-                // a Process object does not mean ShellExecute failed.
-                launchedThisSession.Add(key);
-                openResources.Add(key);
-                result.Requested++;
+                    OpenApplication(window, openPrograms, result);
+                }
+                else
+                {
+                    OpenDocument(window, openResources, result);
+                }
             }
-            catch (Exception error) when (error is System.ComponentModel.Win32Exception
-                or IOException or UnauthorizedAccessException or InvalidOperationException)
+            catch (Exception error) when (error is not OutOfMemoryException)
             {
                 result.Failed++;
-                result.Notes.Add(window.ApplicationName + " — " + window.WindowTitle
-                    + ": " + error.Message);
+                result.Notes.Add(LocalizationService.Format(
+                    "Sets_OpenFailed", window.WindowTitle, error.Message));
             }
         }
 
         return result;
     }
 
-    private static string NormalizeResource(SavedWindowKind kind, string path)
+    private static void OpenApplication(
+        SavedWindowEntry window, HashSet<string> running, SavedWindowRestoreResult result)
     {
-        return ((int)kind).ToString(System.Globalization.CultureInfo.InvariantCulture)
-            + ":" + Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar,
-                Path.AltDirectorySeparatorChar);
+        string? executable = window.ExecutablePath;
+        if (!SavedWindowCaptureService.IsSupportedExecutable(executable))
+        {
+            result.Unsupported++;
+            return;
+        }
+
+        string key = NormalizeProgram(executable!);
+        if (running.Contains(key) || recentlyRequested.ContainsKey(key))
+        {
+            result.AlreadyOpen++;
+            return;
+        }
+
+        if (!File.Exists(executable))
+        {
+            result.Missing++;
+            result.Notes.Add(LocalizationService.Format("Sets_MissingProgram", executable));
+            return;
+        }
+
+        using Process? launched = Process.Start(new ProcessStartInfo
+        {
+            FileName = executable,
+            UseShellExecute = true
+        });
+        recentlyRequested[key] = DateTime.UtcNow;
+        running.Add(key);
+        result.Requested++;
     }
+
+    private static void OpenDocument(
+        SavedWindowEntry window, HashSet<string> openResources, SavedWindowRestoreResult result)
+    {
+        if (!SavedWindowCaptureService.IsSupportedDocument(window.Kind, window.ResourcePath))
+        {
+            result.Unsupported++;
+            return;
+        }
+
+        string file = window.ResourcePath!;
+        string key = NormalizeDocument(window.Kind, file);
+        if (openResources.Contains(key) || recentlyRequested.ContainsKey(key))
+        {
+            result.AlreadyOpen++;
+            return;
+        }
+
+        bool exists = window.Kind == SavedWindowKind.ExplorerFolder
+            ? Directory.Exists(file) : File.Exists(file);
+        if (!exists)
+        {
+            result.Missing++;
+            result.Notes.Add(LocalizationService.Format("Sets_MissingFile", file));
+            return;
+        }
+
+        ProcessStartInfo start;
+        if (window.Kind == SavedWindowKind.DocumentFile
+            && SavedWindowCaptureService.IsSupportedExecutable(window.ExecutablePath)
+            && File.Exists(window.ExecutablePath))
+        {
+            // Use the same application for manually linked files, e.g. Notepad
+            // or Foxit Reader. ArgumentList guarantees correct quoting.
+            start = new ProcessStartInfo
+            {
+                FileName = window.ExecutablePath!,
+                UseShellExecute = false
+            };
+            start.ArgumentList.Add(file);
+        }
+        else
+        {
+            // Let Windows use the user's file association for verified Office
+            // documents, Explorer directories or missing original application.
+            start = new ProcessStartInfo
+            {
+                FileName = file,
+                UseShellExecute = true
+            };
+        }
+
+        using Process? launched = Process.Start(start);
+        recentlyRequested[key] = DateTime.UtcNow;
+        openResources.Add(key);
+        result.Requested++;
+    }
+
+    private static string NormalizeDocument(SavedWindowKind kind, string path)
+    {
+        string prefix = kind == SavedWindowKind.ExplorerFolder ? "folder:" : "file:";
+        return prefix + Path.GetFullPath(path).TrimEnd(
+            Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    }
+
+    private static string NormalizeProgram(string executable) =>
+        "app:" + Path.GetFullPath(executable);
 }
