@@ -157,7 +157,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
 
                 void LayoutRow()
                 {
-                    int pickerWidth = chooseFile.Visible
+                    int pickerWidth = chooseFile.Tag is true
                         ? chooseFile.Width + chooseFile.Margin.Horizontal
                         : 0;
                     check.Width = Math.Max(140, row.ClientSize.Width -
@@ -185,6 +185,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     statusIcon.AccessibleName = LocalizationService.Get(
                         isReady ? "Sets_StatusReady" : "Sets_StatusMissing");
                     fileToolTip.SetToolTip(statusIcon, statusIcon.AccessibleName);
+                    chooseFile.Tag = !isReady;
                     chooseFile.Visible = !isReady;
 
                     string status = window.Kind switch
@@ -254,7 +255,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     SavedWindowStatusIcon indicator =
                         fileRow.Controls.OfType<SavedWindowStatusIcon>().First();
                     Button chooseFile = fileRow.Controls.OfType<Button>().First();
-                    int pickerWidth = chooseFile.Visible
+                    int pickerWidth = chooseFile.Tag is true
                         ? chooseFile.Width + chooseFile.Margin.Horizontal
                         : 0;
                     check.Width = Math.Max(140, width - indicator.Width -
