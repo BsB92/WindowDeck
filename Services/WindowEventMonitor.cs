@@ -11,6 +11,7 @@ internal sealed class WindowEventMonitor : IDisposable
 
     private static readonly uint[] MonitoredEvents =
     [
+        NativeMethods.EventSystemForeground,
         NativeMethods.EventObjectCreate,
         NativeMethods.EventObjectDestroy,
         NativeMethods.EventObjectShow,
@@ -142,7 +143,8 @@ internal sealed class WindowEventMonitor : IDisposable
 
     private static bool IsRelevantEvent(uint eventType, int objectId, int childId)
     {
-        if (eventType is NativeMethods.EventSystemMinimizeStart
+        if (eventType is NativeMethods.EventSystemForeground
+            or NativeMethods.EventSystemMinimizeStart
             or NativeMethods.EventSystemMinimizeEnd)
         {
             return true;

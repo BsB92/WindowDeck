@@ -13,6 +13,7 @@ internal sealed class SavedWindowCaptureService
     private readonly Dictionary<string, Dictionary<long, string?>> officeWindows =
         new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<long, string?>? explorerWindows;
+    private readonly RecentDocumentResolver recentDocuments = new();
 
     public SavedWindowEntry Capture(WindowInfo window)
     {
@@ -32,11 +33,55 @@ internal sealed class SavedWindowCaptureService
         {
             using Process instance = Process.GetProcessById(checked((int)window.ProcessId));
             process = instance.ProcessName;
+            try
+            {
+                string executable = instance.MainModule?.FileName ?? string.Empty;
+                if (IsSupportedExecutable(executable))
+                {
+                    entry.ExecutablePath = executable;
+                    entry.Kind = SavedWindowKind.Application;
+                }
+            }
+            catch (Exception error) when (error is System.ComponentModel.Win32Exception
+                or InvalidOperationException or UnauthorizedAccessException)
+            {
+                // Windows Store applications may not expose their real EXE path.
+            }
         }
         catch (Exception error) when (error is ArgumentException
             or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             return entry;
+        }
+
+        if (entry.Kind == SavedWindowKind.Unsupported
+            && process.Equals("notepad", StringComparison.OrdinalIgnoreCase))
+        {
+            // The Windows 11 packaged Notepad process may hide its package path.
+            // The built-in system launcher is a safe fallback for program-only
+            // capture; users can still link the exact .txt file manually.
+            string systemNotepad = Path.Combine(Environment.SystemDirectory, "notepad.exe");
+            if (File.Exists(systemNotepad))
+            {
+                entry.ExecutablePath = systemNotepad;
+                entry.Kind = SavedWindowKind.Application;
+            }
+        }
+
+        if (RecentDocumentResolver.LooksLikeDocumentWindow(window.DisplayTitle, process))
+        {
+            // Opening a blank editor/reader does not restore the user's
+            // document. Never save a document-bearing window as "program only".
+            entry.Kind = SavedWindowKind.Unsupported;
+            entry.NeedsDocumentPath = true;
+
+            string? document = recentDocuments.Resolve(window.DisplayTitle, process);
+            if (IsSupportedDocument(SavedWindowKind.DocumentFile, document))
+            {
+                entry.Kind = SavedWindowKind.DocumentFile;
+                entry.ResourcePath = document;
+                entry.NeedsDocumentPath = false;
+            }
         }
 
         if (process.Equals("explorer", StringComparison.OrdinalIgnoreCase))
@@ -76,9 +121,26 @@ internal sealed class SavedWindowCaptureService
         {
             entry.Kind = kind;
             entry.ResourcePath = file;
+            entry.NeedsDocumentPath = false;
         }
 
         return entry;
+    }
+
+    public static bool IsSupportedExecutable(string? path)
+    {
+        try
+        {
+            return !string.IsNullOrWhiteSpace(path)
+                && Path.IsPathFullyQualified(path)
+                && string.Equals(Path.GetExtension(path), ".exe",
+                    StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception error) when (error is ArgumentException or NotSupportedException
+            or PathTooLongException)
+        {
+            return false;
+        }
     }
 
     public static bool IsSupportedDocument(SavedWindowKind kind, string? path)
@@ -107,6 +169,21 @@ internal sealed class SavedWindowCaptureService
         if (kind == SavedWindowKind.ExplorerFolder)
         {
             return true;
+        }
+
+        if (kind == SavedWindowKind.DocumentFile)
+        {
+            // Explicitly selected documents are opened through their associated
+            // application. Never allow launchable files or shortcuts as documents.
+            string[] blocked =
+            [
+                ".exe", ".com", ".scr", ".bat", ".cmd", ".ps1", ".psm1",
+                ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".hta",
+                ".lnk", ".url", ".msi", ".msp", ".msix", ".appx",
+                ".reg", ".cpl", ".jar", ".pif", ".scf"
+            ];
+            return extension.Length > 1
+                && !blocked.Contains(extension, StringComparer.OrdinalIgnoreCase);
         }
         return kind switch
         {

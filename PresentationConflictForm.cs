@@ -33,6 +33,10 @@ internal sealed class PresentationConflictForm : Form
         palette = ThemeManager.Resolve(theme);
 
         StartPosition = FormStartPosition.CenterParent;
+        // Owner WindowDeck uses TopMost. The modal preparation dialog must
+        // share that z-order band instead of appearing behind the flyout.
+        TopMost = true;
+        ShowInTaskbar = false;
         FormBorderStyle = FormBorderStyle.Sizable;
         MinimizeBox = false;
         MaximizeBox = false;
@@ -153,7 +157,12 @@ internal sealed class PresentationConflictForm : Form
         footer.Controls.Add(commandPanel, 1, 0);
 
         CancelButton = cancelButton;
-        Shown += (_, _) => SizeRows();
+        Shown += (_, _) =>
+        {
+            SizeRows();
+            BringToFront();
+            Activate();
+        };
         Resize += (_, _) => SizeRows();
     }
 

@@ -35,6 +35,9 @@ internal sealed class SettingsForm : Form
     private readonly Label hotkeyHelp;
     private readonly Label screenNumberingHelp;
     private readonly TableLayoutPanel content;
+    private readonly Panel scrollHost;
+    private readonly Panel footerBar;
+    private readonly Panel footerSeparator;
     private readonly FlowLayoutPanel shortcut;
     private readonly FlowLayoutPanel screenNumberingActions;
     private readonly TableLayoutPanel screenNumberingRows;
@@ -78,15 +81,49 @@ internal sealed class SettingsForm : Form
         Font = new Font("Segoe UI", 9F);
         Icon = WindowDeckIcon.Load();
 
-        content = new TableLayoutPanel
+        // Scroll only the settings content. A separate footer row reserves
+        // space for Save/Cancel even on small or high-DPI monitors.
+        TableLayoutPanel root = new()
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
+        };
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 64));
+
+        scrollHost = new Panel
         {
             Dock = DockStyle.Fill,
             AutoScroll = true,
+            Margin = Padding.Empty
+        };
+        content = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
             ColumnCount = 1,
-            Padding = new Padding(20, 12, 20, 16)
+            Margin = Padding.Empty,
+            Padding = new Padding(20, 12, 20, 20)
         };
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        Controls.Add(content);
+        scrollHost.Controls.Add(content);
+        root.Controls.Add(scrollHost, 0, 0);
+
+        footerBar = new Panel
+        {
+            Dock = DockStyle.Fill,
+            Margin = Padding.Empty,
+            Padding = new Padding(12, 8, 20, 7)
+        };
+        footerSeparator = new Panel { Dock = DockStyle.Top, Height = 1 };
+        footerBar.Controls.Add(footerSeparator);
+        root.Controls.Add(footerBar, 0, 1);
+        Controls.Add(root);
 
         content.Controls.Add(CreateSectionLabel("Settings_General"));
         content.Controls.Add(startWithWindows);
@@ -144,16 +181,26 @@ internal sealed class SettingsForm : Form
 
         buttons = new FlowLayoutPanel
         {
-            AutoSize = true,
+            AutoSize = false,
             FlowDirection = FlowDirection.RightToLeft,
+            WrapContents = false,
             Dock = DockStyle.Fill,
-            Margin = new Padding(0, 20, 0, 0)
+            Margin = Padding.Empty,
+            Padding = new Padding(0, 6, 0, 0)
         };
-        cancel = new Button { DialogResult = DialogResult.Cancel, AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
+        // Settings is shown with Form.Show() (modeless) by the tray context.
+        // DialogResult on a button closes only a modal ShowDialog() form;
+        // the Cancel click must explicitly close this modeless window.
+        cancel = new Button { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
         ok = new Button { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
+        cancel.Click += (_, _) =>
+        {
+            DialogResult = DialogResult.Cancel;
+            Close();
+        };
         ok.Click += Ok_Click;
         buttons.Controls.AddRange([cancel, ok]);
-        content.Controls.Add(buttons);
+        footerBar.Controls.Add(buttons);
         AcceptButton = ok;
         CancelButton = cancel;
 
@@ -340,10 +387,13 @@ internal sealed class SettingsForm : Form
         ForeColor = palette.Foreground;
         content.BackColor = palette.Background;
         content.ForeColor = palette.Foreground;
+        scrollHost.BackColor = palette.Background;
+        footerBar.BackColor = palette.RaisedSurface;
+        footerSeparator.BackColor = palette.Border;
         shortcut.BackColor = palette.Background;
         screenNumberingActions.BackColor = palette.Background;
         screenNumberingRows.BackColor = palette.Background;
-        buttons.BackColor = palette.Background;
+        buttons.BackColor = palette.RaisedSurface;
         hotkeyHelp.ForeColor = palette.SecondaryForeground;
         screenNumberingHelp.ForeColor = palette.SecondaryForeground;
 

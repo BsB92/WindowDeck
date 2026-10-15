@@ -8,6 +8,7 @@ internal static class NativeMethods
     internal const int DwmaCloaked = 14;
     internal const int DwmaExtendedFrameBounds = 9;
     internal const int DwmaUseImmersiveDarkMode = 20;
+    internal const uint EventSystemForeground = 0x0003;
     internal const uint EventObjectCreate = 0x8000;
     internal const uint EventObjectDestroy = 0x8001;
     internal const uint EventObjectShow = 0x8002;

@@ -242,6 +242,15 @@ WindowDeck allows the user to choose the Screen numbers used by the application 
 - Publish the executable and its checksum file as GitHub Release assets; the release notes must contain the checksum of that exact executable. Do not retain a previous executable checksum as the latest-release checksum in README.
 - Test the final published executable outside Visual Studio using the current release checklist before publication.
 
+## 25a. Foreground priority for newly opened windows (v1.4)
+
+- The main WindowDeck panel and Saved window sets manager may be topmost while the user deliberately interacts with them, but **a newly opened and foreground-activated window belonging to another application must not appear behind them**.
+- When an external window is newly detected and becomes the foreground window, Windows should control its normal stacking and focus. WindowDeck temporarily **removes TopMost from its own visible forms**; never set or leave permanent TopMost on another application's windows, and never force-activate background windows.
+- On a deliberate return to WindowDeck (mouse, hotkey, tray), the flyout can reassert its own topmost layer. Foreground event handling must not create a focus/Z-order loop or reshow a hidden flyout.
+- When Open saved set launches multiple files, release WindowDeck's and the Saved sets manager's topmost layer **before launching**. Do not immediately show a modal completion MessageBox that obscures the newly opened applications; instead display results within the Saved sets manager for later inspection. Missing-file paths and counts must remain available.
+- Respect Presentation Mode reserved-monitor enforcement, but do not use it as a reason to keep an unrelated new foreground window behind WindowDeck on a nonreserved monitor.
+- Only act on newly seen, user-facing foreground windows; avoid lowering WindowDeck merely because a background/system/helper window was created. Preserve other v1.4 grouping, event refresh, tray-cleanup, selection and localization behavior.
+
 ## 26. Saved window sets (planned for v1.4.0)
 
 Allow a user to preserve and reopen a named selection of working windows after restarting Windows, without closing or disturbing windows already open at restore time.
@@ -263,6 +272,67 @@ Allow a user to preserve and reopen a named selection of working windows after r
 - Preserve the set even if some resources have moved, been deleted, require authentication, or their applications are unavailable. When opening, report which resources were reopened, already open, skipped, or failed. A partial failure must not undo successfully opened resources or affect unrelated windows.
 - The initial feature does not promise unsaved document changes, transient dialogs, exact application-internal state (e.g. an Excel selection), all browser tabs, or exact screen geometry and placement. Document the supported resource types after confirming actual Windows-specific restore behavior in local tests.
 - Local JSON may contain sensitive document paths/URLs. Store it under the current user profile, without uploading or logging its contents, and do not automatically reopen any saved set on app startup.
+
+### Additional document and program restoration requirements (v1.4)
+
+- **Prioritize reopening the exact file**, not merely the application process, when a reliable document path has been identified. For Office document windows continue using the native window/document mapping when available. An unresolved application window may still be saved as program-only when its executable path is known.
+- In the Save current windows dialog include **Choose file / Wskaż plik** for each window. A user may explicitly attach a local document to Notepad, PDF readers (including Foxit Reader) or other applications when WindowDeck cannot get a dependable path automatically. Preserve the captured source executable so the linked document can be passed as one separate, safely quoted argument; if that executable no longer exists, fall back to the user's Windows file association. Never infer file paths from window title text.
+- Block executing script, shortcut and executable files through document linking. Program-only saved entries may start the **same validated executable**, once per restore action, but must not claim to recover tabs or application-specific state.
+- Recommend (but never require) the application's option to open each document in a separate window for PDF readers and other tab-capable programs; it may improve window-level capture, but it does not itself guarantee a restorable full document path.
+- For each missing or moved document, report its **full saved path** and continue opening the other set members. Never terminate or replace any currently open windows. Reopening is best-effort when another application instance cannot expose a document's exact path, and duplicate prevention for manually linked third-party documents is not guaranteed after the short launch-in-progress window.
+- Open the Saved window sets manager **beside WindowDeck, on its left where screen space permits**, rather than behind the main flyout. It remains visible above the flyout; the capture dialog also remains accessible.
+
+### Automatic document discovery and modal stacking (v1.4 follow-up)
+
+- The Save current windows dialog must be modal, visible and usable **above** the TopMost Saved window sets manager, even when both are on the same screen and WindowDeck itself is TopMost. Place it within the same screen working area near its owner and activate it after showing.
+- **Exact file restoration is the primary purpose of saved sets.** For document-focused programs (Notepad, Foxit, other PDF readers and application windows whose titles clearly contain a document filename), never treat reopening the blank program as a successful document restore.
+- Capture exact document paths directly through supported application automation where available. For other document-focused windows, make a **best-effort, read-only** search in the current user's Windows Recent document links and, where present, Foxit PDF Reader's recent-file history. Accept only an existing local document with a complete filename clearly matching the window title and **exactly one unique matching path**. Do not guess among duplicate names, recursively scan disks, read other users' files, inspect other processes' handles or require administrator permissions.
+- A clearly identified document lacking a trustworthy path is marked **Document path not found / Nie znaleziono ścieżki dokumentu**; it can be saved in a set but must be reported as unrestorable until the user supplies its actual file. Do not silently relaunch the application instead.
+- **Choose file / Wskaż plik** is an optional fallback, not the default workflow. Explain the button in the save dialog. It assigns a real local document to a saved window when path discovery is unavailable or ambiguous. Browser windows may remain program-only, without tabs.
+- Opening a set must continue past one missing document and report its saved full path. It must never silently substitute a blank program for a missing/unresolved document. Always keep current windows open.
+
+### Saved-set capture status indicators (v1.4 UI refinement)
+
+- Each saved-window row shows a compact **green check mark** when a supported file/folder exists and can be requested for reopening, or an app-only entry has a valid executable path. Draw the mark without an emoji, colored badge or square background.
+- Show a visually matching **red X** for unsupported entries, unresolved document paths or targets currently unavailable. Do not imply that a file was successfully reopened; this is a save-time readiness check.
+- **Choose file / Wskaż plik** is shown **only alongside a red X**, to repair an unresolved entry. Hide it for valid files/folders and for valid program-only items. When an exact file is chosen, update the row immediately to a green check and hide the button.
+- Keep a visible **program only / bez kart** label on browser and other program-only entries, even with a green check, so the tick does not imply recovered tabs. Status meanings must be available through localized accessible names/tooltips and consistent across light/dark themes.
+- Keep all save-selection checkboxes checked by default; bulk selection, scrolling, responsive row widths, and saved-set behavior must remain unchanged.
+
+### Update set — saved membership marker (v1.4)
+
+- In **Update set**, every entry **already belonging to the selected set** is **checked by default**, whether currently open or closed. Windows newly discovered during this update remain unchecked until explicitly added.
+- Display a small **theme-aware floppy-disk icon**, drawn as a vector without emoji or colored square, **beside each previously saved entry**. Never show it for a new entry until its addition has actually been saved and the set is edited again.
+- The floppy-disk icon conveys **membership**, not restore readiness. Keep the separate green check/red X for reopenability, even when an existing document path is no longer available. Include localized accessible text and tooltip for the disk.
+- Unchecking a saved member requests its removal **only after confirmation and save**; cancel leaves original sets unchanged. The indicator remains a statement of existing membership throughout editing.
+- Preserve independent select-all/deselect-all actions, the optional Choose file control for unrecognized documents, responsive list widths, and grouping by application. Update Help in Polish and English to distinguish all statuses clearly.
+
+### Close set / Zamknij zestaw (v1.4)
+
+- Add a separate **Close set / Zamknij zestaw** action beside Open set. Closing a set is **not deleting or updating** its definition; it remains saved for the next working session.
+- Discover currently visible/minimized top-level application windows with the normal window enumerator; close **only** windows for which the current window's reliable full document/folder path exactly matches a path saved in the selected set. Matching must ignore case on Windows, normalize paths, and distinguish a file from a folder. Never match on title or process name alone.
+- Do **not** close unsupported windows, entries stored as **program only** (browsers with tabs, etc.), or documents that WindowDeck cannot currently map to their actual window. These may be skipped and reported rather than risk closing unrelated tabs/documents. Never terminate a process or use a forced shutdown.
+- Before any close request, show an explicit confirmation with the number of matched windows and their titles, explaining that programs may prompt to save unsaved changes. Cancel sends no close requests.
+- After confirmation, revalidate the live HWND, process ID, and exact document/folder mapping before each close request; ignore disappearing/replaced/ambiguous windows.
+- Request graceful closing using WindowDeck's existing `WindowActions.RequestClose` (native SC_CLOSE command). Excel, Word, Notepad, and other apps own the unsaved-change prompts; the user may choose Save, Don't Save or Cancel. **Do not bypass those prompts or claim that a posted request guarantees closure.**
+- Temporarily relinquish the topmost layer of WindowDeck and Saved sets before requesting closes, so the target app's own confirmation dialogs can appear on top. Display the number of requests and skipped windows in the Saved sets manager **inline**, without a modal completion dialog that would hide application save prompts.
+- Reopening the set later remains possible and uses the original, unchanged saved entries.
+
+### Non-destructive updates and readable set contents (v1.4)
+
+- Updating a named saved set must **not replace it with only the currently open windows**. Every previously saved entry stays in the update dialog, even when that document is closed, and is checked by default.
+- Newly detected open windows that are not already in the set appear **unchecked**, so adding them is explicit. Removing a stored entry requires deliberately clearing its checkbox; confirm the number of additions and removals before saving. Cancel must leave the original set untouched.
+- Duplicate detection should prefer exact file/folder paths; do not conflate different documents with identical titles. Updating a set with zero currently open windows must work.
+- The update dialog includes the set name, which may be edited there. There is **no separate Rename button or Rename dialog**.
+- Replace the dense table with a **borderless, grouped-by-application preview** in the Saved sets manager. Each collapsible application header shows the name and document count. Below it each saved window occupies one softly separated two-line card: full title (ellipsized visually when needed), compact file path, and matching green-check/red-X readiness indicator plus clear status text. Show the full, unchanged path in a tooltip and provide **Copy full path** from a right-click menu. Use vertical scrolling, no horizontal table scrolling, native theme colors, no white column headers or gridlines. Keep the left saved-set list and inline restore report.
+- Keep restore summaries separate from the file list, rather than prepending multi-line status text to its contents.
+
+### Settings footer, saved-set title bars and Presentation Mode modal (v1.4)
+
+- **Settings** uses a height-constrained, scrollable **options-only** panel. OK and Cancel live in a dedicated, always-visible bottom footer with subtle visual separation; no option may paint over or cover these buttons at low resolutions, high DPI or when many monitors are detected.
+- Changes to appearance, language, monitor numbering, hotkeys and tray-icon maintenance remain functional and scrollable; form keyboard Accept/Cancel semantics are unchanged.
+- Apply the WindowDeck palette's matching Windows DWM light/dark **native title-bar treatment** in both Saved window sets and Save current/Update set windows **after their HWNDs exist** (in OnHandleCreated, not only in constructors). Respect chosen light/dark/system theme just as the Settings form does.
+- **Prepare presentation screen** is an owned, topmost modal dialog **above the WindowDeck flyout**. It should be brought to the front and activated when shown; closing or canceling must preserve the previous presentation-protection behavior.
 
 ### Acceptance scenarios
 

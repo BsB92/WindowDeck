@@ -1,4 +1,3 @@
-using System.Text;
 using WindowDeck.Localization;
 using WindowDeck.Models;
 using WindowDeck.Services;
@@ -15,11 +14,15 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly AppSettings settings;
     private readonly SavedWindowSetsStore store = new();
     private readonly SavedWindowRestoreService restore = new();
+    private readonly SavedWindowSetCloseService closer = new();
     private readonly ListBox setList;
-    private readonly TextBox details;
+    private readonly SavedSetGroupedView details;
+    private readonly Label detailsHeader;
+    private readonly TextBox restoreReport;
+    private readonly TableLayoutPanel detailsLayout;
     private List<SavedWindowSet> savedSets;
 
-    public SavedWindowSetsForm(AppSettings settings)
+    public SavedWindowSetsForm(AppSettings settings, Rectangle windowDeckBounds, Rectangle workingArea)
     {
         this.settings = settings.Copy();
         savedSets = store.Load();
@@ -27,10 +30,18 @@ internal sealed class SavedWindowSetsForm : Form
 
         Text = LocalizationService.Get("Sets_Title");
         Icon = WindowDeckIcon.Load();
-        StartPosition = FormStartPosition.CenterParent;
+        StartPosition = FormStartPosition.Manual;
+        ShowInTaskbar = false;
+        TopMost = true;
         FormBorderStyle = FormBorderStyle.Sizable;
-        MinimumSize = new Size(700, 390);
-        ClientSize = new Size(900, 565);
+        MinimumSize = new Size(560, 390);
+        int availableLeft = Math.Max(0, windowDeckBounds.Left - workingArea.Left - 12);
+        int targetWidth = Math.Clamp(availableLeft, 560, 900);
+        ClientSize = new Size(targetWidth, Math.Min(565, Math.Max(310, workingArea.Height - 70)));
+        Location = new Point(
+            Math.Max(workingArea.Left, windowDeckBounds.Left - Width - 12),
+            Math.Clamp(windowDeckBounds.Top, workingArea.Top,
+                Math.Max(workingArea.Top, workingArea.Bottom - Height)));
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = new Font("Segoe UI", 9F);
         BackColor = palette.Background;
@@ -58,30 +69,66 @@ internal sealed class SavedWindowSetsForm : Form
         layout.Controls.Add(intro, 0, 0);
 
         TableLayoutPanel panes = new() { Dock = DockStyle.Fill, ColumnCount = 2 };
-        panes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
-        panes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60));
+        panes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32));
+        panes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 68));
 
         setList = new ListBox
         {
             Dock = DockStyle.Fill,
             IntegralHeight = false,
+            BorderStyle = BorderStyle.None,
             BackColor = palette.Surface,
             ForeColor = palette.Foreground
         };
         setList.SelectedIndexChanged += (_, _) => DisplaySelection();
         panes.Controls.Add(setList, 0, 0);
 
-        details = new TextBox
+        detailsLayout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 3,
+            Margin = new Padding(12, 0, 0, 0),
+            BackColor = palette.Background
+        };
+        detailsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        detailsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        detailsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        detailsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 0));
+
+        detailsHeader = new Label
+        {
+            AutoSize = true,
+            Font = new Font(Font, FontStyle.Bold),
+            ForeColor = palette.Foreground,
+            Margin = new Padding(0, 0, 0, 8)
+        };
+        detailsLayout.Controls.Add(detailsHeader, 0, 0);
+
+        // Grouped, borderless document cards replace the former spreadsheet-like
+        // ListView. Window titles and shortened paths are in separate lines,
+        // grouped under collapsible application headings.
+        details = new SavedSetGroupedView(palette)
+        {
+            Dock = DockStyle.Fill,
+            Margin = Padding.Empty
+        };
+        detailsLayout.Controls.Add(details, 0, 1);
+
+        restoreReport = new TextBox
         {
             Multiline = true,
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
             Dock = DockStyle.Fill,
+            Visible = false,
+            BorderStyle = BorderStyle.None,
             BackColor = palette.Surface,
             ForeColor = palette.Foreground,
-            Margin = new Padding(12, 0, 0, 0)
+            Margin = new Padding(0, 9, 0, 0)
         };
-        panes.Controls.Add(details, 1, 0);
+        detailsLayout.Controls.Add(restoreReport, 0, 2);
+        panes.Controls.Add(detailsLayout, 1, 0);
         layout.Controls.Add(panes, 0, 1);
 
         FlowLayoutPanel actions = new()
@@ -94,17 +141,17 @@ internal sealed class SavedWindowSetsForm : Form
         };
         Button saveCurrent = MakeButton("Sets_SaveCurrent", palette);
         Button open = MakeButton("Sets_Open", palette);
+        Button closeSet = MakeButton("Sets_CloseSet", palette);
         Button update = MakeButton("Sets_Update", palette);
-        Button rename = MakeButton("Sets_Rename", palette);
         Button delete = MakeButton("Sets_Delete", palette);
         Button close = MakeButton("Sets_Close", palette);
         saveCurrent.Click += (_, _) => SaveCurrent();
         open.Click += (_, _) => OpenSelected();
+        closeSet.Click += (_, _) => CloseSelectedSet();
         update.Click += (_, _) => UpdateSelected();
-        rename.Click += (_, _) => RenameSelected();
         delete.Click += (_, _) => DeleteSelected();
         close.Click += (_, _) => Close();
-        actions.Controls.AddRange([saveCurrent, open, update, rename, delete, close]);
+        actions.Controls.AddRange([saveCurrent, open, closeSet, update, delete, close]);
         layout.Controls.Add(actions, 0, 2);
         Controls.Add(layout);
         CancelButton = close;
@@ -164,27 +211,24 @@ internal sealed class SavedWindowSetsForm : Form
     private void DisplaySelection()
     {
         SavedWindowSet? selected = SelectedSet;
+        HideRestoreReport();
         if (selected is null)
         {
-            details.Text = LocalizationService.Get("Sets_NoSets");
+            detailsHeader.Text = LocalizationService.Get("Sets_NoSets");
+            details.ShowEntries([]);
             return;
         }
 
-        StringBuilder display = new();
-        display.AppendLine(selected.Name);
-        display.AppendLine(LocalizationService.Format("Sets_WindowsCount", selected.Windows.Count));
-        display.AppendLine();
-        foreach (SavedWindowEntry entry in selected.Windows)
-        {
-            display.Append(entry.ApplicationName).Append(" — ").Append(entry.WindowTitle);
-            if (entry.Kind == SavedWindowKind.Unsupported)
-            {
-                display.Append(' ').Append(LocalizationService.Get("Sets_Unsupported"));
-            }
-            display.AppendLine();
-        }
+        detailsHeader.Text = selected.Name + "  —  " +
+            LocalizationService.Format("Sets_WindowsCount", selected.Windows.Count);
+        details.ShowEntries(selected.Windows);
+    }
 
-        details.Text = display.ToString();
+    private void HideRestoreReport()
+    {
+        restoreReport.Visible = false;
+        restoreReport.Text = string.Empty;
+        detailsLayout.RowStyles[2].Height = 0;
     }
 
     private List<SavedWindowEntry> CaptureCurrent()
@@ -210,7 +254,8 @@ internal sealed class SavedWindowSetsForm : Form
             }
 
             using SavedWindowSetCaptureForm dialog = new(
-                windows, LocalizationService.Get("Sets_DefaultName"), settings.Theme);
+                SavedWindowSetUpdatePlanner.ForNewSet(windows),
+                LocalizationService.Get("Sets_DefaultName"), settings.Theme);
             if (dialog.ShowDialog(this) != DialogResult.OK)
             {
                 return;
@@ -241,14 +286,14 @@ internal sealed class SavedWindowSetsForm : Form
 
         try
         {
-            List<SavedWindowEntry> windows = CaptureCurrent();
-            if (windows.Count == 0)
-            {
-                Info("Sets_NoWindows");
-                return;
-            }
+            // Keep all previously saved windows in the editor, even if they
+            // are not running today. Closed entries remain checked. New live
+            // windows are unchecked until the user explicitly adds them.
+            IReadOnlyList<SavedWindowSelectionItem> choices =
+                SavedWindowSetUpdatePlanner.ForUpdate(current.Windows, CaptureCurrent());
 
-            using SavedWindowSetCaptureForm dialog = new(windows, current.Name, settings.Theme);
+            using SavedWindowSetCaptureForm dialog = new(
+                choices, current.Name, settings.Theme, updating: true);
             if (dialog.ShowDialog(this) != DialogResult.OK)
             {
                 return;
@@ -260,53 +305,32 @@ internal sealed class SavedWindowSetsForm : Form
                 return;
             }
 
-            if (!Confirm("Sets_ConfirmUpdate", current.Name)) return;
+            List<SavedWindowEntry> chosen = dialog.SelectedWindows;
+            int removed = choices.Count(item => item.InSavedSet
+                && !chosen.Contains(item.Entry));
+            int added = choices.Count(item => !item.InSavedSet
+                && chosen.Contains(item.Entry));
+
+            if (MessageBox.Show(this, LocalizationService.Format(
+                    "Sets_ConfirmUpdateChanges", current.Name, added, removed),
+                    Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                != DialogResult.Yes)
+            {
+                return;
+            }
+
             SavedWindowSet updatedSet = new()
             {
                 Id = current.Id,
                 Name = dialog.SetName,
                 SavedAtUtc = DateTime.UtcNow,
-                Windows = dialog.SelectedWindows
+                Windows = chosen
             };
             List<SavedWindowSet> updated = savedSets
                 .Select(set => set.Id == current.Id ? updatedSet : set).ToList();
             store.Save(updated);
             savedSets = updated;
             ReloadList(updatedSet.Id);
-        }
-        catch (Exception error) when (error is not OutOfMemoryException)
-        {
-            Failure(error);
-        }
-    }
-
-    private void RenameSelected()
-    {
-        SavedWindowSet? current = SelectedSet;
-        if (current is null) return;
-
-        try
-        {
-            string? name = PromptName(current.Name);
-            if (name is null || string.Equals(name, current.Name, StringComparison.Ordinal)) return;
-            if (NameExists(name, current.Id))
-            {
-                Info("Sets_NameExists");
-                return;
-            }
-
-            List<SavedWindowSet> updated = savedSets.Select(set => set.Id == current.Id
-                ? new SavedWindowSet
-                {
-                    Id = current.Id,
-                    Name = name,
-                    SavedAtUtc = current.SavedAtUtc,
-                    Windows = current.Windows
-                }
-                : set).ToList();
-            store.Save(updated);
-            savedSets = updated;
-            ReloadList(current.Id);
         }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
@@ -339,6 +363,10 @@ internal sealed class SavedWindowSetsForm : Form
 
         try
         {
+            // Stop covering the very documents we are about to open. This also
+            // lowers the owning WindowDeck flyout; it does not change any
+            // other application's window flags or close an existing window.
+            Form1.YieldTopmostForExternalWindows();
             SavedWindowRestoreResult result = restore.Open(current, settings);
             string summary = LocalizationService.Format("Sets_RestoreSummary",
                 result.Requested, result.AlreadyOpen, result.Unsupported, result.Missing, result.Failed);
@@ -347,9 +375,11 @@ internal sealed class SavedWindowSetsForm : Form
                 summary += Environment.NewLine + Environment.NewLine
                     + string.Join(Environment.NewLine, result.Notes.Take(20));
             }
-            MessageBox.Show(this, summary, Text, MessageBoxButtons.OK,
-                result.Missing > 0 || result.Failed > 0
-                    ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+
+            // A modal MessageBox here would jump ABOVE the just-opened files.
+            // Keep the complete result visible in the manager for when the user
+            // switches back, without stealing focus from the document windows.
+            ShowInlineReport(summary);
         }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
@@ -357,47 +387,66 @@ internal sealed class SavedWindowSetsForm : Form
         }
     }
 
-    private string? PromptName(string currentName)
+    private void CloseSelectedSet()
     {
-        ThemePalette palette = ThemeManager.Resolve(settings.Theme);
-        using Form dialog = new()
+        SavedWindowSet? set = SelectedSet;
+        if (set is null)
         {
-            Text = LocalizationService.Get("Sets_Rename"),
-            StartPosition = FormStartPosition.CenterParent,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MinimizeBox = false,
-            MaximizeBox = false,
-            ClientSize = new Size(440, 115),
-            Font = Font,
-            BackColor = palette.Background,
-            ForeColor = palette.Foreground
-        };
-        TextBox name = new()
-        {
-            Text = currentName,
-            Location = new Point(15, 15),
-            Width = 410,
-            MaxLength = 120,
-            BackColor = palette.Surface,
-            ForeColor = palette.Foreground
-        };
-        Button ok = MakeButton("Common_OK", palette);
-        ok.Location = new Point(245, 65);
-        ok.DialogResult = DialogResult.OK;
-        Button cancel = MakeButton("Common_Cancel", palette);
-        cancel.Location = new Point(332, 65);
-        cancel.DialogResult = DialogResult.Cancel;
-        dialog.Controls.AddRange([name, ok, cancel]);
-        dialog.AcceptButton = ok;
-        dialog.CancelButton = cancel;
-
-        if (dialog.ShowDialog(this) != DialogResult.OK) return null;
-        if (string.IsNullOrWhiteSpace(name.Text))
-        {
-            Info("Sets_NameRequired");
-            return null;
+            return;
         }
-        return name.Text.Trim();
+
+        try
+        {
+            SavedSetClosePlan plan = closer.FindOpenWindows(set, settings);
+            if (plan.Targets.Count == 0)
+            {
+                ShowInlineReport(LocalizationService.Format(
+                    "Sets_CloseSetNoMatches", plan.SkippedSavedEntries));
+                return;
+            }
+
+            string windowNames = string.Join(Environment.NewLine,
+                plan.Targets.Take(8).Select(target => "• " + target.Window.DisplayTitle));
+            if (plan.Targets.Count > 8)
+            {
+                windowNames += Environment.NewLine
+                    + LocalizationService.Format("Sets_CloseSetMore", plan.Targets.Count - 8);
+            }
+
+            string confirmation = LocalizationService.Format(
+                "Sets_CloseSetConfirm", set.Name, plan.Targets.Count,
+                plan.SkippedSavedEntries) + Environment.NewLine
+                + Environment.NewLine + windowNames;
+
+            if (MessageBox.Show(this, confirmation, Text,
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                != DialogResult.Yes)
+            {
+                return;
+            }
+
+            // Lower our own panels so the target apps' native prompts about
+            // unsaved work can appear in front. Never force-close a process.
+            Form1.YieldTopmostForExternalWindows();
+            SavedSetCloseResult result = closer.RequestClose(plan, settings);
+
+            ShowInlineReport(LocalizationService.Format(
+                "Sets_CloseSetSummary", result.Requested, result.Failed,
+                result.NoLongerMatching, plan.SkippedSavedEntries));
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            ShowInlineReport(LocalizationService.Format("Sets_Error", error.Message));
+        }
+    }
+
+    private void ShowInlineReport(string summary)
+    {
+        restoreReport.Text = summary;
+        detailsLayout.RowStyles[2].Height = 115;
+        restoreReport.Visible = true;
+        restoreReport.SelectionStart = 0;
+        restoreReport.ScrollToCaret();
     }
 
     private bool NameExists(string name, Guid? except = null) =>
@@ -416,9 +465,20 @@ internal sealed class SavedWindowSetsForm : Form
         MessageBox.Show(this, LocalizationService.Format("Sets_Error", error.Message), Text,
             MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        // ApplyTitleBar called by the constructor has no effect before the
+        // HWND exists. Set DWM title-bar colors once the native window is ready.
+        ThemeManager.ApplyTitleBar(this, ThemeManager.Resolve(settings.Theme).IsDark);
+    }
+
     protected override void Dispose(bool disposing)
     {
-        if (disposing) Icon?.Dispose();
+        if (disposing)
+        {
+            Icon?.Dispose();
+        }
         base.Dispose(disposing);
     }
 }
