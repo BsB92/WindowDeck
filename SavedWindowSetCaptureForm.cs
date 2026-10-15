@@ -22,7 +22,11 @@ internal sealed class SavedWindowSetCaptureForm : Form
         Icon = WindowDeckIcon.Load();
         Font = new Font("Segoe UI", 9F);
         AutoScaleMode = AutoScaleMode.Dpi;
-        StartPosition = FormStartPosition.CenterParent;
+        // The parent Saved window sets panel is TopMost. This second-level
+        // modal dialog must stay in the same Z-order band, above its owner.
+        StartPosition = FormStartPosition.Manual;
+        TopMost = true;
+        ShowInTaskbar = false;
         FormBorderStyle = FormBorderStyle.Sizable;
         MinimumSize = new Size(580, 420);
         ClientSize = new Size(740, 660);
@@ -235,6 +239,21 @@ internal sealed class SavedWindowSetCaptureForm : Form
         AcceptButton = save;
         CancelButton = cancel;
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
+        Shown += (_, _) =>
+        {
+            if (Owner is Form owner && !owner.IsDisposed)
+            {
+                Rectangle area = Screen.FromControl(owner).WorkingArea;
+                int x = Math.Clamp(owner.Left + (owner.Width - Width) / 2,
+                    area.Left, Math.Max(area.Left, area.Right - Width));
+                int y = Math.Clamp(owner.Top + (owner.Height - Height) / 2,
+                    area.Top, Math.Max(area.Top, area.Bottom - Height));
+                Location = new Point(x, y);
+            }
+
+            BringToFront();
+            Activate();
+        };
     }
 
     private static Button CreateButton(string resource, ThemePalette palette)
