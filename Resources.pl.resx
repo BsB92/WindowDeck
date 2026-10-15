@@ -181,4 +181,8 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Sets_MissingFile" xml:space="preserve"><value>Nie znaleziono pliku lub folderu: {0}</value></data>
   <data name="Sets_MissingProgram" xml:space="preserve"><value>Nie znaleziono programu: {0}</value></data>
   <data name="Sets_OpenFailed" xml:space="preserve"><value>Nie udało się otworzyć {0}: {1}</value></data>
+  <data name="Sets_ChooseFileExplanation" xml:space="preserve"><value>WindowDeck próbuje sam rozpoznać konkretne pliki. „Wskaż plik…” służy tylko wtedy, gdy nie udało się ustalić ścieżki dokumentu. „Tylko program” nie przywraca kart.</value></data>
+  <data name="Sets_ChooseFileHelp" xml:space="preserve"><value>Wskaż konkretny dokument do ponownego otwarcia. Użyj tylko wtedy, gdy nie został rozpoznany automatycznie.</value></data>
+  <data name="Sets_DocumentPathRequired" xml:space="preserve"><value>(nie znaleziono ścieżki dokumentu — wskaż plik)</value></data>
+  <data name="Sets_RestoreNeedsDocumentPath" xml:space="preserve"><value>Nie przywrócono dokumentu: {0}. Zaktualizuj zestaw i użyj „Wskaż plik…”, aby przypisać właściwy dokument.</value></data>
 </root>
