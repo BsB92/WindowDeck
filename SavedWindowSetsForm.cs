@@ -16,7 +16,11 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly SavedWindowSetsStore store = new();
     private readonly SavedWindowRestoreService restore = new();
     private readonly ListBox setList;
-    private readonly TextBox details;
+    private readonly ListView details;
+    private readonly Label detailsHeader;
+    private readonly TextBox restoreReport;
+    private readonly TableLayoutPanel detailsLayout;
+    private readonly ImageList detailsRowHeight = new();
     private List<SavedWindowSet> savedSets;
 
     public SavedWindowSetsForm(AppSettings settings, Rectangle windowDeckBounds, Rectangle workingArea)
@@ -79,17 +83,71 @@ internal sealed class SavedWindowSetsForm : Form
         setList.SelectedIndexChanged += (_, _) => DisplaySelection();
         panes.Controls.Add(setList, 0, 0);
 
-        details = new TextBox
+        detailsLayout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 3,
+            Margin = new Padding(12, 0, 0, 0),
+            BackColor = palette.Background
+        };
+        detailsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        detailsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        detailsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        detailsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 0));
+
+        detailsHeader = new Label
+        {
+            AutoSize = true,
+            Font = new Font(Font, FontStyle.Bold),
+            ForeColor = palette.Foreground,
+            Margin = new Padding(0, 0, 0, 8)
+        };
+        detailsLayout.Controls.Add(detailsHeader, 0, 0);
+
+        // Unlike a multiline TextBox, ListView gives each document exactly
+        // one distinct row, column headers, grid separators and native
+        // horizontal/vertical scrollbars for long paths.
+        detailsRowHeight.ImageSize = new Size(1, 29);
+        detailsRowHeight.ColorDepth = ColorDepth.Depth32Bit;
+        using (Bitmap spacer = new(1, 29))
+        {
+            detailsRowHeight.Images.Add(spacer);
+        }
+        details = new ListView
+        {
+            View = View.Details,
+            FullRowSelect = true,
+            GridLines = true,
+            MultiSelect = false,
+            HideSelection = false,
+            HeaderStyle = ColumnHeaderStyle.Nonclickable,
+            Scrollable = true,
+            ShowItemToolTips = true,
+            SmallImageList = detailsRowHeight,
+            Dock = DockStyle.Fill,
+            BackColor = palette.Surface,
+            ForeColor = palette.Foreground
+        };
+        details.Columns.Add(LocalizationService.Get("Sets_ColumnApplication"), 145);
+        details.Columns.Add(LocalizationService.Get("Sets_ColumnWindow"), 350);
+        details.Columns.Add(LocalizationService.Get("Sets_ColumnPath"), 510);
+        details.Columns.Add(LocalizationService.Get("Sets_ColumnStatus"), 185);
+        detailsLayout.Controls.Add(details, 0, 1);
+
+        restoreReport = new TextBox
         {
             Multiline = true,
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
             Dock = DockStyle.Fill,
+            Visible = false,
             BackColor = palette.Surface,
             ForeColor = palette.Foreground,
-            Margin = new Padding(12, 0, 0, 0)
+            Margin = new Padding(0, 9, 0, 0)
         };
-        panes.Controls.Add(details, 1, 0);
+        detailsLayout.Controls.Add(restoreReport, 0, 2);
+        panes.Controls.Add(detailsLayout, 1, 0);
         layout.Controls.Add(panes, 0, 1);
 
         FlowLayoutPanel actions = new()
@@ -172,37 +230,59 @@ internal sealed class SavedWindowSetsForm : Form
     private void DisplaySelection()
     {
         SavedWindowSet? selected = SelectedSet;
-        if (selected is null)
+        details.BeginUpdate();
+        try
         {
-            details.Text = LocalizationService.Get("Sets_NoSets");
-            return;
-        }
+            details.Items.Clear();
+            HideRestoreReport();
+            if (selected is null)
+            {
+                detailsHeader.Text = LocalizationService.Get("Sets_NoSets");
+                return;
+            }
 
-        StringBuilder display = new();
-        display.AppendLine(selected.Name);
-        display.AppendLine(LocalizationService.Format("Sets_WindowsCount", selected.Windows.Count));
-        display.AppendLine();
-        foreach (SavedWindowEntry entry in selected.Windows)
+            detailsHeader.Text = selected.Name + "  —  " +
+                LocalizationService.Format("Sets_WindowsCount", selected.Windows.Count);
+
+            foreach (SavedWindowEntry entry in selected.Windows)
+            {
+                string target = entry.ResourcePath ?? entry.ExecutablePath ?? string.Empty;
+                string status = entry.Kind switch
+                {
+                    SavedWindowKind.Unsupported when entry.NeedsDocumentPath =>
+                        LocalizationService.Get("Sets_DocumentPathRequired"),
+                    SavedWindowKind.Unsupported => LocalizationService.Get("Sets_Unsupported"),
+                    SavedWindowKind.Application => LocalizationService.Get("Sets_ProgramOnly"),
+                    _ => LocalizationService.Get("Sets_DocumentLinked")
+                };
+
+                ListViewItem item = new(
+                [
+                    entry.ApplicationName,
+                    entry.WindowTitle,
+                    target,
+                    status
+                ])
+                {
+                    ImageIndex = 0,
+                    ToolTipText = target.Length > 0
+                        ? entry.WindowTitle + Environment.NewLine + target
+                        : entry.WindowTitle
+                };
+                details.Items.Add(item);
+            }
+        }
+        finally
         {
-            display.Append(entry.ApplicationName).Append(" — ").Append(entry.WindowTitle);
-            if (entry.Kind == SavedWindowKind.Unsupported)
-            {
-                display.Append(' ').Append(LocalizationService.Get(
-                    entry.NeedsDocumentPath ? "Sets_DocumentPathRequired" : "Sets_Unsupported"));
-            }
-            else if (entry.Kind == SavedWindowKind.Application)
-            {
-                display.Append(' ').Append(LocalizationService.Get("Sets_ProgramOnly"));
-            }
-            if (!string.IsNullOrWhiteSpace(entry.ResourcePath))
-            {
-                display.AppendLine();
-                display.Append("    ").Append(entry.ResourcePath);
-            }
-            display.AppendLine();
+            details.EndUpdate();
         }
+    }
 
-        details.Text = display.ToString();
+    private void HideRestoreReport()
+    {
+        restoreReport.Visible = false;
+        restoreReport.Text = string.Empty;
+        detailsLayout.RowStyles[2].Height = 0;
     }
 
     private List<SavedWindowEntry> CaptureCurrent()
@@ -373,11 +453,11 @@ internal sealed class SavedWindowSetsForm : Form
             // A modal MessageBox here would jump ABOVE the just-opened files.
             // Keep the complete result visible in the manager for when the user
             // switches back, without stealing focus from the document windows.
-            string selectedDetails = details.Text;
-            details.Text = summary + Environment.NewLine + Environment.NewLine
-                + "────────────────" + Environment.NewLine + selectedDetails;
-            details.SelectionStart = 0;
-            details.ScrollToCaret();
+            restoreReport.Text = summary;
+            detailsLayout.RowStyles[2].Height = 115;
+            restoreReport.Visible = true;
+            restoreReport.SelectionStart = 0;
+            restoreReport.ScrollToCaret();
         }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
@@ -446,7 +526,11 @@ internal sealed class SavedWindowSetsForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) Icon?.Dispose();
+        if (disposing)
+        {
+            detailsRowHeight.Dispose();
+            Icon?.Dispose();
+        }
         base.Dispose(disposing);
     }
 }
