@@ -189,4 +189,15 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Sets_StatusReady" xml:space="preserve"><value>Ready to reopen</value></data>
   <data name="Sets_StatusMissing" xml:space="preserve"><value>Cannot restore automatically — select a file</value></data>
   <data name="Sets_StatusProgramOnly" xml:space="preserve"><value>The program can be launched; its tabs or documents are not restored</value></data>
+  <data name="Sets_UpdateCaptureTitle" xml:space="preserve"><value>Update saved window set</value></data>
+  <data name="Sets_UpdateInstructions" xml:space="preserve"><value>Previously saved windows stay checked even if closed. New windows are unchecked — select them to add. Unchecking an already saved item explicitly removes it from the set.</value></data>
+  <data name="Sets_SavedAndOpen" xml:space="preserve"><value>(saved, currently open)</value></data>
+  <data name="Sets_SavedButClosed" xml:space="preserve"><value>(saved, currently closed)</value></data>
+  <data name="Sets_NewNotSaved" xml:space="preserve"><value>(new — check to add)</value></data>
+  <data name="Sets_SaveChanges" xml:space="preserve"><value>Save changes</value></data>
+  <data name="Sets_ConfirmUpdateChanges" xml:space="preserve"><value>Update saved set “{0}”?&#10;New entries: {1}&#10;Entries to remove: {2}&#10;&#10;All other saved windows, including currently closed ones, will be retained.</value></data>
+  <data name="Sets_ColumnApplication" xml:space="preserve"><value>Application</value></data>
+  <data name="Sets_ColumnWindow" xml:space="preserve"><value>Document / window</value></data>
+  <data name="Sets_ColumnPath" xml:space="preserve"><value>File / application path</value></data>
+  <data name="Sets_ColumnStatus" xml:space="preserve"><value>Restore mode</value></data>
 </root>
