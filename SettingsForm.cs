@@ -188,8 +188,16 @@ internal sealed class SettingsForm : Form
             Margin = Padding.Empty,
             Padding = new Padding(0, 6, 0, 0)
         };
-        cancel = new Button { DialogResult = DialogResult.Cancel, AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
+        // Settings is shown with Form.Show() (modeless) by the tray context.
+        // DialogResult on a button closes only a modal ShowDialog() form;
+        // the Cancel click must explicitly close this modeless window.
+        cancel = new Button { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
         ok = new Button { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
+        cancel.Click += (_, _) =>
+        {
+            DialogResult = DialogResult.Cancel;
+            Close();
+        };
         ok.Click += Ok_Click;
         buttons.Controls.AddRange([cancel, ok]);
         footerBar.Controls.Add(buttons);
