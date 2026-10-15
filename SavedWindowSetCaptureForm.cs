@@ -137,37 +137,74 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 {
                     Checked = true,
                     AutoSize = false,
-                    Width = 477,
                     Height = 32,
                     AutoEllipsis = true,
                     ForeColor = palette.Foreground,
                     BackColor = palette.Surface,
                     Margin = Padding.Empty
                 };
+                SavedWindowStatusIcon statusIcon = new()
+                {
+                    BackColor = palette.Surface
+                };
                 Button chooseFile = CreateButton("Sets_ChooseFile", palette);
                 chooseFile.AutoSize = false;
                 chooseFile.Width = 157;
                 chooseFile.Height = 31;
                 chooseFile.Margin = new Padding(6, 1, 0, 0);
-                fileToolTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
                 fileToolTip.SetToolTip(chooseFile,
                     LocalizationService.Get("Sets_ChooseFileHelp"));
 
+                void LayoutRow()
+                {
+                    int pickerWidth = chooseFile.Visible
+                        ? chooseFile.Width + chooseFile.Margin.Horizontal
+                        : 0;
+                    check.Width = Math.Max(140, row.ClientSize.Width -
+                        statusIcon.Width - statusIcon.Margin.Horizontal -
+                        pickerWidth - 2);
+                }
+
                 void UpdateRow()
                 {
+                    bool isReady = window.Kind switch
+                    {
+                        SavedWindowKind.Application =>
+                            SavedWindowCaptureService.IsSupportedExecutable(window.ExecutablePath)
+                            && File.Exists(window.ExecutablePath),
+                        SavedWindowKind.ExplorerFolder =>
+                            SavedWindowCaptureService.IsSupportedDocument(
+                                window.Kind, window.ResourcePath)
+                            && Directory.Exists(window.ResourcePath),
+                        _ => SavedWindowCaptureService.IsSupportedDocument(
+                                window.Kind, window.ResourcePath)
+                            && File.Exists(window.ResourcePath)
+                    };
+
+                    statusIcon.IsReady = isReady;
+                    statusIcon.AccessibleName = LocalizationService.Get(
+                        isReady ? "Sets_StatusReady" : "Sets_StatusMissing");
+                    fileToolTip.SetToolTip(statusIcon, statusIcon.AccessibleName);
+                    chooseFile.Visible = !isReady;
+
                     string status = window.Kind switch
                     {
+                        SavedWindowKind.Application when isReady =>
+                            LocalizationService.Get("Sets_ProgramOnly"),
                         SavedWindowKind.Unsupported when window.NeedsDocumentPath =>
                             LocalizationService.Get("Sets_DocumentPathRequired"),
-                        SavedWindowKind.Unsupported => LocalizationService.Get("Sets_Unsupported"),
-                        SavedWindowKind.Application => LocalizationService.Get("Sets_ProgramOnly"),
-                        _ => LocalizationService.Get("Sets_DocumentLinked")
+                        SavedWindowKind.Unsupported =>
+                            LocalizationService.Get("Sets_Unsupported"),
+                        _ when !isReady => LocalizationService.Get("Sets_DocumentPathRequired"),
+                        _ => string.Empty
                     };
                     string fileName = !string.IsNullOrWhiteSpace(window.ResourcePath)
                         ? " — " + Path.GetFileName(window.ResourcePath)
                         : string.Empty;
-                    check.Text = window.WindowTitle + "  " + status + fileName;
+                    check.Text = window.WindowTitle + fileName +
+                        (status.Length > 0 ? "  " + status : string.Empty);
                     fileToolTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
+                    LayoutRow();
                 }
 
                 chooseFile.Click += (_, _) =>
@@ -195,10 +232,12 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     window.NeedsDocumentPath = false;
                     UpdateRow();
                 };
+
+                row.Controls.Add(check);
+                row.Controls.Add(statusIcon);
+                row.Controls.Add(chooseFile);
                 UpdateRow();
                 entries.Add((check, window));
-                row.Controls.Add(check);
-                row.Controls.Add(chooseFile);
                 windowList.Controls.Add(row);
             }
         }
@@ -212,8 +251,14 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 if (child is FlowLayoutPanel fileRow)
                 {
                     CheckBox check = fileRow.Controls.OfType<CheckBox>().First();
+                    SavedWindowStatusIcon indicator =
+                        fileRow.Controls.OfType<SavedWindowStatusIcon>().First();
                     Button chooseFile = fileRow.Controls.OfType<Button>().First();
-                    check.Width = Math.Max(140, width - chooseFile.Width - 10);
+                    int pickerWidth = chooseFile.Visible
+                        ? chooseFile.Width + chooseFile.Margin.Horizontal
+                        : 0;
+                    check.Width = Math.Max(140, width - indicator.Width -
+                        indicator.Margin.Horizontal - pickerWidth - 2);
                 }
             }
         };
