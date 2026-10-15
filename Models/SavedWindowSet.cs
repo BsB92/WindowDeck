@@ -18,6 +18,7 @@ internal sealed class SavedWindowEntry
     public SavedWindowKind Kind { get; set; }
     public string? ResourcePath { get; set; }
     public string? ExecutablePath { get; set; }
+    public bool NeedsDocumentPath { get; set; }
 }
 
 internal sealed class SavedWindowSet
