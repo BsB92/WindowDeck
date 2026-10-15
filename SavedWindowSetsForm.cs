@@ -16,7 +16,7 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly SavedWindowRestoreService restore = new();
     private readonly SavedWindowSetCloseService closer = new();
     private readonly ListBox setList;
-    private readonly ListView details;
+    private readonly SavedSetGroupedView details;
     private readonly Label detailsHeader;
     private readonly TextBox restoreReport;
     private readonly TableLayoutPanel detailsLayout;
@@ -69,13 +69,14 @@ internal sealed class SavedWindowSetsForm : Form
         layout.Controls.Add(intro, 0, 0);
 
         TableLayoutPanel panes = new() { Dock = DockStyle.Fill, ColumnCount = 2 };
-        panes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
-        panes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60));
+        panes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32));
+        panes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 68));
 
         setList = new ListBox
         {
             Dock = DockStyle.Fill,
             IntegralHeight = false,
+            BorderStyle = BorderStyle.None,
             BackColor = palette.Surface,
             ForeColor = palette.Foreground
         };
@@ -104,31 +105,14 @@ internal sealed class SavedWindowSetsForm : Form
         };
         detailsLayout.Controls.Add(detailsHeader, 0, 0);
 
-        // Use standard WinForms row rendering. A previous invisible Bitmap
-        // spacer was disposed before the native ListView/ImageList created its
-        // handle, which can throw ArgumentException: "Parameter is not valid"
-        // and crash the Saved sets dialog on display.
-        // Gridlines and a slightly larger font keep rows easy to read without
-        // creating or disposing any GDI+ bitmaps.
-        details = new ListView
+        // Grouped, borderless document cards replace the former spreadsheet-like
+        // ListView. Window titles and shortened paths are in separate lines,
+        // grouped under collapsible application headings.
+        details = new SavedSetGroupedView(palette)
         {
-            View = View.Details,
-            Font = new Font("Segoe UI", 10F),
-            FullRowSelect = true,
-            GridLines = true,
-            MultiSelect = false,
-            HideSelection = false,
-            HeaderStyle = ColumnHeaderStyle.Nonclickable,
-            Scrollable = true,
-            ShowItemToolTips = true,
             Dock = DockStyle.Fill,
-            BackColor = palette.Surface,
-            ForeColor = palette.Foreground
+            Margin = Padding.Empty
         };
-        details.Columns.Add(LocalizationService.Get("Sets_ColumnApplication"), 145);
-        details.Columns.Add(LocalizationService.Get("Sets_ColumnWindow"), 350);
-        details.Columns.Add(LocalizationService.Get("Sets_ColumnPath"), 510);
-        details.Columns.Add(LocalizationService.Get("Sets_ColumnStatus"), 185);
         detailsLayout.Controls.Add(details, 0, 1);
 
         restoreReport = new TextBox
@@ -138,6 +122,7 @@ internal sealed class SavedWindowSetsForm : Form
             ScrollBars = ScrollBars.Vertical,
             Dock = DockStyle.Fill,
             Visible = false,
+            BorderStyle = BorderStyle.None,
             BackColor = palette.Surface,
             ForeColor = palette.Foreground,
             Margin = new Padding(0, 9, 0, 0)
@@ -226,51 +211,17 @@ internal sealed class SavedWindowSetsForm : Form
     private void DisplaySelection()
     {
         SavedWindowSet? selected = SelectedSet;
-        details.BeginUpdate();
-        try
+        HideRestoreReport();
+        if (selected is null)
         {
-            details.Items.Clear();
-            HideRestoreReport();
-            if (selected is null)
-            {
-                detailsHeader.Text = LocalizationService.Get("Sets_NoSets");
-                return;
-            }
-
-            detailsHeader.Text = selected.Name + "  —  " +
-                LocalizationService.Format("Sets_WindowsCount", selected.Windows.Count);
-
-            foreach (SavedWindowEntry entry in selected.Windows)
-            {
-                string target = entry.ResourcePath ?? entry.ExecutablePath ?? string.Empty;
-                string status = entry.Kind switch
-                {
-                    SavedWindowKind.Unsupported when entry.NeedsDocumentPath =>
-                        LocalizationService.Get("Sets_DocumentPathRequired"),
-                    SavedWindowKind.Unsupported => LocalizationService.Get("Sets_Unsupported"),
-                    SavedWindowKind.Application => LocalizationService.Get("Sets_ProgramOnly"),
-                    _ => LocalizationService.Get("Sets_DocumentLinked")
-                };
-
-                ListViewItem item = new(
-                [
-                    entry.ApplicationName,
-                    entry.WindowTitle,
-                    target,
-                    status
-                ])
-                {
-                    ToolTipText = target.Length > 0
-                        ? entry.WindowTitle + Environment.NewLine + target
-                        : entry.WindowTitle
-                };
-                details.Items.Add(item);
-            }
+            detailsHeader.Text = LocalizationService.Get("Sets_NoSets");
+            details.ShowEntries([]);
+            return;
         }
-        finally
-        {
-            details.EndUpdate();
-        }
+
+        detailsHeader.Text = selected.Name + "  —  " +
+            LocalizationService.Format("Sets_WindowsCount", selected.Windows.Count);
+        details.ShowEntries(selected.Windows);
     }
 
     private void HideRestoreReport()
