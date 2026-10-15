@@ -67,6 +67,16 @@ internal sealed class SavedWindowSetCaptureForm : Form
         };
         nameRow.Controls.Add(nameLabel, 0, 0);
         nameRow.Controls.Add(nameBox, 1, 0);
+        Label fileHelp = new()
+        {
+            Text = LocalizationService.Get("Sets_ChooseFileExplanation"),
+            AutoSize = true,
+            MaximumSize = new Size(650, 0),
+            ForeColor = palette.SecondaryForeground,
+            Margin = new Padding(0, 7, 0, 3)
+        };
+        nameRow.Controls.Add(fileHelp, 0, 1);
+        nameRow.SetColumnSpan(fileHelp, 2);
         layout.Controls.Add(nameRow, 0, 0);
 
         FlowLayoutPanel toolbar = new()
@@ -140,11 +150,15 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 chooseFile.Height = 31;
                 chooseFile.Margin = new Padding(6, 1, 0, 0);
                 fileToolTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
+                fileToolTip.SetToolTip(chooseFile,
+                    LocalizationService.Get("Sets_ChooseFileHelp"));
 
                 void UpdateRow()
                 {
                     string status = window.Kind switch
                     {
+                        SavedWindowKind.Unsupported when window.NeedsDocumentPath =>
+                            LocalizationService.Get("Sets_DocumentPathRequired"),
                         SavedWindowKind.Unsupported => LocalizationService.Get("Sets_Unsupported"),
                         SavedWindowKind.Application => LocalizationService.Get("Sets_ProgramOnly"),
                         _ => LocalizationService.Get("Sets_DocumentLinked")
@@ -178,6 +192,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     }
                     window.Kind = SavedWindowKind.DocumentFile;
                     window.ResourcePath = picker.FileName;
+                    window.NeedsDocumentPath = false;
                     UpdateRow();
                 };
                 UpdateRow();
