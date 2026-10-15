@@ -282,6 +282,14 @@ Allow a user to preserve and reopen a named selection of working windows after r
 - **Choose file / Wskaż plik** is an optional fallback, not the default workflow. Explain the button in the save dialog. It assigns a real local document to a saved window when path discovery is unavailable or ambiguous. Browser windows may remain program-only, without tabs.
 - Opening a set must continue past one missing document and report its saved full path. It must never silently substitute a blank program for a missing/unresolved document. Always keep current windows open.
 
+### Saved-set capture status indicators (v1.4 UI refinement)
+
+- Each saved-window row shows a compact **green check mark** when a supported file/folder exists and can be requested for reopening, or an app-only entry has a valid executable path. Draw the mark without an emoji, colored badge or square background.
+- Show a visually matching **red X** for unsupported entries, unresolved document paths or targets currently unavailable. Do not imply that a file was successfully reopened; this is a save-time readiness check.
+- **Choose file / Wskaż plik** is shown **only alongside a red X**, to repair an unresolved entry. Hide it for valid files/folders and for valid program-only items. When an exact file is chosen, update the row immediately to a green check and hide the button.
+- Keep a visible **program only / bez kart** label on browser and other program-only entries, even with a green check, so the tick does not imply recovered tabs. Status meanings must be available through localized accessible names/tooltips and consistent across light/dark themes.
+- Keep all save-selection checkboxes checked by default; bulk selection, scrolling, responsive row widths, and saved-set behavior must remain unchanged.
+
 ### Acceptance scenarios
 
 - Capture 10-20 windows with all checkboxes initially selected; deselect a few, save a named set and confirm it contains **only** selected entries.
