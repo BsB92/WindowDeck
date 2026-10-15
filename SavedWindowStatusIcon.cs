@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Drawing.Drawing2D;
 
 namespace WindowDeck;
@@ -19,6 +20,9 @@ internal sealed class SavedWindowStatusIcon : Control
             true);
     }
 
+    // Runtime-only state; this control is never configured in the designer.
+    [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool IsReady
     {
         get => isReady;
