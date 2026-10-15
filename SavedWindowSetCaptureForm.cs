@@ -7,6 +7,7 @@ namespace WindowDeck;
 internal sealed class SavedWindowSetCaptureForm : Form
 {
     private readonly TextBox nameBox;
+    private readonly AppTheme appearance;
     private readonly ToolTip fileToolTip = new();
     private readonly List<(CheckBox Check, SavedWindowSelectionItem Selection)> entries = [];
 
@@ -18,6 +19,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
         IReadOnlyList<SavedWindowSelectionItem> windows, string proposedName,
         AppTheme theme, bool updating = false)
     {
+        appearance = theme;
         ThemePalette palette = ThemeManager.Resolve(theme);
         Text = LocalizationService.Get(updating ? "Sets_UpdateCaptureTitle" : "Sets_CaptureTitle");
         Icon = WindowDeckIcon.Load();
@@ -373,6 +375,14 @@ internal sealed class SavedWindowSetCaptureForm : Form
         };
         ThemeManager.StyleButton(button, palette);
         return button;
+    }
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        // ApplyTitleBar called by the constructor has no effect before the
+        // HWND exists. Set DWM title-bar colors once the native window is ready.
+        ThemeManager.ApplyTitleBar(this, ThemeManager.Resolve(appearance).IsDark);
     }
 
     protected override void Dispose(bool disposing)
