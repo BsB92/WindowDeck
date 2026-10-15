@@ -8,17 +8,18 @@ internal sealed class SavedWindowSetCaptureForm : Form
 {
     private readonly TextBox nameBox;
     private readonly ToolTip fileToolTip = new();
-    private readonly List<(CheckBox Check, SavedWindowEntry Entry)> entries = [];
+    private readonly List<(CheckBox Check, SavedWindowSelectionItem Selection)> entries = [];
 
     public string SetName => nameBox.Text.Trim();
     public List<SavedWindowEntry> SelectedWindows =>
-        entries.Where(item => item.Check.Checked).Select(item => item.Entry).ToList();
+        entries.Where(item => item.Check.Checked).Select(item => item.Selection.Entry).ToList();
 
     public SavedWindowSetCaptureForm(
-        IReadOnlyList<SavedWindowEntry> windows, string proposedName, AppTheme theme)
+        IReadOnlyList<SavedWindowSelectionItem> windows, string proposedName,
+        AppTheme theme, bool updating = false)
     {
         ThemePalette palette = ThemeManager.Resolve(theme);
-        Text = LocalizationService.Get("Sets_CaptureTitle");
+        Text = LocalizationService.Get(updating ? "Sets_UpdateCaptureTitle" : "Sets_CaptureTitle");
         Icon = WindowDeckIcon.Load();
         Font = new Font("Segoe UI", 9F);
         AutoScaleMode = AutoScaleMode.Dpi;
@@ -69,7 +70,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
         nameRow.Controls.Add(nameBox, 1, 0);
         Label fileHelp = new()
         {
-            Text = LocalizationService.Get("Sets_ChooseFileExplanation"),
+            Text = LocalizationService.Get(updating ? "Sets_UpdateInstructions" : "Sets_ChooseFileExplanation"),
             AutoSize = true,
             MaximumSize = new Size(650, 0),
             ForeColor = palette.SecondaryForeground,
@@ -107,8 +108,8 @@ internal sealed class SavedWindowSetCaptureForm : Form
             BackColor = palette.Surface,
             Padding = new Padding(8)
         };
-        foreach (IGrouping<string, SavedWindowEntry> group in windows
-                     .GroupBy(window => window.ApplicationName)
+        foreach (IGrouping<string, SavedWindowSelectionItem> group in windows
+                     .GroupBy(item => item.Entry.ApplicationName)
                      .OrderBy(group => group.Key, StringComparer.CurrentCultureIgnoreCase))
         {
             Label groupHeader = new()
@@ -122,8 +123,9 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 Margin = new Padding(3, 9, 3, 0)
             };
             windowList.Controls.Add(groupHeader);
-            foreach (SavedWindowEntry window in group)
+            foreach (SavedWindowSelectionItem selection in group)
             {
+                SavedWindowEntry window = selection.Entry;
                 FlowLayoutPanel row = new()
                 {
                     WrapContents = false,
@@ -135,7 +137,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 };
                 CheckBox check = new()
                 {
-                    Checked = true,
+                    Checked = selection.InitiallyChecked,
                     AutoSize = false,
                     Height = 32,
                     AutoEllipsis = true,
@@ -204,8 +206,14 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     string fileName = !string.IsNullOrWhiteSpace(window.ResourcePath)
                         ? " — " + Path.GetFileName(window.ResourcePath)
                         : string.Empty;
+                    string membership = !updating ? string.Empty :
+                        selection.InSavedSet
+                            ? LocalizationService.Get(selection.CurrentlyOpen
+                                ? "Sets_SavedAndOpen" : "Sets_SavedButClosed")
+                            : LocalizationService.Get("Sets_NewNotSaved");
                     check.Text = window.WindowTitle + fileName +
-                        (status.Length > 0 ? "  " + status : string.Empty);
+                        (status.Length > 0 ? "  " + status : string.Empty) +
+                        (membership.Length > 0 ? "  " + membership : string.Empty);
                     fileToolTip.SetToolTip(check, window.ResourcePath ?? window.WindowTitle);
                     LayoutRow();
                 }
@@ -240,7 +248,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 row.Controls.Add(statusIcon);
                 row.Controls.Add(chooseFile);
                 UpdateRow();
-                entries.Add((check, window));
+                entries.Add((check, selection));
                 windowList.Controls.Add(row);
             }
         }
@@ -274,7 +282,7 @@ internal sealed class SavedWindowSetCaptureForm : Form
             FlowDirection = FlowDirection.RightToLeft,
             Margin = new Padding(0, 12, 0, 0)
         };
-        Button save = CreateButton("Sets_Save", palette);
+        Button save = CreateButton(updating ? "Sets_SaveChanges" : "Sets_Save", palette);
         Button cancel = CreateButton("Common_Cancel", palette);
         save.Click += (_, _) =>
         {
