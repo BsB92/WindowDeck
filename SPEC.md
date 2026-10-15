@@ -299,6 +299,17 @@ Allow a user to preserve and reopen a named selection of working windows after r
 - Keep a visible **program only / bez kart** label on browser and other program-only entries, even with a green check, so the tick does not imply recovered tabs. Status meanings must be available through localized accessible names/tooltips and consistent across light/dark themes.
 - Keep all save-selection checkboxes checked by default; bulk selection, scrolling, responsive row widths, and saved-set behavior must remain unchanged.
 
+### Close set / Zamknij zestaw (v1.4)
+
+- Add a separate **Close set / Zamknij zestaw** action beside Open set. Closing a set is **not deleting or updating** its definition; it remains saved for the next working session.
+- Discover currently visible/minimized top-level application windows with the normal window enumerator; close **only** windows for which the current window's reliable full document/folder path exactly matches a path saved in the selected set. Matching must ignore case on Windows, normalize paths, and distinguish a file from a folder. Never match on title or process name alone.
+- Do **not** close unsupported windows, entries stored as **program only** (browsers with tabs, etc.), or documents that WindowDeck cannot currently map to their actual window. These may be skipped and reported rather than risk closing unrelated tabs/documents. Never terminate a process or use a forced shutdown.
+- Before any close request, show an explicit confirmation with the number of matched windows and their titles, explaining that programs may prompt to save unsaved changes. Cancel sends no close requests.
+- After confirmation, revalidate the live HWND, process ID, and exact document/folder mapping before each close request; ignore disappearing/replaced/ambiguous windows.
+- Request graceful closing using WindowDeck's existing `WindowActions.RequestClose` (native SC_CLOSE command). Excel, Word, Notepad, and other apps own the unsaved-change prompts; the user may choose Save, Don't Save or Cancel. **Do not bypass those prompts or claim that a posted request guarantees closure.**
+- Temporarily relinquish the topmost layer of WindowDeck and Saved sets before requesting closes, so the target app's own confirmation dialogs can appear on top. Display the number of requests and skipped windows in the Saved sets manager **inline**, without a modal completion dialog that would hide application save prompts.
+- Reopening the set later remains possible and uses the original, unchanged saved entries.
+
 ### Non-destructive updates and readable set contents (v1.4)
 
 - Updating a named saved set must **not replace it with only the currently open windows**. Every previously saved entry stays in the update dialog, even when that document is closed, and is checked by default.
