@@ -221,7 +221,7 @@ internal partial class Form1 : Form
         {
             // Never touch other dialogs (such as Presentation Mode's
             // conflict prompt), even if those dialogs also use TopMost.
-            if (form is Form1 or SavedWindowSetsForm or SavedWindowSetCaptureForm
+            if ((form is Form1 or SavedWindowSetsForm or SavedWindowSetCaptureForm)
                 && !form.IsDisposed && !form.Disposing && form.TopMost)
             {
                 form.TopMost = false;
