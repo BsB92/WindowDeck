@@ -201,7 +201,7 @@ The Saved sets overview groups saved entries by application, with collapsible gr
 
 **Limits:** A browser or other entry marked **Program only** can start its application, but WindowDeck **does not restore the saved tabs or document state**. Such program-only entries are **excluded from Close set** to avoid closing unrelated tabs. A document whose path cannot be reliably determined may also be skipped. Saved sets do not preserve unsaved edits, tab sessions, exact monitor positions, or arbitrary application state. If an app contains multiple documents in one window, closing that window may affect other tabs; always check the confirmation. No process is force-killed.
 
-Saved sets are stored locally in \`%LocalAppData%\WindowDeck\window-sets.json\`. This file is not removed when you replace the WindowDeck executable. See [the Saved sets help in the application](#quick-start) and the [1.4.0 validation checklist](docs/V1.4_FULL_VALIDATION.md).
+Saved sets are stored locally in `%LocalAppData%\WindowDeck\window-sets.json`. This file is not removed when you replace the WindowDeck executable. See [the Saved sets help in the application](#quick-start) and the [1.4.0 validation checklist](docs/V1.4_FULL_VALIDATION.md).
 
 ### Settings maintenance (1.4.0)
 
@@ -510,7 +510,7 @@ Podgląd zestawu grupuje pozycje według aplikacji. Grupy można zwijać; każda
 
 **Ograniczenia:** Pozycje **Tylko program**, np. przeglądarki, mogą uruchomić aplikację, ale WindowDeck **nie przywraca zapisanych kart ani ich stanu**. Takie pozycje są **pomijane przez Zamknij zestaw**, aby nie zamknąć niepowiązanych kart. Pomijane mogą być również dokumenty bez wiarygodnej ścieżki. Zestawy nie odtwarzają niezapisanych zmian, sesji kart, dokładnego rozmieszczenia okien na monitorach ani całego stanu aplikacji. Jeśli kilka kart należy do jednego okna, zamknięcie go może objąć także inne karty. WindowDeck nie wymusza kończenia procesów.
 
-Dane zestawów znajdują się lokalnie w pliku \`%LocalAppData%\WindowDeck\window-sets.json\`. Podmiana pliku wykonywalnego WindowDeck nie usuwa zestawów. Więcej szczegółów znajdziesz w pomocy programu i na [liście testów 1.4.0](docs/V1.4_FULL_VALIDATION.md).
+Dane zestawów znajdują się lokalnie w pliku `%LocalAppData%\WindowDeck\window-sets.json`. Podmiana pliku wykonywalnego WindowDeck nie usuwa zestawów. Więcej szczegółów znajdziesz w pomocy programu i na [liście testów 1.4.0](docs/V1.4_FULL_VALIDATION.md).
 
 ### Konserwacja ikon (1.4.0)
 
