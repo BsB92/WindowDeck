@@ -181,4 +181,8 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Sets_MissingFile" xml:space="preserve"><value>File or folder not found: {0}</value></data>
   <data name="Sets_MissingProgram" xml:space="preserve"><value>Program not found: {0}</value></data>
   <data name="Sets_OpenFailed" xml:space="preserve"><value>Could not open {0}: {1}</value></data>
+  <data name="Sets_ChooseFileExplanation" xml:space="preserve"><value>WindowDeck tries to identify exact files automatically. Use Choose file only when a document is marked as needing a path; program-only entries do not restore tabs.</value></data>
+  <data name="Sets_ChooseFileHelp" xml:space="preserve"><value>Point this window at the exact document you want reopened. Use only if the file was not detected automatically.</value></data>
+  <data name="Sets_DocumentPathRequired" xml:space="preserve"><value>(document path not found — choose file)</value></data>
+  <data name="Sets_RestoreNeedsDocumentPath" xml:space="preserve"><value>Document not restored: {0}. Update this set and use Choose file to link the exact document.</value></data>
 </root>
