@@ -1197,18 +1197,16 @@ internal partial class Form1 : Form
             return;
         }
 
-        presentationModeButton.BackColor = presentationModeEnabled
-            ? ActiveButtonBackColor
-            : palette.RaisedSurface;
-        presentationModeButton.ForeColor = presentationModeEnabled
-            ? ActiveButtonForeColor
-            : ActiveButtonBackColor;
-        presentationModeButton.FlatAppearance.BorderColor = ActiveButtonBackColor;
-        presentationModeButton.FlatAppearance.BorderSize = 1;
-        presentationModeButton.FlatAppearance.MouseOverBackColor = presentationModeEnabled
-            ? ActiveButtonBackColor
-            : palette.Hover;
-        presentationModeButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
+        // Match the Saved sets button when idle, while keeping an obvious
+        // active state for Presentation Mode.
+        ThemeManager.StyleButton(presentationModeButton, palette);
+        if (presentationModeEnabled)
+        {
+            presentationModeButton.BackColor = ActiveButtonBackColor;
+            presentationModeButton.ForeColor = ActiveButtonForeColor;
+            presentationModeButton.FlatAppearance.BorderColor = ActiveButtonBackColor;
+            presentationModeButton.FlatAppearance.MouseOverBackColor = ActiveButtonBackColor;
+        }
     }
 
     private void TryActivatePresentationProtection()
@@ -1397,20 +1395,11 @@ internal partial class Form1 : Form
         windowListPanel.ForeColor = palette.Foreground;
         bottomBar.BackColor = palette.RaisedSurface;
         topBar.BackColor = palette.Background;
-        presentationModeButton.BackColor = palette.RaisedSurface;
-        savedSetsButton.BackColor = palette.RaisedSurface;
         helpButton.BackColor = palette.RaisedSurface;
         settingsButton.BackColor = palette.RaisedSurface;
-        presentationModeButton.ForeColor = palette.SecondaryForeground;
-        savedSetsButton.ForeColor = palette.Foreground;
-        savedSetsButton.FlatAppearance.BorderColor = palette.Border;
-        savedSetsButton.FlatAppearance.BorderSize = 1;
-        savedSetsButton.FlatAppearance.MouseOverBackColor = palette.Hover;
-        savedSetsButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
         helpButton.ForeColor = palette.Foreground;
         settingsButton.ForeColor = palette.Foreground;
-        presentationModeButton.FlatAppearance.BorderColor = palette.Border;
-        presentationModeButton.FlatAppearance.BorderSize = 1;
+        ThemeManager.StyleButton(savedSetsButton, palette);
         UpdatePresentationModeVisual();
         helpButton.FlatAppearance.BorderColor = palette.SecondaryForeground;
         settingsButton.FlatAppearance.BorderColor = palette.SecondaryForeground;
