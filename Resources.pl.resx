@@ -200,4 +200,9 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Sets_ColumnWindow" xml:space="preserve"><value>Dokument / okno</value></data>
   <data name="Sets_ColumnPath" xml:space="preserve"><value>Ścieżka pliku / programu</value></data>
   <data name="Sets_ColumnStatus" xml:space="preserve"><value>Sposób odtwarzania</value></data>
+  <data name="Sets_CloseSet" xml:space="preserve"><value>Zamknij zestaw</value></data>
+  <data name="Sets_CloseSetConfirm" xml:space="preserve"><value>Zamknąć {1} otwartych okien należących do zestawu „{0}”?&#10;&#10;Pominięte pozycje zestawu: {2}.&#10;&#10;Programy mogą zapytać o zapisanie niezapisanych zmian. Wybranie „Anuluj” w oknie programu pozostawi dany dokument otwarty. Nie będą zamykane nierozpoznane dokumenty ani programy zapisane tylko jako „program bez kart”.</value></data>
+  <data name="Sets_CloseSetMore" xml:space="preserve"><value>…i jeszcze {0} okien.</value></data>
+  <data name="Sets_CloseSetNoMatches" xml:space="preserve"><value>Nie znaleziono otwartych okien dokumentów ani folderów, które można bezpiecznie dopasować do zestawu. Pominięte pozycje: {0}. Nie zamknięto żadnych okien.</value></data>
+  <data name="Sets_CloseSetSummary" xml:space="preserve"><value>Wysłano prośby o zamknięcie: {0}&#10;Nie udało się wysłać prośby: {1}&#10;Okna niedostępne lub zmienione przed zamknięciem: {2}&#10;Pominięte zapisane pozycje: {3}&#10;&#10;To liczba wysłanych poleceń, nie potwierdzonych zamknięć. Jeśli dokument ma niezapisane zmiany, jego program może zapytać o zapis. Możesz anulować zamknięcie. Zestaw pozostaje zapisany.</value></data>
 </root>
