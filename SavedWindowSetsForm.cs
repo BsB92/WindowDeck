@@ -465,6 +465,14 @@ internal sealed class SavedWindowSetsForm : Form
         MessageBox.Show(this, LocalizationService.Format("Sets_Error", error.Message), Text,
             MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        // ApplyTitleBar called by the constructor has no effect before the
+        // HWND exists. Set DWM title-bar colors once the native window is ready.
+        ThemeManager.ApplyTitleBar(this, ThemeManager.Resolve(settings.Theme).IsDark);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
