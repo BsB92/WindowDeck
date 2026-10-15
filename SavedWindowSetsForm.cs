@@ -20,7 +20,6 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly Label detailsHeader;
     private readonly TextBox restoreReport;
     private readonly TableLayoutPanel detailsLayout;
-    private readonly ImageList detailsRowHeight = new();
     private List<SavedWindowSet> savedSets;
 
     public SavedWindowSetsForm(AppSettings settings, Rectangle windowDeckBounds, Rectangle workingArea)
@@ -105,18 +104,16 @@ internal sealed class SavedWindowSetsForm : Form
         };
         detailsLayout.Controls.Add(detailsHeader, 0, 0);
 
-        // Unlike a multiline TextBox, ListView gives each document exactly
-        // one distinct row, column headers, grid separators and native
-        // horizontal/vertical scrollbars for long paths.
-        detailsRowHeight.ImageSize = new Size(1, 29);
-        detailsRowHeight.ColorDepth = ColorDepth.Depth32Bit;
-        using (Bitmap spacer = new(1, 29))
-        {
-            detailsRowHeight.Images.Add(spacer);
-        }
+        // Use standard WinForms row rendering. A previous invisible Bitmap
+        // spacer was disposed before the native ListView/ImageList created its
+        // handle, which can throw ArgumentException: "Parameter is not valid"
+        // and crash the Saved sets dialog on display.
+        // Gridlines and a slightly larger font keep rows easy to read without
+        // creating or disposing any GDI+ bitmaps.
         details = new ListView
         {
             View = View.Details,
+            Font = new Font("Segoe UI", 10F),
             FullRowSelect = true,
             GridLines = true,
             MultiSelect = false,
@@ -124,7 +121,6 @@ internal sealed class SavedWindowSetsForm : Form
             HeaderStyle = ColumnHeaderStyle.Nonclickable,
             Scrollable = true,
             ShowItemToolTips = true,
-            SmallImageList = detailsRowHeight,
             Dock = DockStyle.Fill,
             BackColor = palette.Surface,
             ForeColor = palette.Foreground
@@ -264,7 +260,6 @@ internal sealed class SavedWindowSetsForm : Form
                     status
                 ])
                 {
-                    ImageIndex = 0,
                     ToolTipText = target.Length > 0
                         ? entry.WindowTitle + Environment.NewLine + target
                         : entry.WindowTitle
@@ -523,7 +518,6 @@ internal sealed class SavedWindowSetsForm : Form
     {
         if (disposing)
         {
-            detailsRowHeight.Dispose();
             Icon?.Dispose();
         }
         base.Dispose(disposing);
