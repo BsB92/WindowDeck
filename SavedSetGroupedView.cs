@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using System.Runtime.InteropServices;
 using WindowDeck.Localization;
 using WindowDeck.Models;
 using WindowDeck.Services;
