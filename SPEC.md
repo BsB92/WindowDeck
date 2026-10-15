@@ -327,6 +327,13 @@ Allow a user to preserve and reopen a named selection of working windows after r
 - Replace the dense table with a **borderless, grouped-by-application preview** in the Saved sets manager. Each collapsible application header shows the name and document count. Below it each saved window occupies one softly separated two-line card: full title (ellipsized visually when needed), compact file path, and matching green-check/red-X readiness indicator plus clear status text. Show the full, unchanged path in a tooltip and provide **Copy full path** from a right-click menu. Use vertical scrolling, no horizontal table scrolling, native theme colors, no white column headers or gridlines. Keep the left saved-set list and inline restore report.
 - Keep restore summaries separate from the file list, rather than prepending multi-line status text to its contents.
 
+### Settings footer, saved-set title bars and Presentation Mode modal (v1.4)
+
+- **Settings** uses a height-constrained, scrollable **options-only** panel. OK and Cancel live in a dedicated, always-visible bottom footer with subtle visual separation; no option may paint over or cover these buttons at low resolutions, high DPI or when many monitors are detected.
+- Changes to appearance, language, monitor numbering, hotkeys and tray-icon maintenance remain functional and scrollable; form keyboard Accept/Cancel semantics are unchanged.
+- Apply the WindowDeck palette's matching Windows DWM light/dark **native title-bar treatment** in both Saved window sets and Save current/Update set windows **after their HWNDs exist** (in OnHandleCreated, not only in constructors). Respect chosen light/dark/system theme just as the Settings form does.
+- **Prepare presentation screen** is an owned, topmost modal dialog **above the WindowDeck flyout**. It should be brought to the front and activated when shown; closing or canceling must preserve the previous presentation-protection behavior.
+
 ### Acceptance scenarios
 
 - Capture 10-20 windows with all checkboxes initially selected; deselect a few, save a named set and confirm it contains **only** selected entries.
