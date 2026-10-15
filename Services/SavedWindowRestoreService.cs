@@ -70,11 +70,45 @@ internal sealed class SavedWindowRestoreService
             recentlyRequested.Remove(key);
         }
 
+        RecentDocumentResolver recentDocuments = new();
         foreach (SavedWindowEntry window in set.Windows)
         {
             try
             {
-                if (window.Kind == SavedWindowKind.Application)
+                string processName = !string.IsNullOrWhiteSpace(window.ExecutablePath)
+                    ? Path.GetFileNameWithoutExtension(window.ExecutablePath)
+                    : window.ApplicationName;
+
+                // Older sets can contain Foxit/Notepad as a program-only entry.
+                // Recover the document if possible; otherwise NEVER treat
+                // opening a blank reader/editor as a successful restore.
+                bool documentWindow = window.Kind is SavedWindowKind.Application
+                        or SavedWindowKind.Unsupported
+                    && RecentDocumentResolver.LooksLikeDocumentWindow(
+                        window.WindowTitle, processName);
+                if (documentWindow)
+                {
+                    string? resolved = recentDocuments.Resolve(window.WindowTitle, processName);
+                    if (SavedWindowCaptureService.IsSupportedDocument(
+                        SavedWindowKind.DocumentFile, resolved))
+                    {
+                        OpenDocument(new SavedWindowEntry
+                        {
+                            ApplicationName = window.ApplicationName,
+                            WindowTitle = window.WindowTitle,
+                            ExecutablePath = window.ExecutablePath,
+                            Kind = SavedWindowKind.DocumentFile,
+                            ResourcePath = resolved
+                        }, openResources, result);
+                    }
+                    else
+                    {
+                        result.Unsupported++;
+                        result.Notes.Add(LocalizationService.Format(
+                            "Sets_RestoreNeedsDocumentPath", window.WindowTitle));
+                    }
+                }
+                else if (window.Kind == SavedWindowKind.Application)
                 {
                     OpenApplication(window, openPrograms, result);
                 }
