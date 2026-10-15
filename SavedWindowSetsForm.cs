@@ -187,7 +187,8 @@ internal sealed class SavedWindowSetsForm : Form
             display.Append(entry.ApplicationName).Append(" — ").Append(entry.WindowTitle);
             if (entry.Kind == SavedWindowKind.Unsupported)
             {
-                display.Append(' ').Append(LocalizationService.Get("Sets_Unsupported"));
+                display.Append(' ').Append(LocalizationService.Get(
+                    entry.NeedsDocumentPath ? "Sets_DocumentPathRequired" : "Sets_Unsupported"));
             }
             else if (entry.Kind == SavedWindowKind.Application)
             {
