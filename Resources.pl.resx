@@ -205,4 +205,12 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Sets_CloseSetMore" xml:space="preserve"><value>…i jeszcze {0} okien.</value></data>
   <data name="Sets_CloseSetNoMatches" xml:space="preserve"><value>Nie znaleziono otwartych okien dokumentów ani folderów, które można bezpiecznie dopasować do zestawu. Pominięte pozycje: {0}. Nie zamknięto żadnych okien.</value></data>
   <data name="Sets_CloseSetSummary" xml:space="preserve"><value>Wysłano prośby o zamknięcie: {0}&#10;Nie udało się wysłać prośby: {1}&#10;Okna niedostępne lub zmienione przed zamknięciem: {2}&#10;Pominięte zapisane pozycje: {3}&#10;&#10;To liczba wysłanych poleceń, nie potwierdzonych zamknięć. Jeśli dokument ma niezapisane zmiany, jego program może zapytać o zapis. Możesz anulować zamknięcie. Zestaw pozostaje zapisany.</value></data>
+  <data name="Sets_PreviewCollapseHelp" xml:space="preserve"><value>Kliknij, aby zwinąć lub rozwinąć grupę okien.</value></data>
+  <data name="Sets_PreviewExpanded" xml:space="preserve"><value>grupa rozwinięta</value></data>
+  <data name="Sets_PreviewCollapsed" xml:space="preserve"><value>grupa zwinięta</value></data>
+  <data name="Sets_PreviewNoPath" xml:space="preserve"><value>Nie ustalono ścieżki dokumentu</value></data>
+  <data name="Sets_PreviewProgramOnly" xml:space="preserve"><value>Tylko program</value></data>
+  <data name="Sets_PreviewUnavailable" xml:space="preserve"><value>Nie można odtworzyć</value></data>
+  <data name="Sets_PreviewReady" xml:space="preserve"><value>Gotowe</value></data>
+  <data name="Sets_CopyPath" xml:space="preserve"><value>Kopiuj pełną ścieżkę</value></data>
 </root>
