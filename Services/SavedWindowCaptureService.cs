@@ -13,6 +13,7 @@ internal sealed class SavedWindowCaptureService
     private readonly Dictionary<string, Dictionary<long, string?>> officeWindows =
         new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<long, string?>? explorerWindows;
+    private readonly RecentDocumentResolver recentDocuments = new();
 
     public SavedWindowEntry Capture(WindowInfo window)
     {
@@ -64,6 +65,20 @@ internal sealed class SavedWindowCaptureService
             {
                 entry.ExecutablePath = systemNotepad;
                 entry.Kind = SavedWindowKind.Application;
+            }
+        }
+
+        if (RecentDocumentResolver.LooksLikeDocumentWindow(window.DisplayTitle, process))
+        {
+            // Opening a blank editor/reader does not restore the user's
+            // document. Never save a document-bearing window as "program only".
+            entry.Kind = SavedWindowKind.Unsupported;
+
+            string? document = recentDocuments.Resolve(window.DisplayTitle, process);
+            if (IsSupportedDocument(SavedWindowKind.DocumentFile, document))
+            {
+                entry.Kind = SavedWindowKind.DocumentFile;
+                entry.ResourcePath = document;
             }
         }
 
