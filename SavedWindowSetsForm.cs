@@ -14,6 +14,7 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly AppSettings settings;
     private readonly SavedWindowSetsStore store = new();
     private readonly SavedWindowRestoreService restore = new();
+    private readonly SavedWindowSetCloseService closer = new();
     private readonly ListBox setList;
     private readonly ListView details;
     private readonly Label detailsHeader;
@@ -159,15 +160,17 @@ internal sealed class SavedWindowSetsForm : Form
         };
         Button saveCurrent = MakeButton("Sets_SaveCurrent", palette);
         Button open = MakeButton("Sets_Open", palette);
+        Button closeSet = MakeButton("Sets_CloseSet", palette);
         Button update = MakeButton("Sets_Update", palette);
         Button delete = MakeButton("Sets_Delete", palette);
         Button close = MakeButton("Sets_Close", palette);
         saveCurrent.Click += (_, _) => SaveCurrent();
         open.Click += (_, _) => OpenSelected();
+        closeSet.Click += (_, _) => CloseSelectedSet();
         update.Click += (_, _) => UpdateSelected();
         delete.Click += (_, _) => DeleteSelected();
         close.Click += (_, _) => Close();
-        actions.Controls.AddRange([saveCurrent, open, update, delete, close]);
+        actions.Controls.AddRange([saveCurrent, open, closeSet, update, delete, close]);
         layout.Controls.Add(actions, 0, 2);
         Controls.Add(layout);
         CancelButton = close;
@@ -430,16 +433,74 @@ internal sealed class SavedWindowSetsForm : Form
             // A modal MessageBox here would jump ABOVE the just-opened files.
             // Keep the complete result visible in the manager for when the user
             // switches back, without stealing focus from the document windows.
-            restoreReport.Text = summary;
-            detailsLayout.RowStyles[2].Height = 115;
-            restoreReport.Visible = true;
-            restoreReport.SelectionStart = 0;
-            restoreReport.ScrollToCaret();
+            ShowInlineReport(summary);
         }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
             Failure(error);
         }
+    }
+
+    private void CloseSelectedSet()
+    {
+        SavedWindowSet? set = SelectedSet;
+        if (set is null)
+        {
+            return;
+        }
+
+        try
+        {
+            SavedSetClosePlan plan = closer.FindOpenWindows(set, settings);
+            if (plan.Targets.Count == 0)
+            {
+                ShowInlineReport(LocalizationService.Format(
+                    "Sets_CloseSetNoMatches", plan.SkippedSavedEntries));
+                return;
+            }
+
+            string windowNames = string.Join(Environment.NewLine,
+                plan.Targets.Take(8).Select(target => "• " + target.Window.DisplayTitle));
+            if (plan.Targets.Count > 8)
+            {
+                windowNames += Environment.NewLine
+                    + LocalizationService.Format("Sets_CloseSetMore", plan.Targets.Count - 8);
+            }
+
+            string confirmation = LocalizationService.Format(
+                "Sets_CloseSetConfirm", set.Name, plan.Targets.Count,
+                plan.SkippedSavedEntries) + Environment.NewLine
+                + Environment.NewLine + windowNames;
+
+            if (MessageBox.Show(this, confirmation, Text,
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                != DialogResult.Yes)
+            {
+                return;
+            }
+
+            // Lower our own panels so the target apps' native prompts about
+            // unsaved work can appear in front. Never force-close a process.
+            Form1.YieldTopmostForExternalWindows();
+            SavedSetCloseResult result = closer.RequestClose(plan, settings);
+
+            ShowInlineReport(LocalizationService.Format(
+                "Sets_CloseSetSummary", result.Requested, result.Failed,
+                result.NoLongerMatching, plan.SkippedSavedEntries));
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            ShowInlineReport(LocalizationService.Format("Sets_Error", error.Message));
+        }
+    }
+
+    private void ShowInlineReport(string summary)
+    {
+        restoreReport.Text = summary;
+        detailsLayout.RowStyles[2].Height = 115;
+        restoreReport.Visible = true;
+        restoreReport.SelectionStart = 0;
+        restoreReport.ScrollToCaret();
     }
 
     private bool NameExists(string name, Guid? except = null) =>
