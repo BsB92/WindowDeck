@@ -137,7 +137,8 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 };
                 CheckBox check = new()
                 {
-                    Checked = selection.InitiallyChecked,
+                    // Existing set members stay selected even if their window is closed.
+                    Checked = selection.InSavedSet || selection.InitiallyChecked,
                     AutoSize = false,
                     Height = 32,
                     AutoEllipsis = true,
@@ -145,6 +146,21 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     BackColor = palette.Surface,
                     Margin = Padding.Empty
                 };
+                // The disk marks existing membership, not restore readiness.
+                // Unlike the green check/red X, it appears only in Update set.
+                SavedWindowMembershipIcon? savedIcon =
+                    updating && selection.InSavedSet
+                        ? new SavedWindowMembershipIcon(palette.Accent)
+                        {
+                            BackColor = palette.Surface,
+                            AccessibleName = LocalizationService.Get("Sets_AlreadySaved")
+                        }
+                        : null;
+                if (savedIcon is not null)
+                {
+                    fileToolTip.SetToolTip(savedIcon,
+                        LocalizationService.Get("Sets_AlreadySavedHelp"));
+                }
                 SavedWindowStatusIcon statusIcon = new()
                 {
                     BackColor = palette.Surface
@@ -162,9 +178,11 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     int pickerWidth = chooseFile.Tag is true
                         ? chooseFile.Width + chooseFile.Margin.Horizontal
                         : 0;
+                    int membershipWidth = savedIcon is null ? 0 :
+                        savedIcon.Width + savedIcon.Margin.Horizontal;
                     check.Width = Math.Max(140, row.ClientSize.Width -
                         statusIcon.Width - statusIcon.Margin.Horizontal -
-                        pickerWidth - 2);
+                        membershipWidth - pickerWidth - 2);
                 }
 
                 void UpdateRow()
@@ -244,6 +262,10 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     UpdateRow();
                 };
 
+                if (savedIcon is not null)
+                {
+                    row.Controls.Add(savedIcon);
+                }
                 row.Controls.Add(check);
                 row.Controls.Add(statusIcon);
                 row.Controls.Add(chooseFile);
@@ -265,11 +287,15 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     SavedWindowStatusIcon indicator =
                         fileRow.Controls.OfType<SavedWindowStatusIcon>().First();
                     Button chooseFile = fileRow.Controls.OfType<Button>().First();
+                    SavedWindowMembershipIcon? member =
+                        fileRow.Controls.OfType<SavedWindowMembershipIcon>().FirstOrDefault();
+                    int membershipWidth = member is null ? 0 :
+                        member.Width + member.Margin.Horizontal;
                     int pickerWidth = chooseFile.Tag is true
                         ? chooseFile.Width + chooseFile.Margin.Horizontal
                         : 0;
                     check.Width = Math.Max(140, width - indicator.Width -
-                        indicator.Margin.Horizontal - pickerWidth - 2);
+                        indicator.Margin.Horizontal - membershipWidth - pickerWidth - 2);
                 }
             }
         };
