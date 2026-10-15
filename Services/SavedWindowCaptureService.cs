@@ -73,12 +73,14 @@ internal sealed class SavedWindowCaptureService
             // Opening a blank editor/reader does not restore the user's
             // document. Never save a document-bearing window as "program only".
             entry.Kind = SavedWindowKind.Unsupported;
+            entry.NeedsDocumentPath = true;
 
             string? document = recentDocuments.Resolve(window.DisplayTitle, process);
             if (IsSupportedDocument(SavedWindowKind.DocumentFile, document))
             {
                 entry.Kind = SavedWindowKind.DocumentFile;
                 entry.ResourcePath = document;
+                entry.NeedsDocumentPath = false;
             }
         }
 
@@ -119,6 +121,7 @@ internal sealed class SavedWindowCaptureService
         {
             entry.Kind = kind;
             entry.ResourcePath = file;
+            entry.NeedsDocumentPath = false;
         }
 
         return entry;
