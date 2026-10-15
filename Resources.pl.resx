@@ -185,4 +185,5 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Sets_ChooseFileHelp" xml:space="preserve"><value>Wskaż konkretny dokument do ponownego otwarcia. Użyj tylko wtedy, gdy nie został rozpoznany automatycznie.</value></data>
   <data name="Sets_DocumentPathRequired" xml:space="preserve"><value>(nie znaleziono ścieżki dokumentu — wskaż plik)</value></data>
   <data name="Sets_RestoreNeedsDocumentPath" xml:space="preserve"><value>Nie przywrócono dokumentu: {0}. Zaktualizuj zestaw i użyj „Wskaż plik…”, aby przypisać właściwy dokument.</value></data>
+  <data name="Sets_UnresolvedSaveConfirmation" xml:space="preserve"><value>Nie udało się ustalić ścieżki pliku dla {0} zaznaczonych dokumentów. Nie będzie można ich przywrócić z tego zestawu. Użyj „Wskaż plik…” lub odznacz te pozycje. Zapisać zestaw mimo tego?</value></data>
 </root>
