@@ -188,4 +188,5 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Sets_UnresolvedSaveConfirmation" xml:space="preserve"><value>Nie udało się ustalić ścieżki pliku dla {0} zaznaczonych dokumentów. Nie będzie można ich przywrócić z tego zestawu. Użyj „Wskaż plik…” lub odznacz te pozycje. Zapisać zestaw mimo tego?</value></data>
   <data name="Sets_StatusReady" xml:space="preserve"><value>Gotowe do ponownego otwarcia</value></data>
   <data name="Sets_StatusMissing" xml:space="preserve"><value>Nie można automatycznie przywrócić — wskaż plik</value></data>
+  <data name="Sets_StatusProgramOnly" xml:space="preserve"><value>Program można ponownie uruchomić, ale jego karty i dokumenty nie zostaną przywrócone</value></data>
 </root>
