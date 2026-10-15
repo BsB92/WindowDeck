@@ -22,9 +22,9 @@ WindowDeck is especially useful when many open windows have similar names or are
 >
 > I designed the concept, requirements, workflow, and UI, and tested and refined the application iteratively. The code was created with the help of **ChatGPT** and **OpenAI Codex**.
 
-### What's new in 1.4.0 — release candidate
+### What's new in 1.4.0
 
-**Version 1.4.0 is being prepared and has not been published yet.** The latest downloadable version remains available via the [GitHub Releases page](https://github.com/BsB92/WindowDeck/releases/latest).
+**WindowDeck 1.4.0 is available now** from the [GitHub Releases page](https://github.com/BsB92/WindowDeck/releases/latest).
 
 - **Saved window sets:** name, save, update, reopen, and close selected collections of windows. Restore reliably identified documents and folders across work sessions; save multiple sets for different tasks or projects.
 - **Safer set updates:** previously saved entries remain selected even when closed, with a floppy-disk indicator; newly found windows are unchecked until you explicitly add them.
@@ -32,7 +32,7 @@ WindowDeck is especially useful when many open windows have similar names or are
 - **Better window-list refresh and ordering:** window changes are reflected more reliably without misplaced application groups; newly foregrounded windows no longer have to compete with WindowDeck's always-on-top panel.
 - **Settings and presentation improvements:** an always-visible OK/Cancel footer, theme-matched dialog title bars, presentation setup dialogs displayed in front, and maintenance for historical WindowDeck notification-area icons.
 
-[Read the 1.4.0 release-candidate notes](docs/notes/v1.4.0.md) · [1.4.0 validation checklist](docs/V1.4_FULL_VALIDATION.md).
+[Read the 1.4.0 release notes](https://github.com/BsB92/WindowDeck/releases/latest) · [1.4.0 validation checklist](docs/V1.4_FULL_VALIDATION.md).
 
 ### Previously in 1.3.0
 
@@ -58,7 +58,7 @@ Configure startup behavior, global hotkey, window list options, appearance, and 
 
 ![WindowDeck Settings](docs/Screenshots/WindowDeck-settings.png)
 
-*The existing screenshots may show the earlier 1.3.x interface; updated 1.4.0 screenshots will be added after validation.*
+*Some screenshots still show the 1.3.x interface; updated 1.4.0 screenshots will be added separately.*
 
 #### About
 
@@ -332,9 +332,9 @@ WindowDeck jest szczególnie przydatny, gdy wiele otwartych okien ma podobne naz
 >
 > Zaprojektowałem koncepcję, wymagania, sposób działania i interfejs użytkownika, a następnie iteracyjnie testowałem i dopracowywałem aplikację. Kod powstał przy wsparciu **ChatGPT** i **OpenAI Codex**.
 
-### Co nowego w 1.4.0 — wersja przed wydaniem
+### Co nowego w 1.4.0
 
-**WindowDeck 1.4.0 jest przygotowywany do publikacji i nie został jeszcze wydany.** Aktualną wersję do pobrania znajdziesz na [stronie wydań GitHub](https://github.com/BsB92/WindowDeck/releases/latest).
+**WindowDeck 1.4.0 jest już dostępny** na [stronie wydań GitHub](https://github.com/BsB92/WindowDeck/releases/latest).
 
 - **Zapisane zestawy okien:** tworzenie wielu zestawów z własnymi nazwami, ich aktualizowanie, ponowne otwieranie i zamykanie dopasowanych okien. Przydatne np. do pracy nad kilkoma wycenami z różnymi skoroszytami.
 - **Aktualizacja bez utraty pozycji:** wcześniej zapisane dokumenty pozostają zaznaczone nawet po zamknięciu; oznacza je dyskietka. Nowe okna dodajesz świadomie.
@@ -342,7 +342,7 @@ WindowDeck jest szczególnie przydatny, gdy wiele otwartych okien ma podobne naz
 - **Poprawki odświeżania i kolejności okien:** stabilniejsze grupowanie, aktualizowanie listy i wyświetlanie nowo otwartych okien przed panelem WindowDeck.
 - **Ulepszone Ustawienia i tryb prezentacji:** stale widoczne przyciski OK/Anuluj, paski tytułu dopasowane do motywu, okna przygotowania prezentacji otwierane na wierzchu oraz czyszczenie starych wpisów ikon WindowDeck w zasobniku systemowym.
 
-[Opis wersji 1.4.0](docs/notes/v1.4.0.md) · [Lista testów 1.4.0](docs/V1.4_FULL_VALIDATION.md).
+[Opis wydania 1.4.0](https://github.com/BsB92/WindowDeck/releases/latest) · [Lista testów 1.4.0](docs/V1.4_FULL_VALIDATION.md).
 
 ### Wcześniej w 1.3.0
 
@@ -368,7 +368,7 @@ Konfiguracja uruchamiania z systemem, globalnego skrótu, listy okien, wyglądu 
 
 ![Ustawienia WindowDeck](docs/Screenshots/WindowDeck-settings.png)
 
-*Dotychczasowe zrzuty ekranu mogą przedstawiać interfejs wersji 1.3.x; zrzuty 1.4.0 dodamy po zakończeniu testów.*
+*Niektóre zrzuty ekranu mogą przedstawiać interfejs wersji 1.3.x; aktualne zrzuty 1.4.0 zostaną dodane osobno.*
 
 #### O programie
 
