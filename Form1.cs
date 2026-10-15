@@ -10,6 +10,7 @@ namespace WindowDeck;
 internal partial class Form1 : Form
 {
     private const int DefaultPanelWidth = 680;
+    private const long NewWindowForegroundGraceMilliseconds = 15000;
     private const int HtCaption = 2;
     private const int HtClient = 1;
     private const int HtLeft = 10;
@@ -36,6 +37,7 @@ internal partial class Form1 : Form
     private readonly HashSet<WindowIdentity> collapsedWindowIds = [];
     private readonly HashSet<WindowIdentity> presentationWindowIds = [];
     private readonly Dictionary<WindowIdentity, WindowRowCacheEntry> windowRowCache = [];
+    private readonly Dictionary<nint, long> recentlyOpenedWindowHandles = [];
     private ContextMenuStrip groupContextMenu = null!;
     private ToolStripMenuItem collapseAllItem = null!;
     private ToolStripMenuItem expandAllItem = null!;
@@ -49,6 +51,7 @@ internal partial class Form1 : Form
     private WindowEventMonitor? windowEventMonitor;
     private bool isClosing;
     private bool monitoringStarted;
+    private bool yieldingTopmostToExternal;
     private bool allowApplicationExit;
     private int anchoredOuterRight;
     private int anchoredOuterTop;
@@ -129,6 +132,17 @@ internal partial class Form1 : Form
         EnsureTopmostZOrder();
     }
 
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        if (!yieldingTopmostToExternal && Visible)
+        {
+            // Only explicitly returning to WindowDeck restores its raised layer.
+            TopMost = true;
+            EnsureTopmostZOrder();
+        }
+    }
+
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
@@ -170,6 +184,7 @@ internal partial class Form1 : Form
         ClearWindowRowCache();
         windowEventMonitor?.Dispose();
         windowEventMonitor = null;
+        recentlyOpenedWindowHandles.Clear();
         base.OnFormClosing(e);
     }
 
@@ -195,6 +210,38 @@ internal partial class Form1 : Form
         Show();
         Activate();
         EnsureTopmostZOrder();
+    }
+
+    // A new foreground window must never need permanent TopMost just to rise
+    // above WindowDeck. Instead release our own application's TopMost forms,
+    // including Saved sets and its nested Save current dialog.
+    internal static void YieldTopmostForExternalWindows()
+    {
+        foreach (Form form in Application.OpenForms.Cast<Form>().ToArray().Reverse())
+        {
+            if (!form.IsDisposed && !form.Disposing && form.TopMost)
+            {
+                form.TopMost = false;
+            }
+        }
+    }
+
+    private void YieldTopmostForNewForegroundWindow()
+    {
+        if (!Visible)
+        {
+            return;
+        }
+
+        yieldingTopmostToExternal = true;
+        try
+        {
+            YieldTopmostForExternalWindows();
+        }
+        finally
+        {
+            yieldingTopmostToExternal = false;
+        }
     }
 
     private void EnsureTopmostZOrder()
@@ -353,6 +400,45 @@ internal partial class Form1 : Form
             MessageBoxIcon.Information);
     }
 
+    private void AllowNewlyOpenedForegroundWindow(IReadOnlyList<WindowInfo> snapshot)
+    {
+        long now = Environment.TickCount64;
+        HashSet<nint> present = snapshot.Select(window => window.Handle).ToHashSet();
+
+        // The initial snapshot contains existing windows, not newly opened ones.
+        if (currentSnapshotInitialized)
+        {
+            HashSet<nint> previous = currentSnapshot
+                .Select(window => window.Handle).ToHashSet();
+            foreach (WindowInfo window in snapshot)
+            {
+                if (!previous.Contains(window.Handle))
+                {
+                    recentlyOpenedWindowHandles[window.Handle] = now;
+                }
+            }
+        }
+
+        foreach ((nint handle, long started) in recentlyOpenedWindowHandles.ToArray())
+        {
+            if (!present.Contains(handle)
+                || now - started > NewWindowForegroundGraceMilliseconds)
+            {
+                recentlyOpenedWindowHandles.Remove(handle);
+            }
+        }
+
+        nint foreground = NativeMethods.GetForegroundWindow();
+        if (foreground != 0
+            && recentlyOpenedWindowHandles.Remove(foreground)
+            && Visible)
+        {
+            // Foreground changed to a new user-facing external window.
+            // We lower OUR own TopMost windows rather than modifying the app.
+            YieldTopmostForNewForegroundWindow();
+        }
+    }
+
     private void RefreshWindowList(bool force = false)
     {
         try
@@ -360,6 +446,7 @@ internal partial class Form1 : Form
             IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate(settings);
             updatedSnapshot = EnforcePresentationReservation(updatedSnapshot);
             PrunePresentationWindows(updatedSnapshot);
+            AllowNewlyOpenedForegroundWindow(updatedSnapshot);
             if (!force && currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
             {
                 return;
