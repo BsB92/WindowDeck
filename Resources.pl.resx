@@ -189,4 +189,15 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Sets_StatusReady" xml:space="preserve"><value>Gotowe do ponownego otwarcia</value></data>
   <data name="Sets_StatusMissing" xml:space="preserve"><value>Nie można automatycznie przywrócić — wskaż plik</value></data>
   <data name="Sets_StatusProgramOnly" xml:space="preserve"><value>Program można ponownie uruchomić, ale jego karty i dokumenty nie zostaną przywrócone</value></data>
+  <data name="Sets_UpdateCaptureTitle" xml:space="preserve"><value>Aktualizuj zestaw okien</value></data>
+  <data name="Sets_UpdateInstructions" xml:space="preserve"><value>Wcześniej zapisane okna pozostają zaznaczone, nawet gdy są zamknięte. Nowe okna są odznaczone — zaznacz je, aby dodać. Odznaczenie zapisanej pozycji oznacza jej usunięcie z zestawu.</value></data>
+  <data name="Sets_SavedAndOpen" xml:space="preserve"><value>(zapisane, otwarte)</value></data>
+  <data name="Sets_SavedButClosed" xml:space="preserve"><value>(zapisane, obecnie zamknięte)</value></data>
+  <data name="Sets_NewNotSaved" xml:space="preserve"><value>(nowe — zaznacz, aby dodać)</value></data>
+  <data name="Sets_SaveChanges" xml:space="preserve"><value>Zapisz zmiany</value></data>
+  <data name="Sets_ConfirmUpdateChanges" xml:space="preserve"><value>Zaktualizować zestaw „{0}”?&#10;Nowe pozycje: {1}&#10;Usuwane pozycje: {2}&#10;&#10;Pozostałe zapisane okna, także te obecnie zamknięte, zostaną zachowane.</value></data>
+  <data name="Sets_ColumnApplication" xml:space="preserve"><value>Program</value></data>
+  <data name="Sets_ColumnWindow" xml:space="preserve"><value>Dokument / okno</value></data>
+  <data name="Sets_ColumnPath" xml:space="preserve"><value>Ścieżka pliku / programu</value></data>
+  <data name="Sets_ColumnStatus" xml:space="preserve"><value>Sposób odtwarzania</value></data>
 </root>
