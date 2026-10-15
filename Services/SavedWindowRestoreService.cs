@@ -134,6 +134,11 @@ internal sealed class SavedWindowRestoreService
         if (!SavedWindowCaptureService.IsSupportedDocument(window.Kind, window.ResourcePath))
         {
             result.Unsupported++;
+            if (window.NeedsDocumentPath)
+            {
+                result.Notes.Add(LocalizationService.Format(
+                    "Sets_RestoreNeedsDocumentPath", window.WindowTitle));
+            }
             return;
         }
 
