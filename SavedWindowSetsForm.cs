@@ -1,4 +1,3 @@
-using System.Text;
 using WindowDeck.Localization;
 using WindowDeck.Models;
 using WindowDeck.Services;
@@ -161,16 +160,14 @@ internal sealed class SavedWindowSetsForm : Form
         Button saveCurrent = MakeButton("Sets_SaveCurrent", palette);
         Button open = MakeButton("Sets_Open", palette);
         Button update = MakeButton("Sets_Update", palette);
-        Button rename = MakeButton("Sets_Rename", palette);
         Button delete = MakeButton("Sets_Delete", palette);
         Button close = MakeButton("Sets_Close", palette);
         saveCurrent.Click += (_, _) => SaveCurrent();
         open.Click += (_, _) => OpenSelected();
         update.Click += (_, _) => UpdateSelected();
-        rename.Click += (_, _) => RenameSelected();
         delete.Click += (_, _) => DeleteSelected();
         close.Click += (_, _) => Close();
-        actions.Controls.AddRange([saveCurrent, open, update, rename, delete, close]);
+        actions.Controls.AddRange([saveCurrent, open, update, delete, close]);
         layout.Controls.Add(actions, 0, 2);
         Controls.Add(layout);
         CancelButton = close;
@@ -392,40 +389,6 @@ internal sealed class SavedWindowSetsForm : Form
         }
     }
 
-    private void RenameSelected()
-    {
-        SavedWindowSet? current = SelectedSet;
-        if (current is null) return;
-
-        try
-        {
-            string? name = PromptName(current.Name);
-            if (name is null || string.Equals(name, current.Name, StringComparison.Ordinal)) return;
-            if (NameExists(name, current.Id))
-            {
-                Info("Sets_NameExists");
-                return;
-            }
-
-            List<SavedWindowSet> updated = savedSets.Select(set => set.Id == current.Id
-                ? new SavedWindowSet
-                {
-                    Id = current.Id,
-                    Name = name,
-                    SavedAtUtc = current.SavedAtUtc,
-                    Windows = current.Windows
-                }
-                : set).ToList();
-            store.Save(updated);
-            savedSets = updated;
-            ReloadList(current.Id);
-        }
-        catch (Exception error) when (error is not OutOfMemoryException)
-        {
-            Failure(error);
-        }
-    }
-
     private void DeleteSelected()
     {
         SavedWindowSet? current = SelectedSet;
@@ -477,49 +440,6 @@ internal sealed class SavedWindowSetsForm : Form
         {
             Failure(error);
         }
-    }
-
-    private string? PromptName(string currentName)
-    {
-        ThemePalette palette = ThemeManager.Resolve(settings.Theme);
-        using Form dialog = new()
-        {
-            Text = LocalizationService.Get("Sets_Rename"),
-            StartPosition = FormStartPosition.CenterParent,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MinimizeBox = false,
-            MaximizeBox = false,
-            ClientSize = new Size(440, 115),
-            Font = Font,
-            BackColor = palette.Background,
-            ForeColor = palette.Foreground
-        };
-        TextBox name = new()
-        {
-            Text = currentName,
-            Location = new Point(15, 15),
-            Width = 410,
-            MaxLength = 120,
-            BackColor = palette.Surface,
-            ForeColor = palette.Foreground
-        };
-        Button ok = MakeButton("Common_OK", palette);
-        ok.Location = new Point(245, 65);
-        ok.DialogResult = DialogResult.OK;
-        Button cancel = MakeButton("Common_Cancel", palette);
-        cancel.Location = new Point(332, 65);
-        cancel.DialogResult = DialogResult.Cancel;
-        dialog.Controls.AddRange([name, ok, cancel]);
-        dialog.AcceptButton = ok;
-        dialog.CancelButton = cancel;
-
-        if (dialog.ShowDialog(this) != DialogResult.OK) return null;
-        if (string.IsNullOrWhiteSpace(name.Text))
-        {
-            Info("Sets_NameRequired");
-            return null;
-        }
-        return name.Text.Trim();
     }
 
     private bool NameExists(string name, Guid? except = null) =>
