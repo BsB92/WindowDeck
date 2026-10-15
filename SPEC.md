@@ -299,6 +299,15 @@ Allow a user to preserve and reopen a named selection of working windows after r
 - Keep a visible **program only / bez kart** label on browser and other program-only entries, even with a green check, so the tick does not imply recovered tabs. Status meanings must be available through localized accessible names/tooltips and consistent across light/dark themes.
 - Keep all save-selection checkboxes checked by default; bulk selection, scrolling, responsive row widths, and saved-set behavior must remain unchanged.
 
+### Non-destructive updates and readable set contents (v1.4)
+
+- Updating a named saved set must **not replace it with only the currently open windows**. Every previously saved entry stays in the update dialog, even when that document is closed, and is checked by default.
+- Newly detected open windows that are not already in the set appear **unchecked**, so adding them is explicit. Removing a stored entry requires deliberately clearing its checkbox; confirm the number of additions and removals before saving. Cancel must leave the original set untouched.
+- Duplicate detection should prefer exact file/folder paths; do not conflate different documents with identical titles. Updating a set with zero currently open windows must work.
+- The update dialog includes the set name, which may be edited there. There is **no separate Rename button or Rename dialog**.
+- Show each saved window as **one row** with columns for application, window/document title, full saved file path, and restore mode. Preserve full readable paths via **horizontal scrolling** rather than text wrapping. Distinguish rows with clear grid separators and spacing; use vertical scrolling for longer lists.
+- Keep restore summaries separate from the file list, rather than prepending multi-line status text to its contents.
+
 ### Acceptance scenarios
 
 - Capture 10-20 windows with all checkboxes initially selected; deselect a few, save a named set and confirm it contains **only** selected entries.
