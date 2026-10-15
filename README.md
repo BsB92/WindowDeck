@@ -595,7 +595,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Prepare-Release.ps
 Pliki wynikowe są tworzone w:
 
 ```text
-artifacts\WindowDeck-1.3.0-win-x64
+artifacts\WindowDeck-1.4.0-win-x64
 ```
 
 Konfiguracja wydania wykorzystuje:
