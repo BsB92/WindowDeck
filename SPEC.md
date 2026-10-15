@@ -242,6 +242,15 @@ WindowDeck allows the user to choose the Screen numbers used by the application 
 - Publish the executable and its checksum file as GitHub Release assets; the release notes must contain the checksum of that exact executable. Do not retain a previous executable checksum as the latest-release checksum in README.
 - Test the final published executable outside Visual Studio using the current release checklist before publication.
 
+## 25a. Foreground priority for newly opened windows (v1.4)
+
+- The main WindowDeck panel and Saved window sets manager may be topmost while the user deliberately interacts with them, but **a newly opened and foreground-activated window belonging to another application must not appear behind them**.
+- When an external window is newly detected and becomes the foreground window, Windows should control its normal stacking and focus. WindowDeck temporarily **removes TopMost from its own visible forms**; never set or leave permanent TopMost on another application's windows, and never force-activate background windows.
+- On a deliberate return to WindowDeck (mouse, hotkey, tray), the flyout can reassert its own topmost layer. Foreground event handling must not create a focus/Z-order loop or reshow a hidden flyout.
+- When Open saved set launches multiple files, release WindowDeck's and the Saved sets manager's topmost layer **before launching**. Do not immediately show a modal completion MessageBox that obscures the newly opened applications; instead display results within the Saved sets manager for later inspection. Missing-file paths and counts must remain available.
+- Respect Presentation Mode reserved-monitor enforcement, but do not use it as a reason to keep an unrelated new foreground window behind WindowDeck on a nonreserved monitor.
+- Only act on newly seen, user-facing foreground windows; avoid lowering WindowDeck merely because a background/system/helper window was created. Preserve other v1.4 grouping, event refresh, tray-cleanup, selection and localization behavior.
+
 ## 26. Saved window sets (planned for v1.4.0)
 
 Allow a user to preserve and reopen a named selection of working windows after restarting Windows, without closing or disturbing windows already open at restore time.
