@@ -299,6 +299,14 @@ Allow a user to preserve and reopen a named selection of working windows after r
 - Keep a visible **program only / bez kart** label on browser and other program-only entries, even with a green check, so the tick does not imply recovered tabs. Status meanings must be available through localized accessible names/tooltips and consistent across light/dark themes.
 - Keep all save-selection checkboxes checked by default; bulk selection, scrolling, responsive row widths, and saved-set behavior must remain unchanged.
 
+### Update set — saved membership marker (v1.4)
+
+- In **Update set**, every entry **already belonging to the selected set** is **checked by default**, whether currently open or closed. Windows newly discovered during this update remain unchecked until explicitly added.
+- Display a small **theme-aware floppy-disk icon**, drawn as a vector without emoji or colored square, **beside each previously saved entry**. Never show it for a new entry until its addition has actually been saved and the set is edited again.
+- The floppy-disk icon conveys **membership**, not restore readiness. Keep the separate green check/red X for reopenability, even when an existing document path is no longer available. Include localized accessible text and tooltip for the disk.
+- Unchecking a saved member requests its removal **only after confirmation and save**; cancel leaves original sets unchanged. The indicator remains a statement of existing membership throughout editing.
+- Preserve independent select-all/deselect-all actions, the optional Choose file control for unrecognized documents, responsive list widths, and grouping by application. Update Help in Polish and English to distinguish all statuses clearly.
+
 ### Close set / Zamknij zestaw (v1.4)
 
 - Add a separate **Close set / Zamknij zestaw** action beside Open set. Closing a set is **not deleting or updating** its definition; it remains saved for the next working session.
