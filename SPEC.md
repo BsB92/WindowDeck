@@ -273,6 +273,15 @@ Allow a user to preserve and reopen a named selection of working windows after r
 - For each missing or moved document, report its **full saved path** and continue opening the other set members. Never terminate or replace any currently open windows. Reopening is best-effort when another application instance cannot expose a document's exact path, and duplicate prevention for manually linked third-party documents is not guaranteed after the short launch-in-progress window.
 - Open the Saved window sets manager **beside WindowDeck, on its left where screen space permits**, rather than behind the main flyout. It remains visible above the flyout; the capture dialog also remains accessible.
 
+### Automatic document discovery and modal stacking (v1.4 follow-up)
+
+- The Save current windows dialog must be modal, visible and usable **above** the TopMost Saved window sets manager, even when both are on the same screen and WindowDeck itself is TopMost. Place it within the same screen working area near its owner and activate it after showing.
+- **Exact file restoration is the primary purpose of saved sets.** For document-focused programs (Notepad, Foxit, other PDF readers and application windows whose titles clearly contain a document filename), never treat reopening the blank program as a successful document restore.
+- Capture exact document paths directly through supported application automation where available. For other document-focused windows, make a **best-effort, read-only** search in the current user's Windows Recent document links and, where present, Foxit PDF Reader's recent-file history. Accept only an existing local document with a complete filename clearly matching the window title and **exactly one unique matching path**. Do not guess among duplicate names, recursively scan disks, read other users' files, inspect other processes' handles or require administrator permissions.
+- A clearly identified document lacking a trustworthy path is marked **Document path not found / Nie znaleziono ścieżki dokumentu**; it can be saved in a set but must be reported as unrestorable until the user supplies its actual file. Do not silently relaunch the application instead.
+- **Choose file / Wskaż plik** is an optional fallback, not the default workflow. Explain the button in the save dialog. It assigns a real local document to a saved window when path discovery is unavailable or ambiguous. Browser windows may remain program-only, without tabs.
+- Opening a set must continue past one missing document and report its saved full path. It must never silently substitute a blank program for a missing/unresolved document. Always keep current windows open.
+
 ### Acceptance scenarios
 
 - Capture 10-20 windows with all checkboxes initially selected; deselect a few, save a named set and confirm it contains **only** selected entries.
