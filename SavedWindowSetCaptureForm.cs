@@ -244,6 +244,16 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 return;
             }
 
+            int unresolvedDocuments = SelectedWindows.Count(item => item.NeedsDocumentPath);
+            if (unresolvedDocuments > 0
+                && MessageBox.Show(this,
+                    LocalizationService.Format("Sets_UnresolvedSaveConfirmation", unresolvedDocuments),
+                    Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+            {
+                // Keep the dialog open so missing paths can be linked or unchecked.
+                return;
+            }
+
             DialogResult = DialogResult.OK;
             Close();
         };
