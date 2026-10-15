@@ -183,7 +183,9 @@ internal sealed class SavedWindowSetCaptureForm : Form
 
                     statusIcon.IsReady = isReady;
                     statusIcon.AccessibleName = LocalizationService.Get(
-                        isReady ? "Sets_StatusReady" : "Sets_StatusMissing");
+                        !isReady ? "Sets_StatusMissing" :
+                        window.Kind == SavedWindowKind.Application
+                            ? "Sets_StatusProgramOnly" : "Sets_StatusReady");
                     fileToolTip.SetToolTip(statusIcon, statusIcon.AccessibleName);
                     chooseFile.Tag = !isReady;
                     chooseFile.Visible = !isReady;
