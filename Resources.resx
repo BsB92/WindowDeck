@@ -185,4 +185,5 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Sets_ChooseFileHelp" xml:space="preserve"><value>Point this window at the exact document you want reopened. Use only if the file was not detected automatically.</value></data>
   <data name="Sets_DocumentPathRequired" xml:space="preserve"><value>(document path not found — choose file)</value></data>
   <data name="Sets_RestoreNeedsDocumentPath" xml:space="preserve"><value>Document not restored: {0}. Update this set and use Choose file to link the exact document.</value></data>
+  <data name="Sets_UnresolvedSaveConfirmation" xml:space="preserve"><value>{0} selected document(s) have no recoverable file path and cannot be reopened from this set. Use Choose file, or uncheck those entries. Save this set anyway?</value></data>
 </root>
