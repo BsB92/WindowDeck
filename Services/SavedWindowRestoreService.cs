@@ -82,8 +82,8 @@ internal sealed class SavedWindowRestoreService
                 // Older sets can contain Foxit/Notepad as a program-only entry.
                 // Recover the document if possible; otherwise NEVER treat
                 // opening a blank reader/editor as a successful restore.
-                bool documentWindow = window.Kind is SavedWindowKind.Application
-                        or SavedWindowKind.Unsupported
+                bool documentWindow =
+                    (window.Kind is SavedWindowKind.Application or SavedWindowKind.Unsupported)
                     && RecentDocumentResolver.LooksLikeDocumentWindow(
                         window.WindowTitle, processName);
                 if (documentWindow)
