@@ -14,7 +14,8 @@ internal sealed class HelpForm : Form
         ("Help_AuxiliaryHeading", "Help_AuxiliaryText"),
         ("Help_PresentationHeading", "Help_PresentationText"),
         ("Help_TrayHeading", "Help_TrayText"),
-        ("Help_SettingsHeading", "Help_SettingsText")
+        ("Help_SettingsHeading", "Help_SettingsText"),
+        ("Help_SavedSetsHeading", "Help_SavedSetsText")
     ];
 
     private readonly Panel scrollHost;

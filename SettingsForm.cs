@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Security;
 using WindowDeck.Interop;
 using WindowDeck.Localization;
 using WindowDeck.Models;
@@ -26,12 +28,16 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox showMinimizedWindows = new() { AutoSize = true };
     private readonly ComboBox theme = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
     private readonly ComboBox language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
+    private readonly Button cleanOldTrayIcons = new() { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
     private readonly Func<AppSettings, (bool Success, string? ErrorMessage, bool EffectiveStartupState)> applySettings;
     private readonly MonitorDetector screenDetector = new();
     private readonly List<(Label Label, string ResourceKey)> sectionLabels = [];
     private readonly Label hotkeyHelp;
     private readonly Label screenNumberingHelp;
     private readonly TableLayoutPanel content;
+    private readonly Panel scrollHost;
+    private readonly Panel footerBar;
+    private readonly Panel footerSeparator;
     private readonly FlowLayoutPanel shortcut;
     private readonly FlowLayoutPanel screenNumberingActions;
     private readonly TableLayoutPanel screenNumberingRows;
@@ -75,15 +81,49 @@ internal sealed class SettingsForm : Form
         Font = new Font("Segoe UI", 9F);
         Icon = WindowDeckIcon.Load();
 
-        content = new TableLayoutPanel
+        // Scroll only the settings content. A separate footer row reserves
+        // space for Save/Cancel even on small or high-DPI monitors.
+        TableLayoutPanel root = new()
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty
+        };
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 64));
+
+        scrollHost = new Panel
         {
             Dock = DockStyle.Fill,
             AutoScroll = true,
+            Margin = Padding.Empty
+        };
+        content = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
             ColumnCount = 1,
-            Padding = new Padding(20, 12, 20, 16)
+            Margin = Padding.Empty,
+            Padding = new Padding(20, 12, 20, 20)
         };
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        Controls.Add(content);
+        scrollHost.Controls.Add(content);
+        root.Controls.Add(scrollHost, 0, 0);
+
+        footerBar = new Panel
+        {
+            Dock = DockStyle.Fill,
+            Margin = Padding.Empty,
+            Padding = new Padding(12, 8, 20, 7)
+        };
+        footerSeparator = new Panel { Dock = DockStyle.Top, Height = 1 };
+        footerBar.Controls.Add(footerSeparator);
+        root.Controls.Add(footerBar, 0, 1);
+        Controls.Add(root);
 
         content.Controls.Add(CreateSectionLabel("Settings_General"));
         content.Controls.Add(startWithWindows);
@@ -135,19 +175,32 @@ internal sealed class SettingsForm : Form
         content.Controls.Add(theme);
         content.Controls.Add(CreateSectionLabel("Settings_Language"));
         content.Controls.Add(language);
+        content.Controls.Add(CreateSectionLabel("Settings_Maintenance"));
+        cleanOldTrayIcons.Click += CleanOldTrayIcons_Click;
+        content.Controls.Add(cleanOldTrayIcons);
 
         buttons = new FlowLayoutPanel
         {
-            AutoSize = true,
+            AutoSize = false,
             FlowDirection = FlowDirection.RightToLeft,
+            WrapContents = false,
             Dock = DockStyle.Fill,
-            Margin = new Padding(0, 20, 0, 0)
+            Margin = Padding.Empty,
+            Padding = new Padding(0, 6, 0, 0)
         };
-        cancel = new Button { DialogResult = DialogResult.Cancel, AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
+        // Settings is shown with Form.Show() (modeless) by the tray context.
+        // DialogResult on a button closes only a modal ShowDialog() form;
+        // the Cancel click must explicitly close this modeless window.
+        cancel = new Button { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
         ok = new Button { AutoSize = true, Padding = new Padding(10, 2, 10, 2) };
+        cancel.Click += (_, _) =>
+        {
+            DialogResult = DialogResult.Cancel;
+            Close();
+        };
         ok.Click += Ok_Click;
         buttons.Controls.AddRange([cancel, ok]);
-        content.Controls.Add(buttons);
+        footerBar.Controls.Add(buttons);
         AcceptButton = ok;
         CancelButton = cancel;
 
@@ -300,6 +353,7 @@ internal sealed class SettingsForm : Form
         screenNumberingHelp.Text = LocalizationService.Get("Settings_ScreenNumberingHelp");
         identifyScreens.Text = LocalizationService.Get("Settings_IdentifyScreens");
         resetScreenNumbering.Text = LocalizationService.Get("Settings_ResetScreenNumbering");
+        cleanOldTrayIcons.Text = LocalizationService.Get("Settings_TrayCleanupButton");
         cancel.Text = LocalizationService.Get("Common_Cancel");
         ok.Text = LocalizationService.Get("Common_OK");
 
@@ -333,10 +387,13 @@ internal sealed class SettingsForm : Form
         ForeColor = palette.Foreground;
         content.BackColor = palette.Background;
         content.ForeColor = palette.Foreground;
+        scrollHost.BackColor = palette.Background;
+        footerBar.BackColor = palette.RaisedSurface;
+        footerSeparator.BackColor = palette.Border;
         shortcut.BackColor = palette.Background;
         screenNumberingActions.BackColor = palette.Background;
         screenNumberingRows.BackColor = palette.Background;
-        buttons.BackColor = palette.Background;
+        buttons.BackColor = palette.RaisedSurface;
         hotkeyHelp.ForeColor = palette.SecondaryForeground;
         screenNumberingHelp.ForeColor = palette.SecondaryForeground;
 
@@ -371,9 +428,50 @@ internal sealed class SettingsForm : Form
         language.ForeColor = palette.Foreground;
         ThemeManager.StyleButton(identifyScreens, palette);
         ThemeManager.StyleButton(resetScreenNumbering, palette);
+        ThemeManager.StyleButton(cleanOldTrayIcons, palette);
         ThemeManager.StyleButton(ok, palette);
         ThemeManager.StyleButton(cancel, palette);
         ThemeManager.ApplyTitleBar(this, palette.IsDark);
+    }
+
+    private void CleanOldTrayIcons_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            IReadOnlyList<TrayIconHistoryEntry> entries = TrayIconHistoryService.GetOldEntries();
+            if (entries.Count == 0)
+            {
+                MessageBox.Show(this, LocalizationService.Get("Settings_TrayCleanupNone"), Text,
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            using TrayIconCleanupForm confirmation = new(entries, selectedTheme);
+            if (confirmation.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            cleanOldTrayIcons.Enabled = false;
+            try
+            {
+                string backupDirectory = TrayIconHistoryService.RemoveOldEntries(entries);
+                MessageBox.Show(this,
+                    LocalizationService.Format("Settings_TrayCleanupSuccess", entries.Count, backupDirectory),
+                    Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            finally
+            {
+                cleanOldTrayIcons.Enabled = true;
+            }
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException
+            or SecurityException or Win32Exception or ArgumentException or InvalidOperationException)
+        {
+            MessageBox.Show(this,
+                LocalizationService.Format("Settings_TrayCleanupFailed", error.Message),
+                Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     private void HotkeyKey_KeyDown(object? sender, KeyEventArgs e)

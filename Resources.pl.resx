@@ -65,11 +65,11 @@ Jak używać:
 4. W sekcji Ochrona kliknij Włącz. Jeżeli na wybranym ekranie znajdują się już inne okna, WindowDeck pokaże je przed włączeniem ochrony. Każde z nich możesz przenieść na inny ekran, dodać przyciskiem + do Grupy prezentacji albo użyć Przenieś wszystkie do, aby przenieść wszystkie konfliktujące okna razem.
 5. Zatwierdź okno dialogowe. Ochrona jest teraz aktywna. Jeżeli na ekranie prezentacji pojawi się inne widoczne okno, którego nie ma w Grupie prezentacji, WindowDeck automatycznie przeniesie je na inny ekran.
 
-Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz używać ich na innych ekranach. W sekcji Ochrona kliknij Wyłącz, aby wyłączyć ochronę. Wyłączenie Trybu prezentacji czyści tymczasową Grupę prezentacji i wybór ekranu dla tej sesji; przeniesione wcześniej okna nie są automatycznie przenoszone z powrotem.</value></data>
+Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz używać ich na innych ekranach. W sekcji Ochrona kliknij Wyłącz, aby wyłączyć ochronę. Wyłączenie Trybu prezentacji czyści tymczasową Grupę prezentacji i wybór ekranu dla tej sesji; przeniesione wcześniej okna nie są automatycznie przenoszone z powrotem. W oknach Zapisane zestawy okien i Zapisz otwarte okna kolor systemowego paska tytułu jest dopasowany do wybranego motywu. Okno Przygotuj ekran prezentacji pozostaje nad WindowDeckiem, żeby można było wybrać działania dla okien bez przełączania aplikacji.</value></data>
   <data name="Help_TrayHeading" xml:space="preserve"><value>Działanie zasobnika</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>Przycisk X WindowDeck oraz Esc ukrywają panel. WindowDeck nadal działa w zasobniku. Aby zakończyć aplikację, użyj Zasobnik &gt; Zakończ.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Ustawienia</value></data>
-  <data name="Help_SettingsText" xml:space="preserve"><value>Ustawienia obejmują uruchamianie z systemem Windows, uruchamianie zminimalizowane do zasobnika, konfigurowalny globalny skrót, grupowanie według aplikacji, ikony aplikacji, numery ekranów, własną numerację ekranów z funkcją Identyfikuj ekrany, zminimalizowane okna, Wygląd (System, Jasny lub Ciemny) oraz Język (System, English lub Polski).</value></data>
+  <data name="Help_SettingsText" xml:space="preserve"><value>Ustawienia obejmują uruchamianie z systemem Windows, uruchamianie zminimalizowane do zasobnika, konfigurowalny globalny skrót, grupowanie według aplikacji, ikony aplikacji, numery ekranów, własną numerację ekranów z funkcją Identyfikuj ekrany, zminimalizowane okna, Wygląd (System, Jasny lub Ciemny) oraz Język (System, English lub Polski). W sekcji Konserwacja można ręcznie przejrzeć i usunąć stare wpisy ikon WindowDeck z paska zadań, po wykonaniu kopii zapasowej; bieżący wpis zostaje zachowany. W oknie Ustawienia przewijasz tylko listę opcji, a przyciski OK i Anuluj pozostają zawsze widoczne na dolnym pasku, nawet przy wielu monitorach lub małej wysokości ekranu.</value></data>
   <data name="About_Title" xml:space="preserve"><value>O WindowDeck</value></data>
   <data name="About_Version" xml:space="preserve"><value>Wersja {0}</value></data>
   <data name="About_Description" xml:space="preserve"><value>Lekka aplikacja dla systemu Windows do szybkiego znajdowania i przełączania się między otwartymi oknami.</value></data>
@@ -137,4 +137,82 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Flyout_CollapseAuxiliary" xml:space="preserve"><value>Ukryj dodatkowe okna dla {0} ({1})</value></data>
   <data name="Help_AuxiliaryHeading" xml:space="preserve"><value>Dodatkowe okna</value></data>
   <data name="Help_AuxiliaryText" xml:space="preserve"><value>Włącz Pokaż dodatkowe okna w Ustawieniach &gt; Lista okien, aby wyświetlać widoczne okna dialogowe i pływające okna narzędziowe z tytułem. Domyślnie opcja jest włączona; można ją wyłączyć w ustawieniach. Okna z potwierdzonym właścicielem w tym samym procesie pojawiają się z wcięciem pod jego oknem; strzałka zwija lub rozwija podgrupę. Kliknięcie tytułu aktywuje wybrane okno. Wyszukiwanie tymczasowo rozwija pasujące podgrupy i pokazuje okno właściciela jako kontekst. Okna bez potwierdzonego widocznego właściciela pozostają osobnymi wpisami. Panele osadzone lub zadokowane, okna bez tytułu oraz pasywne okna pomocnicze nie są uwzględniane. Zamykanie, minimalizacja, przenoszenie i dodawanie do grupy prezentacyjnej nadal dotyczą pojedynczego wybranego okna; aplikacja może przy tym zmienić również swoje powiązane okna. Stan zwinięcia jest pamiętany do zamknięcia WindowDeck.</value></data>
+  <data name="Settings_Maintenance" xml:space="preserve"><value>Konserwacja</value></data>
+  <data name="Settings_TrayCleanupButton" xml:space="preserve"><value>Usuń stare wpisy WindowDeck z paska zadań…</value></data>
+  <data name="Settings_TrayCleanupDialogTitle" xml:space="preserve"><value>Czyszczenie wpisów WindowDeck na pasku zadań</value></data>
+  <data name="Settings_TrayCleanupConfirm" xml:space="preserve"><value>Znaleziono {0} historycznych wpisów WindowDeck z innych lokalizacji programu. Sprawdź poniższe ścieżki. Wpis obecnie uruchomionej wersji zostanie zachowany. Przed usunięciem każdego wpisu zostanie wykonana kopia zapasowa rejestru. Odświeżenie listy przez Windows może wymagać wylogowania.</value></data>
+  <data name="Settings_TrayCleanupRemove" xml:space="preserve"><value>Usuń stare wpisy</value></data>
+  <data name="Settings_TrayCleanupNone" xml:space="preserve"><value>Nie znaleziono starych wpisów WindowDeck na pasku zadań. Wpis uruchomionej wersji zostaje zachowany.</value></data>
+  <data name="Settings_TrayCleanupSuccess" xml:space="preserve"><value>Usunięto {0} historycznych wpisów WindowDeck. Folder kopii zapasowych: {1}&#10;&#10;Jeśli stare wpisy są nadal widoczne w personalizacji paska zadań, wyloguj się i zaloguj ponownie do Windows.</value></data>
+  <data name="Settings_TrayCleanupFailed" xml:space="preserve"><value>Nie udało się wyczyścić starych wpisów paska zadań. {0}</value></data>
+  <data name="Sets_Button" xml:space="preserve"><value>Zestawy okien</value></data>
+  <data name="Sets_Title" xml:space="preserve"><value>Zapisane zestawy okien</value></data>
+  <data name="Sets_Introduction" xml:space="preserve"><value>Zapisz wybrane okna pod własną nazwą i później otwórz obsługiwane dokumenty oraz foldery.</value></data>
+  <data name="Sets_CaptureTitle" xml:space="preserve"><value>Zapisz otwarte okna</value></data>
+  <data name="Sets_Name" xml:space="preserve"><value>Nazwa zestawu</value></data>
+  <data name="Sets_DefaultName" xml:space="preserve"><value>Mój zestaw okien</value></data>
+  <data name="Sets_SelectAll" xml:space="preserve"><value>Zaznacz wszystkie</value></data>
+  <data name="Sets_DeselectAll" xml:space="preserve"><value>Odznacz wszystkie</value></data>
+  <data name="Sets_Unsupported" xml:space="preserve"><value>(nie można odtworzyć automatycznie)</value></data>
+  <data name="Sets_Save" xml:space="preserve"><value>Zapisz zestaw</value></data>
+  <data name="Sets_SaveCurrent" xml:space="preserve"><value>Zapisz obecne…</value></data>
+  <data name="Sets_Open" xml:space="preserve"><value>Otwórz zestaw</value></data>
+  <data name="Sets_Update" xml:space="preserve"><value>Aktualizuj zestaw…</value></data>
+  <data name="Sets_Rename" xml:space="preserve"><value>Zmień nazwę</value></data>
+  <data name="Sets_Delete" xml:space="preserve"><value>Usuń</value></data>
+  <data name="Sets_Close" xml:space="preserve"><value>Zamknij</value></data>
+  <data name="Sets_NoSets" xml:space="preserve"><value>Brak zapisanych zestawów. Kliknij „Zapisz obecne”, aby utworzyć pierwszy.</value></data>
+  <data name="Sets_WindowsCount" xml:space="preserve"><value>Liczba okien: {0}</value></data>
+  <data name="Sets_NameRequired" xml:space="preserve"><value>Podaj nazwę zestawu.</value></data>
+  <data name="Sets_NoSelection" xml:space="preserve"><value>Zaznacz przynajmniej jedno okno.</value></data>
+  <data name="Sets_NoWindows" xml:space="preserve"><value>Nie ma okien, które można zapisać.</value></data>
+  <data name="Sets_NameExists" xml:space="preserve"><value>Zestaw o takiej nazwie już istnieje. Wpisz inną nazwę lub zaktualizuj istniejący zestaw.</value></data>
+  <data name="Sets_ConfirmUpdate" xml:space="preserve"><value>Zastąpić okna zapisane w zestawie „{0}” aktualnie wybranymi?</value></data>
+  <data name="Sets_ConfirmDelete" xml:space="preserve"><value>Usunąć zapisany zestaw „{0}”? Nie zamknie to żadnych otwartych okien.</value></data>
+  <data name="Sets_RestoreSummary" xml:space="preserve"><value>Wysłano polecenia otwarcia: {0}&#10;Już otwarte lub wcześniej uruchomione: {1}&#10;Nieobsługiwane automatycznie: {2}&#10;Brakujące pliki lub foldery: {3}&#10;Błędy uruchamiania: {4}&#10;&#10;Nie zamknięto żadnego z obecnie otwartych okien. Otwieranie dokumentów może jeszcze trwać.</value></data>
+  <data name="Sets_Error" xml:space="preserve"><value>Nie udało się wykonać operacji na zestawach okien. {0}</value></data>
+  <data name="Help_SavedSetsHeading" xml:space="preserve"><value>Zapisane zestawy okien</value></data>
+  <data name="Help_SavedSetsText" xml:space="preserve"><value>Kliknij Zestawy okien w głównym panelu WindowDeck, aby zapisać wiele nazwanych zestawów. Po wybraniu Zapisz obecne wszystkie wykryte okna są domyślnie zaznaczone; możesz użyć Zaznacz wszystkie, Odznacz wszystkie lub wybierać pojedyncze okna. Później wybierz zestaw i kliknij Otwórz zestaw. Aktualne okna nie są zamykane. WindowDeck może ponownie otworzyć rozpoznane foldery Eksploratora i obsługiwane lokalne dokumenty Excel, Word i PowerPoint, gdy uda się ustalić ich prawdziwe ścieżki. Karty przeglądarki, niezapisana praca, foldery wirtualne i nierozpoznane okna nie mogą zostać wiarygodnie odtworzone i są oznaczone jako nieobsługiwane. Funkcja nie przywraca niezapisanych zmian, dokładnego rozmieszczenia okien ani wewnętrznego stanu programów. Zestawy są przechowywane lokalnie i można je aktualizować, zmieniać ich nazwy lub usuwać. Zestawy okien mogą ponownie otworzyć rozpoznane pliki i foldery. W przypadku Notatnika, czytników PDF i innych aplikacji możesz przy zapisywaniu wskazać konkretny plik, jeśli WindowDeck nie wykryje jego ścieżki. Dla przeglądarek i innych okien bez rozpoznanego dokumentu można ponownie uruchomić sam program, bez przywracania kart. Jeśli czytnik PDF lub inny program pozwala otwierać każdy plik w osobnym oknie, warto włączyć tę opcję w jego ustawieniach; WindowDeck nie może tego wymusić. Brakujące pliki zostaną zgłoszone, a pozostałe elementy zestawu będą nadal otwierane. Przycisk „Zamknij zestaw” wysyła zwykłe polecenia zamknięcia tylko do jednoznacznie rozpoznanych, aktualnie otwartych dokumentów i folderów z wybranego zestawu. Jeśli program ma niezapisane zmiany, może zapytać o ich zapisanie; wybranie Anuluj pozostawi okno otwarte. Zestaw nie zostanie usunięty. Programy zapisane tylko jako „tylko program” są pomijane, aby nie zamykać innych kart. W programach z kartami zamknięcie okna może jednak objąć więcej niż jedną kartę, dlatego WindowDeck wymaga potwierdzenia. Podczas Aktualizuj zestaw przy pozycjach, które już należą do wybranego zestawu, widać ikonę dyskietki. Są one domyślnie zaznaczone także wtedy, gdy dokumenty lub foldery są zamknięte. Nowe okna są domyślnie odznaczone i można je zaznaczyć, aby je dodać. Odznaczenie pozycji z dyskietką oznacza świadome usunięcie jej z zestawu dopiero po zapisaniu zmian; przycisk Anuluj pozostawia zestaw bez zmian. Zielony haczyk i czerwony X informują osobno o możliwości przywrócenia danej pozycji. Nazwę zestawu można zmienić podczas Aktualizuj zestaw, bez osobnej funkcji Zmień nazwę.</value></data>
+  <data name="Sets_ChooseFile" xml:space="preserve"><value>Wskaż plik…</value></data>
+  <data name="Sets_AllFilesFilter" xml:space="preserve"><value>Wszystkie pliki (*.*)|*.*</value></data>
+  <data name="Sets_UnsafeFile" xml:space="preserve"><value>Wskaż dokument, a nie program, skrót lub skrypt wykonywalny.</value></data>
+  <data name="Sets_ProgramOnly" xml:space="preserve"><value>(tylko program — bez kart)</value></data>
+  <data name="Sets_DocumentLinked" xml:space="preserve"><value>(dokument)</value></data>
+  <data name="Sets_MissingFile" xml:space="preserve"><value>Nie znaleziono pliku lub folderu: {0}</value></data>
+  <data name="Sets_MissingProgram" xml:space="preserve"><value>Nie znaleziono programu: {0}</value></data>
+  <data name="Sets_OpenFailed" xml:space="preserve"><value>Nie udało się otworzyć {0}: {1}</value></data>
+  <data name="Sets_ChooseFileExplanation" xml:space="preserve"><value>WindowDeck próbuje sam rozpoznać konkretne pliki. „Wskaż plik…” służy tylko wtedy, gdy nie udało się ustalić ścieżki dokumentu. „Tylko program” nie przywraca kart.</value></data>
+  <data name="Sets_ChooseFileHelp" xml:space="preserve"><value>Wskaż konkretny dokument do ponownego otwarcia. Użyj tylko wtedy, gdy nie został rozpoznany automatycznie.</value></data>
+  <data name="Sets_DocumentPathRequired" xml:space="preserve"><value>(nie znaleziono ścieżki dokumentu — wskaż plik)</value></data>
+  <data name="Sets_RestoreNeedsDocumentPath" xml:space="preserve"><value>Nie przywrócono dokumentu: {0}. Zaktualizuj zestaw i użyj „Wskaż plik…”, aby przypisać właściwy dokument.</value></data>
+  <data name="Sets_UnresolvedSaveConfirmation" xml:space="preserve"><value>Nie udało się ustalić ścieżki pliku dla {0} zaznaczonych dokumentów. Nie będzie można ich przywrócić z tego zestawu. Użyj „Wskaż plik…” lub odznacz te pozycje. Zapisać zestaw mimo tego?</value></data>
+  <data name="Sets_StatusReady" xml:space="preserve"><value>Gotowe do ponownego otwarcia</value></data>
+  <data name="Sets_StatusMissing" xml:space="preserve"><value>Nie można automatycznie przywrócić — wskaż plik</value></data>
+  <data name="Sets_StatusProgramOnly" xml:space="preserve"><value>Program można ponownie uruchomić, ale jego karty i dokumenty nie zostaną przywrócone</value></data>
+  <data name="Sets_UpdateCaptureTitle" xml:space="preserve"><value>Aktualizuj zestaw okien</value></data>
+  <data name="Sets_UpdateInstructions" xml:space="preserve"><value>Dyskietka oznacza okno, dokument lub folder już zapisany w tym zestawie. Takie pozycje są domyślnie zaznaczone, nawet jeśli obecnie są zamknięte. Nowe okna są odznaczone — zaznacz je, aby dodać. Odznaczenie zapisanej pozycji spowoduje jej usunięcie z zestawu po zatwierdzeniu zmian. Zielony haczyk lub czerwony X pokazuje możliwość przywrócenia, a nie to, czy pozycja należy do zestawu.</value></data>
+  <data name="Sets_SavedAndOpen" xml:space="preserve"><value>(zapisane, otwarte)</value></data>
+  <data name="Sets_SavedButClosed" xml:space="preserve"><value>(zapisane, obecnie zamknięte)</value></data>
+  <data name="Sets_NewNotSaved" xml:space="preserve"><value>(nowe — zaznacz, aby dodać)</value></data>
+  <data name="Sets_SaveChanges" xml:space="preserve"><value>Zapisz zmiany</value></data>
+  <data name="Sets_ConfirmUpdateChanges" xml:space="preserve"><value>Zaktualizować zestaw „{0}”?&#10;Nowe pozycje: {1}&#10;Usuwane pozycje: {2}&#10;&#10;Pozostałe zapisane okna, także te obecnie zamknięte, zostaną zachowane.</value></data>
+  <data name="Sets_ColumnApplication" xml:space="preserve"><value>Program</value></data>
+  <data name="Sets_ColumnWindow" xml:space="preserve"><value>Dokument / okno</value></data>
+  <data name="Sets_ColumnPath" xml:space="preserve"><value>Ścieżka pliku / programu</value></data>
+  <data name="Sets_ColumnStatus" xml:space="preserve"><value>Sposób odtwarzania</value></data>
+  <data name="Sets_CloseSet" xml:space="preserve"><value>Zamknij zestaw</value></data>
+  <data name="Sets_CloseSetConfirm" xml:space="preserve"><value>Zamknąć {1} otwartych okien należących do zestawu „{0}”?&#10;&#10;Pominięte pozycje zestawu: {2}.&#10;&#10;Programy mogą zapytać o zapisanie niezapisanych zmian. Wybranie „Anuluj” w oknie programu pozostawi dany dokument otwarty. W programach z kartami zamknięcie okna może objąć również pozostałe karty w tym samym oknie — jeśli chcesz je zachować, wybierz Nie. Nie będą zamykane nierozpoznane dokumenty ani programy zapisane tylko jako „program bez kart”.</value></data>
+  <data name="Sets_CloseSetMore" xml:space="preserve"><value>…i jeszcze {0} okien.</value></data>
+  <data name="Sets_CloseSetNoMatches" xml:space="preserve"><value>Nie znaleziono otwartych okien dokumentów ani folderów, które można bezpiecznie dopasować do zestawu. Pominięte pozycje: {0}. Nie zamknięto żadnych okien.</value></data>
+  <data name="Sets_CloseSetSummary" xml:space="preserve"><value>Wysłano prośby o zamknięcie: {0}&#10;Nie udało się wysłać prośby: {1}&#10;Okna niedostępne lub zmienione przed zamknięciem: {2}&#10;Pominięte zapisane pozycje: {3}&#10;&#10;To liczba wysłanych poleceń, nie potwierdzonych zamknięć. Jeśli dokument ma niezapisane zmiany, jego program może zapytać o zapis. Możesz anulować zamknięcie. Zestaw pozostaje zapisany.</value></data>
+  <data name="Sets_PreviewCollapseHelp" xml:space="preserve"><value>Kliknij, aby zwinąć lub rozwinąć grupę okien.</value></data>
+  <data name="Sets_PreviewExpanded" xml:space="preserve"><value>grupa rozwinięta</value></data>
+  <data name="Sets_PreviewCollapsed" xml:space="preserve"><value>grupa zwinięta</value></data>
+  <data name="Sets_PreviewNoPath" xml:space="preserve"><value>Nie ustalono ścieżki dokumentu</value></data>
+  <data name="Sets_PreviewProgramOnly" xml:space="preserve"><value>Tylko program</value></data>
+  <data name="Sets_PreviewUnavailable" xml:space="preserve"><value>Nie można odtworzyć</value></data>
+  <data name="Sets_PreviewReady" xml:space="preserve"><value>Gotowe</value></data>
+  <data name="Sets_CopyPath" xml:space="preserve"><value>Kopiuj pełną ścieżkę</value></data>
+  <data name="Sets_AlreadySaved" xml:space="preserve"><value>Już zapisane w zestawie</value></data>
+  <data name="Sets_AlreadySavedHelp" xml:space="preserve"><value>Ikona dyskietki: ta pozycja należy już do zestawu, nawet jeśli jej okno jest teraz zamknięte. Pozostaje zaznaczona; odznaczenie oznacza usunięcie podczas zapisu zmian.</value></data>
 </root>

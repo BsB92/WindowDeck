@@ -10,6 +10,7 @@ namespace WindowDeck;
 internal partial class Form1 : Form
 {
     private const int DefaultPanelWidth = 680;
+    private const long NewWindowForegroundGraceMilliseconds = 15000;
     private const int HtCaption = 2;
     private const int HtClient = 1;
     private const int HtLeft = 10;
@@ -36,6 +37,7 @@ internal partial class Form1 : Form
     private readonly HashSet<WindowIdentity> collapsedWindowIds = [];
     private readonly HashSet<WindowIdentity> presentationWindowIds = [];
     private readonly Dictionary<WindowIdentity, WindowRowCacheEntry> windowRowCache = [];
+    private readonly Dictionary<nint, long> recentlyOpenedWindowHandles = [];
     private ContextMenuStrip groupContextMenu = null!;
     private ToolStripMenuItem collapseAllItem = null!;
     private ToolStripMenuItem expandAllItem = null!;
@@ -49,6 +51,7 @@ internal partial class Form1 : Form
     private WindowEventMonitor? windowEventMonitor;
     private bool isClosing;
     private bool monitoringStarted;
+    private bool yieldingTopmostToExternal;
     private bool allowApplicationExit;
     private int anchoredOuterRight;
     private int anchoredOuterTop;
@@ -77,6 +80,7 @@ internal partial class Form1 : Form
         settingsButton.Click += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
         helpButton.Click += (_, _) => HelpRequested?.Invoke(this, EventArgs.Empty);
         presentationModeButton.Click += PresentationModeButton_Click;
+        savedSetsButton.Click += SavedSetsButton_Click;
         InitializeGroupContextMenu();
         ApplyLocalization();
         ApplyTheme();
@@ -125,6 +129,18 @@ internal partial class Form1 : Form
         base.OnShown(e);
         RefreshWindowList();
         EnsureMonitoringStarted();
+        EnsureTopmostZOrder();
+    }
+
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        if (!yieldingTopmostToExternal && Visible)
+        {
+            // Only explicitly returning to WindowDeck restores its raised layer.
+            TopMost = true;
+            EnsureTopmostZOrder();
+        }
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -168,6 +184,7 @@ internal partial class Form1 : Form
         ClearWindowRowCache();
         windowEventMonitor?.Dispose();
         windowEventMonitor = null;
+        recentlyOpenedWindowHandles.Clear();
         base.OnFormClosing(e);
     }
 
@@ -192,6 +209,58 @@ internal partial class Form1 : Form
         RefreshWindowList();
         Show();
         Activate();
+        EnsureTopmostZOrder();
+    }
+
+    // A new foreground window must never need permanent TopMost just to rise
+    // above WindowDeck. Instead release our own application's TopMost forms,
+    // including Saved sets and its nested Save current dialog.
+    internal static void YieldTopmostForExternalWindows()
+    {
+        foreach (Form form in Application.OpenForms.Cast<Form>().ToArray().Reverse())
+        {
+            // Never touch other dialogs (such as Presentation Mode's
+            // conflict prompt), even if those dialogs also use TopMost.
+            if ((form is Form1 or SavedWindowSetsForm or SavedWindowSetCaptureForm)
+                && !form.IsDisposed && !form.Disposing && form.TopMost)
+            {
+                form.TopMost = false;
+            }
+        }
+    }
+
+    private void YieldTopmostForNewForegroundWindow()
+    {
+        if (!Visible)
+        {
+            return;
+        }
+
+        yieldingTopmostToExternal = true;
+        try
+        {
+            YieldTopmostForExternalWindows();
+        }
+        finally
+        {
+            yieldingTopmostToExternal = false;
+        }
+    }
+
+    private void EnsureTopmostZOrder()
+    {
+        if (!Visible || !IsHandleCreated)
+        {
+            return;
+        }
+
+        // TopMost is also set in the designer. Reassert the Z-order when opening
+        // the flyout or activating an external window without stealing focus.
+        NativeMethods.SetWindowPos(
+            Handle,
+            NativeMethods.HwndTopMost,
+            0, 0, 0, 0,
+            NativeMethods.SwpNoMove | NativeMethods.SwpNoSize | NativeMethods.SwpNoActivate);
     }
 
     public void ExitApplication()
@@ -285,6 +354,7 @@ internal partial class Form1 : Form
         switch (result)
         {
             case WindowActivationResult.Activated:
+                EnsureTopmostZOrder();
                 break;
             case WindowActivationResult.WindowUnavailable:
                 ShowActivationFailure(
@@ -333,6 +403,45 @@ internal partial class Form1 : Form
             MessageBoxIcon.Information);
     }
 
+    private void AllowNewlyOpenedForegroundWindow(IReadOnlyList<WindowInfo> snapshot)
+    {
+        long now = Environment.TickCount64;
+        HashSet<nint> present = snapshot.Select(window => window.Handle).ToHashSet();
+
+        // The initial snapshot contains existing windows, not newly opened ones.
+        if (currentSnapshotInitialized)
+        {
+            HashSet<nint> previous = currentSnapshot
+                .Select(window => window.Handle).ToHashSet();
+            foreach (WindowInfo window in snapshot)
+            {
+                if (!previous.Contains(window.Handle))
+                {
+                    recentlyOpenedWindowHandles[window.Handle] = now;
+                }
+            }
+        }
+
+        foreach ((nint handle, long started) in recentlyOpenedWindowHandles.ToArray())
+        {
+            if (!present.Contains(handle)
+                || now - started > NewWindowForegroundGraceMilliseconds)
+            {
+                recentlyOpenedWindowHandles.Remove(handle);
+            }
+        }
+
+        nint foreground = NativeMethods.GetForegroundWindow();
+        if (foreground != 0
+            && recentlyOpenedWindowHandles.Remove(foreground)
+            && Visible)
+        {
+            // Foreground changed to a new user-facing external window.
+            // We lower OUR own TopMost windows rather than modifying the app.
+            YieldTopmostForNewForegroundWindow();
+        }
+    }
+
     private void RefreshWindowList(bool force = false)
     {
         try
@@ -340,6 +449,7 @@ internal partial class Form1 : Form
             IReadOnlyList<WindowInfo> updatedSnapshot = windowEnumerator.Enumerate(settings);
             updatedSnapshot = EnforcePresentationReservation(updatedSnapshot);
             PrunePresentationWindows(updatedSnapshot);
+            AllowNewlyOpenedForegroundWindow(updatedSnapshot);
             if (!force && currentSnapshotInitialized && currentSnapshot.SequenceEqual(updatedSnapshot))
             {
                 return;
@@ -365,18 +475,10 @@ internal partial class Form1 : Form
     private void RenderWindowList()
     {
         IReadOnlyList<MonitorDisplay> updatedDisplays = monitorDetector.GetDisplays(settings);
-        if (!displays.SequenceEqual(updatedDisplays))
-        {
-            displays = updatedDisplays;
-            ClearWindowRowCache();
-        }
-        else
-        {
-            displays = updatedDisplays;
-        }
+        bool displaysChanged = !displays.SequenceEqual(updatedDisplays);
+        displays = updatedDisplays;
 
         collapsedWindowIds.IntersectWith(currentSnapshot.Select(WindowIdentity.From));
-        PruneWindowRowCache();
         IReadOnlyList<WindowInfo> presentationWindows = presentationModeEnabled
             ? currentSnapshot
                 .Where(window => presentationWindowIds.Contains(WindowIdentity.From(window)))
@@ -401,26 +503,25 @@ internal partial class Form1 : Form
         windowListPanel.BeginUpdate();
         try
         {
-            HashSet<Control> cachedRows = windowRowCache.Values
-                .Select(entry => entry.Control)
-                .ToHashSet<Control>(ReferenceEqualityComparer.Instance);
-            foreach (Control control in windowListPanel.Controls.Cast<Control>().ToArray())
+            // Build a complete ordered list before replacing the visible controls.
+            // Reusing cached rows during incremental additions can otherwise leave
+            // the flow layout temporarily mixing old and new group positions.
+            if (displaysChanged)
             {
-                if (!cachedRows.Contains(control))
-                {
-                    control.Dispose();
-                }
+                ClearWindowRowCache();
             }
 
-            windowListPanel.Controls.Clear();
+            PruneWindowRowCache();
+            List<Control> orderedControls = [];
 
             if (presentationModeEnabled)
             {
-                windowListPanel.Controls.Add(CreatePresentationGroupHeader(presentationWindows));
-                AddWindowFamilies(presentationWindows, presentationMember: true, searchActive: false);
+                orderedControls.Add(CreatePresentationGroupHeader(presentationWindows));
+                AddWindowFamilies(presentationWindows, presentationMember: true,
+                    searchActive: false, orderedControls: orderedControls);
             }
 
-            windowListPanel.Controls.Add(CreateColumnHeader());
+            orderedControls.Add(CreateColumnHeader());
 
             if (visibleCount == 0 && !presentationModeEnabled)
             {
@@ -435,7 +536,7 @@ internal partial class Form1 : Form
                     TextAlign = ContentAlignment.MiddleCenter
                 };
                 emptyLabel.ForeColor = palette.SecondaryForeground;
-                windowListPanel.Controls.Add(emptyLabel);
+                orderedControls.Add(emptyLabel);
             }
             else
             {
@@ -444,7 +545,7 @@ internal partial class Form1 : Form
                     if (settings.GroupByApplication)
                     {
                         bool collapsed = collapsedApplicationIds.Contains(group.Key);
-                        windowListPanel.Controls.Add(CreateGroupHeader(
+                        orderedControls.Add(CreateGroupHeader(
                             group.Key,
                             group.First().ApplicationName,
                             collapsed && !searchActive,
@@ -454,10 +555,25 @@ internal partial class Form1 : Form
                             continue;
                         }
                     }
-                    AddWindowFamilies(group.ToArray(), presentationMember: false, searchActive);
+
+                    AddWindowFamilies(group.ToArray(), presentationMember: false,
+                        searchActive: searchActive, orderedControls: orderedControls);
                 }
             }
 
+            HashSet<Control> cachedRows = windowRowCache.Values
+                .Select(entry => entry.Control)
+                .ToHashSet<Control>(ReferenceEqualityComparer.Instance);
+            foreach (Control control in windowListPanel.Controls.Cast<Control>().ToArray())
+            {
+                if (!cachedRows.Contains(control))
+                {
+                    control.Dispose();
+                }
+            }
+
+            windowListPanel.Controls.Clear();
+            windowListPanel.Controls.AddRange(orderedControls.ToArray());
         }
         finally
         {
@@ -470,7 +586,8 @@ internal partial class Form1 : Form
     private void AddWindowFamilies(
         IReadOnlyList<WindowInfo> windows,
         bool presentationMember,
-        bool searchActive)
+        bool searchActive,
+        ICollection<Control> orderedControls)
     {
         HashSet<WindowIdentity> visibleIds = windows.Select(WindowIdentity.From).ToHashSet();
         ILookup<WindowIdentity, WindowInfo> auxiliaryWindows = windows
@@ -484,13 +601,13 @@ internal partial class Form1 : Form
             WindowIdentity identity = WindowIdentity.From(window);
             WindowInfo[] children = auxiliaryWindows[identity].ToArray();
             bool collapsed = !searchActive && collapsedWindowIds.Contains(identity);
-            windowListPanel.Controls.Add(GetOrCreateWindowRow(
+            orderedControls.Add(GetOrCreateWindowRow(
                 window, presentationMember, children.Length, collapsed));
             if (!collapsed)
             {
                 foreach (WindowInfo child in children)
                 {
-                    windowListPanel.Controls.Add(GetOrCreateWindowRow(child, presentationMember));
+                    orderedControls.Add(GetOrCreateWindowRow(child, presentationMember));
                 }
             }
         }
@@ -1170,18 +1287,16 @@ internal partial class Form1 : Form
             return;
         }
 
-        presentationModeButton.BackColor = presentationModeEnabled
-            ? ActiveButtonBackColor
-            : palette.RaisedSurface;
-        presentationModeButton.ForeColor = presentationModeEnabled
-            ? ActiveButtonForeColor
-            : ActiveButtonBackColor;
-        presentationModeButton.FlatAppearance.BorderColor = ActiveButtonBackColor;
-        presentationModeButton.FlatAppearance.BorderSize = 1;
-        presentationModeButton.FlatAppearance.MouseOverBackColor = presentationModeEnabled
-            ? ActiveButtonBackColor
-            : palette.Hover;
-        presentationModeButton.FlatAppearance.MouseDownBackColor = palette.Pressed;
+        // Match the Saved sets button when idle, while keeping an obvious
+        // active state for Presentation Mode.
+        ThemeManager.StyleButton(presentationModeButton, palette);
+        if (presentationModeEnabled)
+        {
+            presentationModeButton.BackColor = ActiveButtonBackColor;
+            presentationModeButton.ForeColor = ActiveButtonForeColor;
+            presentationModeButton.FlatAppearance.BorderColor = ActiveButtonBackColor;
+            presentationModeButton.FlatAppearance.MouseOverBackColor = ActiveButtonBackColor;
+        }
     }
 
     private void TryActivatePresentationProtection()
@@ -1342,6 +1457,23 @@ internal partial class Form1 : Form
         }
     }
 
+    private void SavedSetsButton_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            using SavedWindowSetsForm dialog = new(settings, Bounds, Screen.FromControl(this).WorkingArea);
+            dialog.ShowDialog(this);
+            RefreshWindowList(force: true);
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            MessageBox.Show(this,
+                LocalizationService.Format("Sets_Error", error.Message),
+                LocalizationService.Get("Sets_Title"),
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
     private void ApplyTheme()
     {
         palette = ThemeManager.Resolve(settings.Theme);
@@ -1353,14 +1485,11 @@ internal partial class Form1 : Form
         windowListPanel.ForeColor = palette.Foreground;
         bottomBar.BackColor = palette.RaisedSurface;
         topBar.BackColor = palette.Background;
-        presentationModeButton.BackColor = palette.RaisedSurface;
         helpButton.BackColor = palette.RaisedSurface;
         settingsButton.BackColor = palette.RaisedSurface;
-        presentationModeButton.ForeColor = palette.SecondaryForeground;
         helpButton.ForeColor = palette.Foreground;
         settingsButton.ForeColor = palette.Foreground;
-        presentationModeButton.FlatAppearance.BorderColor = palette.Border;
-        presentationModeButton.FlatAppearance.BorderSize = 1;
+        ThemeManager.StyleButton(savedSetsButton, palette);
         UpdatePresentationModeVisual();
         helpButton.FlatAppearance.BorderColor = palette.SecondaryForeground;
         settingsButton.FlatAppearance.BorderColor = palette.SecondaryForeground;
@@ -1378,6 +1507,7 @@ internal partial class Form1 : Form
         Text = LocalizationService.Get("App_Title");
         searchTextBox.PlaceholderText = LocalizationService.Get("Flyout_Search");
         presentationModeButton.Text = LocalizationService.Get("Flyout_PresentationMode");
+        savedSetsButton.Text = LocalizationService.Get("Sets_Button");
         helpButton.Text = "?";
         settingsButton.Text = "\uE713";
         helpButton.AccessibleName = LocalizationService.Get("Tray_Help");
@@ -1385,6 +1515,7 @@ internal partial class Form1 : Form
         toolTip.SetToolTip(helpButton, helpButton.AccessibleName);
         toolTip.SetToolTip(settingsButton, settingsButton.AccessibleName);
         toolTip.SetToolTip(presentationModeButton, LocalizationService.Get("Flyout_PresentationMode"));
+        toolTip.SetToolTip(savedSetsButton, LocalizationService.Get("Sets_Title"));
         collapseAllItem.Text = LocalizationService.Get("Flyout_CollapseAll");
         expandAllItem.Text = LocalizationService.Get("Flyout_ExpandAll");
     }

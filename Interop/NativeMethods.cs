@@ -8,6 +8,7 @@ internal static class NativeMethods
     internal const int DwmaCloaked = 14;
     internal const int DwmaExtendedFrameBounds = 9;
     internal const int DwmaUseImmersiveDarkMode = 20;
+    internal const uint EventSystemForeground = 0x0003;
     internal const uint EventObjectCreate = 0x8000;
     internal const uint EventObjectDestroy = 0x8001;
     internal const uint EventObjectShow = 0x8002;
@@ -35,7 +36,10 @@ internal static class NativeMethods
     internal const int SwMinimize = 6;
     internal const int SwMaximize = 3;
     internal const uint SwpNoActivate = 0x0010;
+    internal const uint SwpNoMove = 0x0002;
+    internal const uint SwpNoSize = 0x0001;
     internal const uint SwpNoZOrder = 0x0004;
+    internal static readonly nint HwndTopMost = -1;
     internal const uint WmSetRedraw = 0x000B;
     internal const uint WmSysCommand = 0x0112;
     internal static readonly nint ScClose = 0xF060;
@@ -428,6 +432,15 @@ internal static class NativeMethods
         int attribute,
         out Rect attributeValue,
         int attributeSize);
+
+    [DllImport("ole32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int CLSIDFromProgID(
+        [MarshalAs(UnmanagedType.LPWStr)] string progId, out Guid clsid);
+
+    [DllImport("oleaut32.dll")]
+    internal static extern int GetActiveObject(
+        ref Guid clsid, nint reserved,
+        [MarshalAs(UnmanagedType.IUnknown)] out object result);
 
     internal static nint GetWindowLongPtr(nint windowHandle, int index)
     {

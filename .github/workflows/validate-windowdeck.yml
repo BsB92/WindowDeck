@@ -1,0 +1,21 @@
+name: Validate WindowDeck on Windows
+
+on:
+  pull_request:
+  push:
+    branches:
+      - feature/v1.4-integrated-window-sets
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore WindowDeck.csproj
+      - name: Build
+        run: dotnet build WindowDeck.csproj --configuration Release --no-restore

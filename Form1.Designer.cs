@@ -8,6 +8,7 @@ namespace WindowDeck
         private BufferedFlowLayoutPanel windowListPanel = null!;
         private Panel bottomBar = null!;
         private Button presentationModeButton = null!;
+        private Button savedSetsButton = null!;
         private Button helpButton = null!;
         private Button settingsButton = null!;
         private ToolTip toolTip = null!;
@@ -33,6 +34,7 @@ namespace WindowDeck
             windowListPanel = new BufferedFlowLayoutPanel();
             bottomBar = new Panel();
             presentationModeButton = new Button();
+            savedSetsButton = new Button();
             helpButton = new Button();
             settingsButton = new Button();
             toolTip = new ToolTip(components);
@@ -86,6 +88,7 @@ namespace WindowDeck
             //
             bottomBar.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             bottomBar.Controls.Add(presentationModeButton);
+            bottomBar.Controls.Add(savedSetsButton);
             bottomBar.Location = new Point(16, 696);
             bottomBar.Name = "bottomBar";
             bottomBar.Size = new Size(648, 42);
@@ -98,6 +101,11 @@ namespace WindowDeck
             presentationModeButton.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             presentationModeButton.Location = new Point(0, 4);
             presentationModeButton.Size = new Size(190, 34);
+            savedSetsButton.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            savedSetsButton.FlatStyle = FlatStyle.Flat;
+            savedSetsButton.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            savedSetsButton.Location = new Point(202, 4);
+            savedSetsButton.Size = new Size(180, 34);
             helpButton.Anchor = AnchorStyles.None;
             helpButton.FlatStyle = FlatStyle.Flat;
             helpButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);

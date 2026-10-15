@@ -65,11 +65,11 @@ How to use it:
 4. Under Protection, click Enable. If other windows are already on that screen, WindowDeck shows them before protection is enabled. Move each one to another screen, add it to the Presentation group with +, or use Move all to to move all conflicting windows together.
 5. Confirm the dialog. Protection is now active. If another visible window that is not in the Presentation group appears on the presentation screen, WindowDeck automatically moves it to another screen.
 
-The allowed windows do not have to stay on the presentation screen; they may still be used on other screens. Under Protection, click Disable to turn protection off. Turning Presentation Mode off clears the temporary Presentation group and screen selection for that session; windows that were moved are not automatically moved back.</value></data>
+The allowed windows do not have to stay on the presentation screen; they may still be used on other screens. Under Protection, click Disable to turn protection off. Turning Presentation Mode off clears the temporary Presentation group and screen selection for that session; windows that were moved are not automatically moved back. Saved window sets and Save current use a native title bar matching the selected light/dark theme. Prepare presentation screen appears above the WindowDeck flyout so you can use its modal controls immediately.</value></data>
   <data name="Help_TrayHeading" xml:space="preserve"><value>Tray behavior</value></data>
   <data name="Help_TrayText" xml:space="preserve"><value>WindowDeck's X button and Esc hide the flyout. WindowDeck keeps running in the tray. To shut down the application, use Tray &gt; Exit.</value></data>
   <data name="Help_SettingsHeading" xml:space="preserve"><value>Settings</value></data>
-  <data name="Help_SettingsText" xml:space="preserve"><value>Settings includes Start with Windows, Start minimized to tray, the configurable global hotkey, grouping by application, application icons, screen numbers, custom Screen numbering with Identify screens, minimized windows, Appearance (System, Light, or Dark), and Language (System, English, or Polski).</value></data>
+  <data name="Help_SettingsText" xml:space="preserve"><value>Settings includes Start with Windows, Start minimized to tray, the configurable global hotkey, grouping by application, application icons, screen numbers, custom Screen numbering with Identify screens, minimized windows, Appearance (System, Light, or Dark), and Language (System, English, or Polski). Maintenance also provides a manual button to review and remove old WindowDeck taskbar icon entries with a backup; the current executable is preserved. In Settings, only the options scroll; OK and Cancel stay visible in a separate fixed footer even with multiple monitors or limited display height.</value></data>
   <data name="About_Title" xml:space="preserve"><value>About WindowDeck</value></data>
   <data name="About_Version" xml:space="preserve"><value>Version {0}</value></data>
   <data name="About_Description" xml:space="preserve"><value>A lightweight Windows utility for quickly finding and switching between open windows.</value></data>
@@ -137,4 +137,82 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Flyout_CollapseAuxiliary" xml:space="preserve"><value>Hide auxiliary windows for {0} ({1})</value></data>
   <data name="Help_AuxiliaryHeading" xml:space="preserve"><value>Auxiliary windows</value></data>
   <data name="Help_AuxiliaryText" xml:space="preserve"><value>Enable Show auxiliary windows in Settings &gt; Window list to include visible dialogs and floating tool windows with a title. This option is on by default and can be disabled in Settings. Windows with a confirmed owner in the same process appear indented below that owner; use its arrow to collapse or expand the subgroup. Clicking the title activates the selected window. Search temporarily expands matching subgroups and retains the owner as context. Windows without a confirmed visible owner remain separate entries. Embedded or docked panels, untitled windows, and passive helper windows are not included. Close, minimize, move, and Presentation membership still apply to the individual selected window; the application may also affect its owned windows. Collapse state lasts until WindowDeck exits.</value></data>
+  <data name="Settings_Maintenance" xml:space="preserve"><value>Maintenance</value></data>
+  <data name="Settings_TrayCleanupButton" xml:space="preserve"><value>Remove old WindowDeck taskbar entries…</value></data>
+  <data name="Settings_TrayCleanupDialogTitle" xml:space="preserve"><value>Clean up WindowDeck taskbar entries</value></data>
+  <data name="Settings_TrayCleanupConfirm" xml:space="preserve"><value>Found {0} historical WindowDeck tray entries from other executable locations. Review the paths below. The current executable entry will be kept. Every selected registry entry will be backed up before removal. Windows may need a sign-out for the list to refresh.</value></data>
+  <data name="Settings_TrayCleanupRemove" xml:space="preserve"><value>Remove old entries</value></data>
+  <data name="Settings_TrayCleanupNone" xml:space="preserve"><value>No old WindowDeck taskbar entries were found. The currently running copy is preserved.</value></data>
+  <data name="Settings_TrayCleanupSuccess" xml:space="preserve"><value>Removed {0} historical WindowDeck entries. Backup folder: {1}&#10;&#10;Sign out of Windows and sign back in if Taskbar personalization still shows stale entries.</value></data>
+  <data name="Settings_TrayCleanupFailed" xml:space="preserve"><value>The old taskbar entries could not be cleaned up. {0}</value></data>
+  <data name="Sets_Button" xml:space="preserve"><value>Saved sets</value></data>
+  <data name="Sets_Title" xml:space="preserve"><value>Saved window sets</value></data>
+  <data name="Sets_Introduction" xml:space="preserve"><value>Save a named selection of windows, then reopen supported documents and folders later.</value></data>
+  <data name="Sets_CaptureTitle" xml:space="preserve"><value>Save current windows</value></data>
+  <data name="Sets_Name" xml:space="preserve"><value>Set name</value></data>
+  <data name="Sets_DefaultName" xml:space="preserve"><value>My window set</value></data>
+  <data name="Sets_SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="Sets_DeselectAll" xml:space="preserve"><value>Deselect all</value></data>
+  <data name="Sets_Unsupported" xml:space="preserve"><value>(cannot restore automatically)</value></data>
+  <data name="Sets_Save" xml:space="preserve"><value>Save set</value></data>
+  <data name="Sets_SaveCurrent" xml:space="preserve"><value>Save current…</value></data>
+  <data name="Sets_Open" xml:space="preserve"><value>Open set</value></data>
+  <data name="Sets_Update" xml:space="preserve"><value>Update set…</value></data>
+  <data name="Sets_Rename" xml:space="preserve"><value>Rename</value></data>
+  <data name="Sets_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Sets_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Sets_NoSets" xml:space="preserve"><value>No saved sets yet. Choose Save current to create one.</value></data>
+  <data name="Sets_WindowsCount" xml:space="preserve"><value>Windows: {0}</value></data>
+  <data name="Sets_NameRequired" xml:space="preserve"><value>Enter a name for this set.</value></data>
+  <data name="Sets_NoSelection" xml:space="preserve"><value>Select at least one window.</value></data>
+  <data name="Sets_NoWindows" xml:space="preserve"><value>There are no eligible windows to save.</value></data>
+  <data name="Sets_NameExists" xml:space="preserve"><value>A set with that name already exists. Choose another name or update the existing set.</value></data>
+  <data name="Sets_ConfirmUpdate" xml:space="preserve"><value>Replace the saved windows in &quot;{0}&quot; with the current selection?</value></data>
+  <data name="Sets_ConfirmDelete" xml:space="preserve"><value>Delete the saved set &quot;{0}&quot;? This will not close any open windows.</value></data>
+  <data name="Sets_RestoreSummary" xml:space="preserve"><value>Opening requests sent: {0}&#10;Already open or previously requested: {1}&#10;Cannot restore automatically: {2}&#10;Missing files or folders: {3}&#10;Failed to launch: {4}&#10;&#10;No currently open windows were closed. The application may take time to finish opening documents.</value></data>
+  <data name="Sets_Error" xml:space="preserve"><value>Could not complete the saved-sets action. {0}</value></data>
+  <data name="Help_SavedSetsHeading" xml:space="preserve"><value>Saved window sets</value></data>
+  <data name="Help_SavedSetsText" xml:space="preserve"><value>Use Saved sets in the main WindowDeck panel to create multiple named sets. Save current shows all detected windows checked by default; use Select all, Deselect all or individual checkboxes. Later select a saved set and click Open set. Existing windows are not closed. WindowDeck can reopen recognized File Explorer folders and supported local Excel, Word and PowerPoint documents when their real paths can be identified. Browser tabs, unsaved work, virtual folders, and other unrecognized windows are marked as unsupported and cannot be reliably restored. Reopening a set does not restore unsaved changes, exact window positions or internal application state. Sets stay in your local Windows profile and can be renamed, updated or deleted. Saved sets can reopen recognized files and folders. For Notepad, PDF readers and other applications, choose the exact document file in the Save dialog if WindowDeck cannot detect its path. Browser and other program windows without a known document can relaunch the program only, without restoring tabs. For PDF readers or other applications that support one document per window, enable that option in their settings when practical; WindowDeck cannot enforce it. Missing files are reported while remaining set items continue opening. Close set sends normal close requests only to currently open documents and folders whose exact paths can be matched to the selected set. Apps may prompt to save unsaved edits; choosing Cancel keeps that window open. The saved set is never deleted. Program-only entries are skipped to avoid closing unrelated tabs. In tabbed applications a single window can still contain additional tabs, so closing requires confirmation. In Update set, a floppy-disk icon marks windows, documents or folders already saved in the selected set. Those entries are checked by default even when currently closed. Newly opened windows are unchecked and can be selected to add them. Unchecking an entry with a disk icon explicitly removes it only when changes are saved; Cancel leaves the set unchanged. The green check and red X independently show whether the item can be reopened. You can also rename a set within Update set; no separate Rename button is needed.</value></data>
+  <data name="Sets_ChooseFile" xml:space="preserve"><value>Choose file…</value></data>
+  <data name="Sets_AllFilesFilter" xml:space="preserve"><value>All files (*.*)|*.*</value></data>
+  <data name="Sets_UnsafeFile" xml:space="preserve"><value>Select a document, not a program, shortcut, or executable script.</value></data>
+  <data name="Sets_ProgramOnly" xml:space="preserve"><value>(program only — tabs not restored)</value></data>
+  <data name="Sets_DocumentLinked" xml:space="preserve"><value>(document)</value></data>
+  <data name="Sets_MissingFile" xml:space="preserve"><value>File or folder not found: {0}</value></data>
+  <data name="Sets_MissingProgram" xml:space="preserve"><value>Program not found: {0}</value></data>
+  <data name="Sets_OpenFailed" xml:space="preserve"><value>Could not open {0}: {1}</value></data>
+  <data name="Sets_ChooseFileExplanation" xml:space="preserve"><value>WindowDeck tries to identify exact files automatically. Use Choose file only when a document is marked as needing a path; program-only entries do not restore tabs.</value></data>
+  <data name="Sets_ChooseFileHelp" xml:space="preserve"><value>Point this window at the exact document you want reopened. Use only if the file was not detected automatically.</value></data>
+  <data name="Sets_DocumentPathRequired" xml:space="preserve"><value>(document path not found — choose file)</value></data>
+  <data name="Sets_RestoreNeedsDocumentPath" xml:space="preserve"><value>Document not restored: {0}. Update this set and use Choose file to link the exact document.</value></data>
+  <data name="Sets_UnresolvedSaveConfirmation" xml:space="preserve"><value>{0} selected document(s) have no recoverable file path and cannot be reopened from this set. Use Choose file, or uncheck those entries. Save this set anyway?</value></data>
+  <data name="Sets_StatusReady" xml:space="preserve"><value>Ready to reopen</value></data>
+  <data name="Sets_StatusMissing" xml:space="preserve"><value>Cannot restore automatically — select a file</value></data>
+  <data name="Sets_StatusProgramOnly" xml:space="preserve"><value>The program can be launched; its tabs or documents are not restored</value></data>
+  <data name="Sets_UpdateCaptureTitle" xml:space="preserve"><value>Update saved window set</value></data>
+  <data name="Sets_UpdateInstructions" xml:space="preserve"><value>The floppy-disk icon marks a window, document or folder already saved in this set. Existing entries stay checked even when closed. New windows are unchecked — check them to add. Unchecking a saved entry removes it only when you confirm the changes. The green check or red X indicates restore readiness, independently of saved-set membership.</value></data>
+  <data name="Sets_SavedAndOpen" xml:space="preserve"><value>(saved, currently open)</value></data>
+  <data name="Sets_SavedButClosed" xml:space="preserve"><value>(saved, currently closed)</value></data>
+  <data name="Sets_NewNotSaved" xml:space="preserve"><value>(new — check to add)</value></data>
+  <data name="Sets_SaveChanges" xml:space="preserve"><value>Save changes</value></data>
+  <data name="Sets_ConfirmUpdateChanges" xml:space="preserve"><value>Update saved set “{0}”?&#10;New entries: {1}&#10;Entries to remove: {2}&#10;&#10;All other saved windows, including currently closed ones, will be retained.</value></data>
+  <data name="Sets_ColumnApplication" xml:space="preserve"><value>Application</value></data>
+  <data name="Sets_ColumnWindow" xml:space="preserve"><value>Document / window</value></data>
+  <data name="Sets_ColumnPath" xml:space="preserve"><value>File / application path</value></data>
+  <data name="Sets_ColumnStatus" xml:space="preserve"><value>Restore mode</value></data>
+  <data name="Sets_CloseSet" xml:space="preserve"><value>Close set</value></data>
+  <data name="Sets_CloseSetConfirm" xml:space="preserve"><value>Request closing {1} currently open windows belonging to the set “{0}”?&#10;&#10;Skipped set entries: {2}.&#10;&#10;Applications may ask you to save unsaved changes. Choosing Cancel in an application will keep its document open. For tabbed applications, closing a window may also close other tabs inside that same window; choose No if those tabs must remain open. Unidentified documents and program-only entries with unknown tabs will not be closed.</value></data>
+  <data name="Sets_CloseSetMore" xml:space="preserve"><value>…and {0} more windows.</value></data>
+  <data name="Sets_CloseSetNoMatches" xml:space="preserve"><value>There are no currently open document or folder windows that can be safely matched to this set. Skipped entries: {0}. No windows were closed.</value></data>
+  <data name="Sets_CloseSetSummary" xml:space="preserve"><value>Close requests sent: {0}&#10;Failed to send: {1}&#10;Windows missing or changed before close: {2}&#10;Skipped saved entries: {3}&#10;&#10;These are requests, not confirmed closures. Applications may ask to save unsaved changes, and you can cancel closing. The saved set remains unchanged.</value></data>
+  <data name="Sets_PreviewCollapseHelp" xml:space="preserve"><value>Click to collapse or expand this application group.</value></data>
+  <data name="Sets_PreviewExpanded" xml:space="preserve"><value>expanded group</value></data>
+  <data name="Sets_PreviewCollapsed" xml:space="preserve"><value>collapsed group</value></data>
+  <data name="Sets_PreviewNoPath" xml:space="preserve"><value>Document path unavailable</value></data>
+  <data name="Sets_PreviewProgramOnly" xml:space="preserve"><value>Program only</value></data>
+  <data name="Sets_PreviewUnavailable" xml:space="preserve"><value>Unavailable</value></data>
+  <data name="Sets_PreviewReady" xml:space="preserve"><value>Ready</value></data>
+  <data name="Sets_CopyPath" xml:space="preserve"><value>Copy full path</value></data>
+  <data name="Sets_AlreadySaved" xml:space="preserve"><value>Already saved in this set</value></data>
+  <data name="Sets_AlreadySavedHelp" xml:space="preserve"><value>Floppy-disk icon: this entry already belongs to the set, even if the window is currently closed. It stays selected; uncheck it to remove it when saving changes.</value></data>
 </root>
