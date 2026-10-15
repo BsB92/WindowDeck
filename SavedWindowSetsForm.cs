@@ -308,7 +308,8 @@ internal sealed class SavedWindowSetsForm : Form
             }
 
             using SavedWindowSetCaptureForm dialog = new(
-                windows, LocalizationService.Get("Sets_DefaultName"), settings.Theme);
+                SavedWindowSetUpdatePlanner.ForNewSet(windows),
+                LocalizationService.Get("Sets_DefaultName"), settings.Theme);
             if (dialog.ShowDialog(this) != DialogResult.OK)
             {
                 return;
@@ -339,14 +340,14 @@ internal sealed class SavedWindowSetsForm : Form
 
         try
         {
-            List<SavedWindowEntry> windows = CaptureCurrent();
-            if (windows.Count == 0)
-            {
-                Info("Sets_NoWindows");
-                return;
-            }
+            // Keep all previously saved windows in the editor, even if they
+            // are not running today. Closed entries remain checked. New live
+            // windows are unchecked until the user explicitly adds them.
+            IReadOnlyList<SavedWindowSelectionItem> choices =
+                SavedWindowSetUpdatePlanner.ForUpdate(current.Windows, CaptureCurrent());
 
-            using SavedWindowSetCaptureForm dialog = new(windows, current.Name, settings.Theme);
+            using SavedWindowSetCaptureForm dialog = new(
+                choices, current.Name, settings.Theme, updating: true);
             if (dialog.ShowDialog(this) != DialogResult.OK)
             {
                 return;
@@ -358,13 +359,26 @@ internal sealed class SavedWindowSetsForm : Form
                 return;
             }
 
-            if (!Confirm("Sets_ConfirmUpdate", current.Name)) return;
+            List<SavedWindowEntry> chosen = dialog.SelectedWindows;
+            int removed = choices.Count(item => item.InSavedSet
+                && !chosen.Contains(item.Entry));
+            int added = choices.Count(item => !item.InSavedSet
+                && chosen.Contains(item.Entry));
+
+            if (MessageBox.Show(this, LocalizationService.Format(
+                    "Sets_ConfirmUpdateChanges", current.Name, added, removed),
+                    Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                != DialogResult.Yes)
+            {
+                return;
+            }
+
             SavedWindowSet updatedSet = new()
             {
                 Id = current.Id,
                 Name = dialog.SetName,
                 SavedAtUtc = DateTime.UtcNow,
-                Windows = dialog.SelectedWindows
+                Windows = chosen
             };
             List<SavedWindowSet> updated = savedSets
                 .Select(set => set.Id == current.Id ? updatedSet : set).ToList();
