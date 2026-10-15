@@ -219,7 +219,10 @@ internal partial class Form1 : Form
     {
         foreach (Form form in Application.OpenForms.Cast<Form>().ToArray().Reverse())
         {
-            if (!form.IsDisposed && !form.Disposing && form.TopMost)
+            // Never touch other dialogs (such as Presentation Mode's
+            // conflict prompt), even if those dialogs also use TopMost.
+            if (form is Form1 or SavedWindowSetsForm or SavedWindowSetCaptureForm
+                && !form.IsDisposed && !form.Disposing && form.TopMost)
             {
                 form.TopMost = false;
             }
