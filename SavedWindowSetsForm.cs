@@ -357,6 +357,10 @@ internal sealed class SavedWindowSetsForm : Form
 
         try
         {
+            // Stop covering the very documents we are about to open. This also
+            // lowers the owning WindowDeck flyout; it does not change any
+            // other application's window flags or close an existing window.
+            Form1.YieldTopmostForExternalWindows();
             SavedWindowRestoreResult result = restore.Open(current, settings);
             string summary = LocalizationService.Format("Sets_RestoreSummary",
                 result.Requested, result.AlreadyOpen, result.Unsupported, result.Missing, result.Failed);
@@ -365,9 +369,15 @@ internal sealed class SavedWindowSetsForm : Form
                 summary += Environment.NewLine + Environment.NewLine
                     + string.Join(Environment.NewLine, result.Notes.Take(20));
             }
-            MessageBox.Show(this, summary, Text, MessageBoxButtons.OK,
-                result.Missing > 0 || result.Failed > 0
-                    ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+
+            // A modal MessageBox here would jump ABOVE the just-opened files.
+            // Keep the complete result visible in the manager for when the user
+            // switches back, without stealing focus from the document windows.
+            string selectedDetails = details.Text;
+            details.Text = summary + Environment.NewLine + Environment.NewLine
+                + "────────────────" + Environment.NewLine + selectedDetails;
+            details.SelectionStart = 0;
+            details.ScrollToCaret();
         }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
