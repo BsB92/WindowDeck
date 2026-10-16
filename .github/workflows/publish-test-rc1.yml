@@ -1,0 +1,87 @@
+name: Publish WindowDeck 1.4.1 RC1 test prerelease
+
+on:
+  push:
+    branches:
+      - test/v1.4.1-rc1
+
+permissions:
+  contents: write
+
+jobs:
+  test-prerelease:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out the test branch
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish self-contained Windows x64 executable
+        shell: pwsh
+        run: |
+          dotnet publish WindowDeck.csproj -p:PublishProfile=WinX64 -p:Version=1.4.1-rc.1 -p:AssemblyVersion=1.4.1.0 -p:FileVersion=1.4.1.0 -p:InformationalVersion=1.4.1-rc.1
+          if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
+
+      - name: Verify build, calculate SHA-256 and prepare bilingual notes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $directory = Join-Path $env:GITHUB_WORKSPACE 'artifacts/WindowDeck-1.4.1-rc.1-win-x64'
+          $exe = Join-Path $directory 'WindowDeck.exe'
+          if (-not (Test-Path -LiteralPath $exe)) { throw "Missing published EXE: $exe" }
+          $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash
+          [System.IO.File]::WriteAllText(
+            (Join-Path $directory 'WindowDeck.exe.sha256'),
+            "$hash  WindowDeck.exe`r`n",
+            [System.Text.UTF8Encoding]::new($false))
+          $template = Get-Content -LiteralPath 'docs/notes/v1.4.1-rc.1.md' -Raw -Encoding UTF8
+          if (-not $template.Contains('{{WINDOWDECK_SHA256}}')) { throw 'Missing SHA placeholder' }
+          [System.IO.File]::WriteAllText(
+            (Join-Path $directory 'RELEASE_NOTES.md'),
+            $template.Replace('{{WINDOWDECK_SHA256}}', $hash),
+            [System.Text.UTF8Encoding]::new($false))
+          $version = (Get-Item -LiteralPath $exe).VersionInfo
+          Write-Host "WindowDeck.exe SHA-256: $hash"
+          Write-Host "Version: $($version.FileVersion); ProductVersion: $($version.ProductVersion)"
+          if ($version.FileVersion -ne '1.4.1.0') { throw "Wrong EXE version: $($version.FileVersion)" }
+          "WINDOWDECK_RELEASE_DIR=$directory" >> $env:GITHUB_ENV
+
+      - name: Keep a test-build artifact if release permissions are unavailable
+        uses: actions/upload-artifact@v4
+        with:
+          name: WindowDeck-v1.4.1-rc.1-win-x64
+          path: |
+            artifacts/WindowDeck-1.4.1-rc.1-win-x64/WindowDeck.exe
+            artifacts/WindowDeck-1.4.1-rc.1-win-x64/WindowDeck.exe.sha256
+            artifacts/WindowDeck-1.4.1-rc.1-win-x64/RELEASE_NOTES.md
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub prerelease (not Latest)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: v1.4.1-rc.1
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            throw "Test prerelease tag already exists; do not overwrite a previously published EXE."
+          }
+          $directory = $env:WINDOWDECK_RELEASE_DIR
+          gh release create $env:RELEASE_TAG `
+            (Join-Path $directory 'WindowDeck.exe') `
+            (Join-Path $directory 'WindowDeck.exe.sha256') `
+            (Join-Path $directory 'RELEASE_NOTES.md') `
+            --repo $env:GITHUB_REPOSITORY `
+            --title 'WindowDeck v1.4.1 RC1 — TEST BUILD' `
+            --notes-file (Join-Path $directory 'RELEASE_NOTES.md') `
+            --target $env:GITHUB_SHA `
+            --prerelease `
+            --latest=false
+          if ($LASTEXITCODE -ne 0) { throw "Failed to create GitHub test prerelease" }
