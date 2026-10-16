@@ -8,7 +8,11 @@ internal sealed record SavedWindowSelectionItem(
     SavedWindowEntry Entry,
     bool InSavedSet,
     bool CurrentlyOpen,
-    bool InitiallyChecked);
+    bool InitiallyChecked)
+{
+    // Populated off the UI thread before rendering a capture dialog.
+    public bool IsReady { get; init; }
+}
 
 internal static class SavedWindowSetUpdatePlanner
 {
