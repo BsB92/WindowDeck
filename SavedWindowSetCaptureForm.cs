@@ -110,6 +110,9 @@ internal sealed class SavedWindowSetCaptureForm : Form
             BackColor = palette.Surface,
             Padding = new Padding(8)
         };
+        windowList.SuspendLayout();
+        try
+        {
         foreach (IGrouping<string, SavedWindowSelectionItem> group in windows
                      .GroupBy(item => item.Entry.ApplicationName)
                      .OrderBy(group => group.Key, StringComparer.CurrentCultureIgnoreCase))
@@ -281,6 +284,11 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 entries.Add((check, selection));
                 windowList.Controls.Add(row);
             }
+        }
+        }
+        finally
+        {
+            windowList.ResumeLayout(false);
         }
         windowList.Resize += (_, _) =>
         {
