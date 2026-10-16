@@ -215,4 +215,9 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Sets_CopyPath" xml:space="preserve"><value>Copy full path</value></data>
   <data name="Sets_AlreadySaved" xml:space="preserve"><value>Already saved in this set</value></data>
   <data name="Sets_AlreadySavedHelp" xml:space="preserve"><value>Floppy-disk icon: this entry already belongs to the set, even if the window is currently closed. It stays selected; uncheck it to remove it when saving changes.</value></data>
+  <data name="Sets_ScanningWindows" xml:space="preserve"><value>Scanning windows…</value></data>
+  <data name="Sets_CaptureTimeout" xml:space="preserve"><value>Scanning open windows or checking cloud files took too long. WindowDeck is still responsive. Please retry or check whether Office/OneDrive is busy.</value></data>
+  <data name="Sets_PastePathHelp" xml:space="preserve"><value>Paste the complete local file path (Explorer: Copy as path), even if the document is currently open in Excel. You can also browse for the file. WindowDeck will only save its path, not open or modify it.</value></data>
+  <data name="Sets_BrowseFile" xml:space="preserve"><value>Browse…</value></data>
+  <data name="Sets_PreviewChecking" xml:space="preserve"><value>Checking…</value></data>
 </root>
