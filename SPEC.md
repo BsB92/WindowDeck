@@ -291,6 +291,15 @@ Allow a user to preserve and reopen a named selection of working windows after r
 - **Choose file / Wskaż plik** is an optional fallback, not the default workflow. Explain the button in the save dialog. It assigns a real local document to a saved window when path discovery is unavailable or ambiguous. Browser windows may remain program-only, without tabs.
 - Opening a set must continue past one missing document and report its saved full path. It must never silently substitute a blank program for a missing/unresolved document. Always keep current windows open.
 
+### Cloud-synced capture responsiveness and manual file paths (post-1.4 hotfix)
+
+- Opening Saved sets, selecting a saved set, Save current, and Update set must keep the WinForms message loop responsive even when Office/Explorer automation or OneDrive/SharePoint file checks are slow or temporarily blocked.
+- Enumerate and resolve documents off the UI thread on an STA worker; bound the user's wait, show a localized busy state, and do not allow duplicate concurrent capture requests. A timeout never modifies or deletes saved sets.
+- Show readiness asynchronously in the saved-sets overview and precompute readiness before constructing Save/Update capture rows. A transient "checking" state is not a confirmed missing document.
+- **Choose file** must support manually pasting a local absolute document path when Windows' native file picker refuses an already-open cloud-synced workbook. Never open, lock, overwrite or rewrite the selected document merely to verify its path. Retain a browsing option and block executable/script/shortcut targets.
+- Linking a file to an entry must not require the file to be closed in Excel. A temporarily offline/missing path remains visibly not ready rather than being falsely marked restorable. User-provided linked paths are local only; no fabricated cloud-URL-to-local-path conversion.
+- Preserve exact document restore behavior, previously saved closed members, localized themes, and the ability to cancel without changing the stored set. Retest locally on Windows with real cloud-synced workbooks before releasing a patch.
+
 ### Saved-set capture status indicators (v1.4 UI refinement)
 
 - Each saved-window row shows a compact **green check mark** when a supported file/folder exists and can be requested for reopening, or an app-only entry has a valid executable path. Draw the mark without an emoji, colored badge or square background.
