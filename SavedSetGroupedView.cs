@@ -39,6 +39,9 @@ internal sealed class SavedSetGroupedView : UserControl
     private readonly Font pathFont;
     private readonly Font stateFont;
     private bool isUpdatingLayout;
+    private int previewGeneration;
+    // Limit concurrent filesystem requests for cloud-synced/offline files.
+    private readonly SemaphoreSlim readinessSlots = new(4, 4);
 
     public SavedSetGroupedView(ThemePalette palette)
     {
@@ -68,6 +71,8 @@ internal sealed class SavedSetGroupedView : UserControl
 
     public void ShowEntries(IReadOnlyList<SavedWindowEntry> entries)
     {
+        int generation = ++previewGeneration;
+        List<(SavedWindowEntry Entry, DocumentRow Row)> checks = [];
         viewport.AutoScrollPosition = Point.Empty;
         canvas.SuspendLayout();
         try
@@ -107,7 +112,9 @@ internal sealed class SavedSetGroupedView : UserControl
                 List<DocumentRow> rows = [];
                 foreach (SavedWindowEntry entry in group)
                 {
-                    rows.Add(CreateDocumentRow(entry));
+                    DocumentRow row = CreateDocumentRow(entry);
+                    rows.Add(row);
+                    checks.Add((entry, row));
                 }
 
                 ApplicationGroup section = new(groupName, heading, rows);
@@ -133,6 +140,48 @@ internal sealed class SavedSetGroupedView : UserControl
         }
 
         LayoutGroups();
+        foreach ((SavedWindowEntry entry, DocumentRow row) in checks)
+        {
+            _ = RefreshReadinessAsync(entry, row, generation);
+        }
+    }
+
+    private async Task RefreshReadinessAsync(
+        SavedWindowEntry entry, DocumentRow row, int generation)
+    {
+        await readinessSlots.WaitAsync();
+        bool ready;
+        try
+        {
+            ready = await Task.Run(() => SavedWindowReadiness.IsReady(entry));
+        }
+        finally
+        {
+            readinessSlots.Release();
+        }
+
+        if (IsDisposed || row.Container.IsDisposed || generation != previewGeneration)
+        {
+            return;
+        }
+
+        row.StatusIcon.IsReady = ready;
+        row.StatusIcon.Visible = true;
+        string key = entry.Kind switch
+        {
+            SavedWindowKind.Application when ready => "Sets_PreviewProgramOnly",
+            SavedWindowKind.Application => "Sets_PreviewUnavailable",
+            SavedWindowKind.Unsupported => "Sets_PreviewUnavailable",
+            _ when ready => "Sets_PreviewReady",
+            _ => "Sets_PreviewUnavailable"
+        };
+        row.StatusText.Text = LocalizationService.Get(key);
+        row.StatusText.ForeColor = ready ? palette.SecondaryForeground
+            : Color.FromArgb(211, 58, 58);
+        string hint = LocalizationService.Get(entry.Kind == SavedWindowKind.Application && ready
+            ? "Sets_StatusProgramOnly" : ready ? "Sets_StatusReady" : "Sets_StatusMissing");
+        toolTip.SetToolTip(row.StatusIcon, hint);
+        toolTip.SetToolTip(row.StatusText, hint);
     }
 
     private DocumentRow CreateDocumentRow(SavedWindowEntry entry)
@@ -170,26 +219,17 @@ internal sealed class SavedSetGroupedView : UserControl
             AutoSize = false
         };
 
-        bool ready = IsRestorable(entry);
+        // The initial state is neutral; cloud existence checks run in the background.
         SavedWindowStatusIcon statusIcon = new()
         {
-            IsReady = ready,
+            Visible = false,
             BackColor = palette.Surface
-        };
-        string stateKey = entry.Kind switch
-        {
-            SavedWindowKind.Application when ready => "Sets_PreviewProgramOnly",
-            SavedWindowKind.Application => "Sets_PreviewUnavailable",
-            SavedWindowKind.Unsupported => "Sets_PreviewUnavailable",
-            _ when ready => "Sets_PreviewReady",
-            _ => "Sets_PreviewUnavailable"
         };
         Label state = new()
         {
-            Text = LocalizationService.Get(stateKey),
+            Text = LocalizationService.Get("Sets_PreviewChecking"),
             Font = stateFont,
-            ForeColor = ready ? palette.SecondaryForeground
-                : Color.FromArgb(211, 58, 58),
+            ForeColor = palette.SecondaryForeground,
             BackColor = palette.Surface,
             AutoEllipsis = true,
             AutoSize = false,
@@ -201,9 +241,7 @@ internal sealed class SavedSetGroupedView : UserControl
             : resource;
         toolTip.SetToolTip(title, entry.WindowTitle);
         toolTip.SetToolTip(path, fullPathHint);
-        string stateHint = LocalizationService.Get(entry.Kind == SavedWindowKind.Application && ready
-            ? "Sets_StatusProgramOnly"
-            : ready ? "Sets_StatusReady" : "Sets_StatusMissing");
+        string stateHint = LocalizationService.Get("Sets_PreviewChecking");
         toolTip.SetToolTip(statusIcon, stateHint);
         toolTip.SetToolTip(state, stateHint);
 
@@ -305,33 +343,6 @@ internal sealed class SavedSetGroupedView : UserControl
         finally
         {
             isUpdatingLayout = false;
-        }
-    }
-
-    private static bool IsRestorable(SavedWindowEntry entry)
-    {
-        try
-        {
-            return entry.Kind switch
-            {
-                SavedWindowKind.Application =>
-                    SavedWindowCaptureService.IsSupportedExecutable(entry.ExecutablePath)
-                    && File.Exists(entry.ExecutablePath),
-                SavedWindowKind.ExplorerFolder =>
-                    SavedWindowCaptureService.IsSupportedDocument(
-                        entry.Kind, entry.ResourcePath)
-                    && Directory.Exists(entry.ResourcePath),
-                SavedWindowKind.Unsupported => false,
-                _ => SavedWindowCaptureService.IsSupportedDocument(
-                        entry.Kind, entry.ResourcePath)
-                    && File.Exists(entry.ResourcePath)
-            };
-        }
-        catch (Exception error) when (error is ArgumentException
-            or NotSupportedException or UnauthorizedAccessException
-            or IOException)
-        {
-            return false;
         }
     }
 

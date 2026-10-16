@@ -215,4 +215,9 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Sets_CopyPath" xml:space="preserve"><value>Kopiuj pełną ścieżkę</value></data>
   <data name="Sets_AlreadySaved" xml:space="preserve"><value>Już zapisane w zestawie</value></data>
   <data name="Sets_AlreadySavedHelp" xml:space="preserve"><value>Ikona dyskietki: ta pozycja należy już do zestawu, nawet jeśli jej okno jest teraz zamknięte. Pozostaje zaznaczona; odznaczenie oznacza usunięcie podczas zapisu zmian.</value></data>
+  <data name="Sets_ScanningWindows" xml:space="preserve"><value>Odczyt okien…</value></data>
+  <data name="Sets_CaptureTimeout" xml:space="preserve"><value>Odczytywanie okien lub sprawdzanie plików w chmurze trwało zbyt długo. WindowDeck nadal odpowiada. Spróbuj ponownie lub sprawdź, czy Excel/OneDrive nie jest zajęty.</value></data>
+  <data name="Sets_PastePathHelp" xml:space="preserve"><value>Wklej pełną lokalną ścieżkę pliku (Eksplorator: Kopiuj jako ścieżkę), nawet jeśli dokument jest już otwarty w Excelu. Możesz też użyć przycisku Przeglądaj. WindowDeck zapisze tylko ścieżkę, bez otwierania pliku.</value></data>
+  <data name="Sets_BrowseFile" xml:space="preserve"><value>Przeglądaj…</value></data>
+  <data name="Sets_PreviewChecking" xml:space="preserve"><value>Sprawdzanie…</value></data>
 </root>

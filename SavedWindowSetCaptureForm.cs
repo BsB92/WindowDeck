@@ -110,6 +110,9 @@ internal sealed class SavedWindowSetCaptureForm : Form
             BackColor = palette.Surface,
             Padding = new Padding(8)
         };
+        windowList.SuspendLayout();
+        try
+        {
         foreach (IGrouping<string, SavedWindowSelectionItem> group in windows
                      .GroupBy(item => item.Entry.ApplicationName)
                      .OrderBy(group => group.Key, StringComparer.CurrentCultureIgnoreCase))
@@ -187,21 +190,12 @@ internal sealed class SavedWindowSetCaptureForm : Form
                         membershipWidth - pickerWidth - 2);
                 }
 
+                // All bulk file-existence checks have already been done on a
+                // worker. Do not access OneDrive files while laying out controls.
+                bool rowReady = selection.IsReady;
                 void UpdateRow()
                 {
-                    bool isReady = window.Kind switch
-                    {
-                        SavedWindowKind.Application =>
-                            SavedWindowCaptureService.IsSupportedExecutable(window.ExecutablePath)
-                            && File.Exists(window.ExecutablePath),
-                        SavedWindowKind.ExplorerFolder =>
-                            SavedWindowCaptureService.IsSupportedDocument(
-                                window.Kind, window.ResourcePath)
-                            && Directory.Exists(window.ResourcePath),
-                        _ => SavedWindowCaptureService.IsSupportedDocument(
-                                window.Kind, window.ResourcePath)
-                            && File.Exists(window.ResourcePath)
-                    };
+                    bool isReady = rowReady;
 
                     statusIcon.IsReady = isReady;
                     statusIcon.AccessibleName = LocalizationService.Get(
@@ -238,30 +232,45 @@ internal sealed class SavedWindowSetCaptureForm : Form
                     LayoutRow();
                 }
 
-                chooseFile.Click += (_, _) =>
+                chooseFile.Click += async (_, _) =>
                 {
-                    using OpenFileDialog picker = new()
-                    {
-                        Title = LocalizationService.Get("Sets_ChooseFile"),
-                        Filter = LocalizationService.Get("Sets_AllFilesFilter"),
-                        CheckFileExists = true,
-                        Multiselect = false
-                    };
+                    // Selecting an open Office file can fail in the native picker
+                    // when OneDrive/SharePoint holds a share lock. A text path
+                    // provides a fallback without accessing document contents.
+                    using SavedWindowFilePathForm picker = new(
+                        appearance, window.ResourcePath);
                     if (picker.ShowDialog(this) != DialogResult.OK)
                     {
                         return;
                     }
-                    if (!SavedWindowCaptureService.IsSupportedDocument(
-                            SavedWindowKind.DocumentFile, picker.FileName))
-                    {
-                        MessageBox.Show(this, LocalizationService.Get("Sets_UnsafeFile"),
-                            Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
+
                     window.Kind = SavedWindowKind.DocumentFile;
-                    window.ResourcePath = picker.FileName;
+                    window.ResourcePath = picker.SelectedPath;
                     window.NeedsDocumentPath = false;
-                    UpdateRow();
+                    chooseFile.Enabled = false;
+                    try
+                    {
+                        try
+                        {
+                            rowReady = await Task.Run(() =>
+                                SavedWindowReadiness.IsReady(window))
+                                .WaitAsync(TimeSpan.FromSeconds(10));
+                        }
+                        catch (TimeoutException)
+                        {
+                            // A slow cloud provider must not freeze the editor.
+                            rowReady = false;
+                        }
+
+                        if (!IsDisposed)
+                        {
+                            UpdateRow();
+                        }
+                    }
+                    finally
+                    {
+                        if (!chooseFile.IsDisposed) chooseFile.Enabled = true;
+                    }
                 };
 
                 if (savedIcon is not null)
@@ -275,6 +284,11 @@ internal sealed class SavedWindowSetCaptureForm : Form
                 entries.Add((check, selection));
                 windowList.Controls.Add(row);
             }
+        }
+        }
+        finally
+        {
+            windowList.ResumeLayout(false);
         }
         windowList.Resize += (_, _) =>
         {

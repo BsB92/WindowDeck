@@ -20,6 +20,10 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly Label detailsHeader;
     private readonly TextBox restoreReport;
     private readonly TableLayoutPanel detailsLayout;
+    private readonly Button saveCurrentButton;
+    private readonly Button updateButton;
+    private bool captureRunning;
+    private Task<List<SavedWindowEntry>>? pendingCaptureTask;
     private List<SavedWindowSet> savedSets;
 
     public SavedWindowSetsForm(AppSettings settings, Rectangle windowDeckBounds, Rectangle workingArea)
@@ -139,19 +143,19 @@ internal sealed class SavedWindowSetsForm : Form
             Dock = DockStyle.Fill,
             Margin = new Padding(0, 14, 0, 0)
         };
-        Button saveCurrent = MakeButton("Sets_SaveCurrent", palette);
+        saveCurrentButton = MakeButton("Sets_SaveCurrent", palette);
         Button open = MakeButton("Sets_Open", palette);
         Button closeSet = MakeButton("Sets_CloseSet", palette);
-        Button update = MakeButton("Sets_Update", palette);
+        updateButton = MakeButton("Sets_Update", palette);
         Button delete = MakeButton("Sets_Delete", palette);
         Button close = MakeButton("Sets_Close", palette);
-        saveCurrent.Click += (_, _) => SaveCurrent();
+        saveCurrentButton.Click += (_, _) => SaveCurrent();
         open.Click += (_, _) => OpenSelected();
         closeSet.Click += (_, _) => CloseSelectedSet();
-        update.Click += (_, _) => UpdateSelected();
+        updateButton.Click += (_, _) => UpdateSelected();
         delete.Click += (_, _) => DeleteSelected();
         close.Click += (_, _) => Close();
-        actions.Controls.AddRange([saveCurrent, open, closeSet, update, delete, close]);
+        actions.Controls.AddRange([saveCurrentButton, open, closeSet, updateButton, delete, close]);
         layout.Controls.Add(actions, 0, 2);
         Controls.Add(layout);
         CancelButton = close;
@@ -231,31 +235,106 @@ internal sealed class SavedWindowSetsForm : Form
         detailsLayout.RowStyles[2].Height = 0;
     }
 
-    private List<SavedWindowEntry> CaptureCurrent()
+    // Office/Shell COM discovery and cloud file checks can block for seconds.
+    // Keep all discovery on a dedicated STA worker rather than the WinForms thread.
+    private Task<List<SavedWindowEntry>> CaptureCurrentAsync()
     {
-        WindowEnumerator enumerator = new();
-        SavedWindowCaptureService capture = new();
-        return enumerator.Enumerate(settings)
-            .Select(capture.Capture)
-            .OrderBy(entry => entry.ApplicationName, StringComparer.CurrentCultureIgnoreCase)
-            .ThenBy(entry => entry.WindowTitle, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
+        // A timed-out Office COM request may still be running in its STA.
+        // Reuse that worker instead of starting another competing Office scan.
+        if (pendingCaptureTask is { IsCompleted: false })
+        {
+            return pendingCaptureTask;
+        }
+
+        AppSettings snapshot = settings.Copy();
+        TaskCompletionSource<List<SavedWindowEntry>> completion =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Thread worker = new(() =>
+        {
+            try
+            {
+                WindowEnumerator enumerator = new();
+                SavedWindowCaptureService capture = new();
+                List<SavedWindowEntry> windows = enumerator.Enumerate(snapshot)
+                    .Select(capture.Capture)
+                    .OrderBy(entry => entry.ApplicationName,
+                        StringComparer.CurrentCultureIgnoreCase)
+                    .ThenBy(entry => entry.WindowTitle,
+                        StringComparer.CurrentCultureIgnoreCase)
+                    .ToList();
+                completion.TrySetResult(windows);
+            }
+            catch (Exception error)
+            {
+                completion.TrySetException(error);
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "WindowDeck saved-set discovery"
+        };
+        worker.SetApartmentState(ApartmentState.STA);
+        worker.Start();
+        pendingCaptureTask = completion.Task;
+        return completion.Task;
     }
 
-    private void SaveCurrent()
+    private async Task<IReadOnlyList<SavedWindowSelectionItem>> PrepareChoicesAsync(
+        IReadOnlyList<SavedWindowEntry>? existing = null)
     {
+        List<SavedWindowEntry> windows = await CaptureCurrentAsync()
+            .WaitAsync(TimeSpan.FromSeconds(20));
+
+        // File.Exists can be unexpectedly slow for OneDrive/SharePoint placeholders.
+        // Evaluate readiness before constructing hundreds of UI controls.
+        return await Task.Run(() =>
+        {
+            IReadOnlyList<SavedWindowSelectionItem> choices = existing is null
+                ? SavedWindowSetUpdatePlanner.ForNewSet(windows)
+                : SavedWindowSetUpdatePlanner.ForUpdate(existing, windows);
+            return (IReadOnlyList<SavedWindowSelectionItem>)choices
+                .Select(item => item with
+                {
+                    IsReady = SavedWindowReadiness.IsReady(item.Entry)
+                })
+                .ToArray();
+        }).WaitAsync(TimeSpan.FromSeconds(20));
+    }
+
+    private void SetCaptureRunning(bool running)
+    {
+        captureRunning = running;
+        if (IsDisposed || Disposing)
+        {
+            return;
+        }
+
+        saveCurrentButton.Enabled = !running;
+        updateButton.Enabled = !running;
+        saveCurrentButton.Text = LocalizationService.Get(
+            running ? "Sets_ScanningWindows" : "Sets_SaveCurrent");
+        updateButton.Text = LocalizationService.Get(
+            running ? "Sets_ScanningWindows" : "Sets_Update");
+    }
+
+    private async void SaveCurrent()
+    {
+        if (captureRunning) return;
+
+        SetCaptureRunning(true);
         try
         {
-            List<SavedWindowEntry> windows = CaptureCurrent();
-            if (windows.Count == 0)
+            IReadOnlyList<SavedWindowSelectionItem> choices = await PrepareChoicesAsync();
+            if (IsDisposed || Disposing) return;
+            if (choices.Count == 0)
             {
                 Info("Sets_NoWindows");
                 return;
             }
 
             using SavedWindowSetCaptureForm dialog = new(
-                SavedWindowSetUpdatePlanner.ForNewSet(windows),
-                LocalizationService.Get("Sets_DefaultName"), settings.Theme);
+                choices, LocalizationService.Get("Sets_DefaultName"), settings.Theme);
             if (dialog.ShowDialog(this) != DialogResult.OK)
             {
                 return;
@@ -273,24 +352,33 @@ internal sealed class SavedWindowSetsForm : Form
             savedSets = updated;
             ReloadList(set.Id);
         }
+        catch (TimeoutException)
+        {
+            if (!IsDisposed) Info("Sets_CaptureTimeout");
+        }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
-            Failure(error);
+            if (!IsDisposed) Failure(error);
+        }
+        finally
+        {
+            SetCaptureRunning(false);
         }
     }
 
-    private void UpdateSelected()
+    private async void UpdateSelected()
     {
+        if (captureRunning) return;
         SavedWindowSet? current = SelectedSet;
         if (current is null) return;
 
+        SetCaptureRunning(true);
         try
         {
-            // Keep all previously saved windows in the editor, even if they
-            // are not running today. Closed entries remain checked. New live
-            // windows are unchecked until the user explicitly adds them.
+            // Keep previously saved (even closed) resources in the editor.
             IReadOnlyList<SavedWindowSelectionItem> choices =
-                SavedWindowSetUpdatePlanner.ForUpdate(current.Windows, CaptureCurrent());
+                await PrepareChoicesAsync(current.Windows);
+            if (IsDisposed || Disposing) return;
 
             using SavedWindowSetCaptureForm dialog = new(
                 choices, current.Name, settings.Theme, updating: true);
@@ -332,9 +420,17 @@ internal sealed class SavedWindowSetsForm : Form
             savedSets = updated;
             ReloadList(updatedSet.Id);
         }
+        catch (TimeoutException)
+        {
+            if (!IsDisposed) Info("Sets_CaptureTimeout");
+        }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
-            Failure(error);
+            if (!IsDisposed) Failure(error);
+        }
+        finally
+        {
+            SetCaptureRunning(false);
         }
     }
 
