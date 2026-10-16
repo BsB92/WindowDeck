@@ -23,6 +23,7 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly Button saveCurrentButton;
     private readonly Button updateButton;
     private bool captureRunning;
+    private Task<List<SavedWindowEntry>>? pendingCaptureTask;
     private List<SavedWindowSet> savedSets;
 
     public SavedWindowSetsForm(AppSettings settings, Rectangle windowDeckBounds, Rectangle workingArea)
@@ -238,6 +239,13 @@ internal sealed class SavedWindowSetsForm : Form
     // Keep all discovery on a dedicated STA worker rather than the WinForms thread.
     private Task<List<SavedWindowEntry>> CaptureCurrentAsync()
     {
+        // A timed-out Office COM request may still be running in its STA.
+        // Reuse that worker instead of starting another competing Office scan.
+        if (pendingCaptureTask is { IsCompleted: false })
+        {
+            return pendingCaptureTask;
+        }
+
         AppSettings snapshot = settings.Copy();
         TaskCompletionSource<List<SavedWindowEntry>> completion =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -268,6 +276,7 @@ internal sealed class SavedWindowSetsForm : Form
         };
         worker.SetApartmentState(ApartmentState.STA);
         worker.Start();
+        pendingCaptureTask = completion.Task;
         return completion.Task;
     }
 
