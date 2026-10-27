@@ -39,6 +39,7 @@
   <data name="Language_English" xml:space="preserve"><value>English</value></data>
   <data name="Language_Polish" xml:space="preserve"><value>Polski</value></data>
   <data name="Flyout_Search" xml:space="preserve"><value>Search windows</value></data>
+  <data name="Flyout_RefreshWindows" xml:space="preserve"><value>Refresh window list</value></data>
   <data name="Flyout_NoWindows" xml:space="preserve"><value>No windows found</value></data>
   <data name="Flyout_NoMatches" xml:space="preserve"><value>No matching windows</value></data>
   <data name="Flyout_Screen" xml:space="preserve"><value>Screen</value></data>

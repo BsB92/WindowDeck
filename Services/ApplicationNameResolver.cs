@@ -57,10 +57,12 @@ internal sealed class ApplicationNameResolver
             name = LocalizationService.Get("Application_Unknown");
         }
 
+        // An executable path can be inaccessible for some instances of the
+        // same application. Group unpackaged windows by process name so a
+        // transient metadata failure cannot split Excel into several groups.
         string applicationId = metadata.PackageFamilyName
-            ?? metadata.ExecutablePath
             ?? (string.IsNullOrWhiteSpace(metadata.ProcessName)
-                ? $"pid:{windowProcessId}"
+                ? metadata.ExecutablePath ?? $"pid:{windowProcessId}"
                 : $"process:{metadata.ProcessName}");
 
         HashSet<string> titleSuffixes = new(StringComparer.OrdinalIgnoreCase) { name };
