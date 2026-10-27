@@ -62,7 +62,7 @@ namespace WindowDeck
             refreshButton.Font = new Font("Segoe MDL2 Assets", 12F, FontStyle.Regular);
             refreshButton.Margin = new Padding(3);
             refreshButton.Name = "refreshButton";
-            refreshButton.Size = new Size(38, 30);
+            refreshButton.Size = new Size(38, 36);
             refreshButton.TabIndex = 1;
             refreshButton.Text = "\uE72C";
             refreshButton.TextAlign = ContentAlignment.MiddleCenter;
@@ -84,7 +84,7 @@ namespace WindowDeck
             topBar.RowCount = 2;
             topBar.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
             topBar.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            topBar.Size = new Size(648, 76);
+            topBar.Size = new Size(648, 82);
             topBar.TabIndex = 0;
             //
             // windowListPanel
@@ -93,9 +93,9 @@ namespace WindowDeck
             windowListPanel.AutoScroll = true;
             windowListPanel.BorderStyle = BorderStyle.None;
             windowListPanel.FlowDirection = FlowDirection.TopDown;
-            windowListPanel.Location = new Point(16, 92);
+            windowListPanel.Location = new Point(16, 98);
             windowListPanel.Name = "windowListPanel";
-            windowListPanel.Size = new Size(648, 596);
+            windowListPanel.Size = new Size(648, 590);
             windowListPanel.TabIndex = 1;
             windowListPanel.WrapContents = false;
             //
