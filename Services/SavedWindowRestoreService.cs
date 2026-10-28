@@ -128,7 +128,6 @@ internal sealed class SavedWindowRestoreService
                         "Sets_OpenFailed", window.WindowTitle, error.Message));
                 }
             }
-
         }
         finally
         {
@@ -207,7 +206,14 @@ internal sealed class SavedWindowRestoreService
             return;
         }
 
-        if (window.Kind == SavedWindowKind.ExcelWorkbook)
+        bool excelWorkbook = window.Kind == SavedWindowKind.ExcelWorkbook
+            || (window.Kind == SavedWindowKind.DocumentFile
+                && SavedWindowCaptureService.IsSupportedDocument(
+                    SavedWindowKind.ExcelWorkbook, window.ResourcePath)
+                && string.Equals(Path.GetFileName(window.ExecutablePath),
+                    "EXCEL.exe", StringComparison.OrdinalIgnoreCase));
+
+        if (excelWorkbook)
         {
             if (excel is null && !excelUnavailable)
             {
@@ -238,6 +244,7 @@ internal sealed class SavedWindowRestoreService
 
         ProcessStartInfo start;
         if (window.Kind == SavedWindowKind.DocumentFile
+            && !excelWorkbook
             && SavedWindowCaptureService.IsSupportedExecutable(window.ExecutablePath)
             && File.Exists(window.ExecutablePath))
         {
