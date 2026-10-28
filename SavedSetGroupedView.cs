@@ -222,13 +222,21 @@ internal sealed class SavedSetGroupedView : UserControl
             copyPath = new Button
             {
                 AccessibleName = LocalizationService.Get("Sets_CopyPath"),
-                Text = "\uE8C8",
-                Font = new Font("Segoe MDL2 Assets", 10F),
-                TextAlign = ContentAlignment.MiddleCenter,
+                Text = string.Empty,
                 Padding = Padding.Empty,
                 TabStop = true
             };
             ThemeManager.StyleButton(copyPath, palette);
+            // Draw the overlapping pages directly, independent of font/DPI.
+            copyPath.Paint += (_, e) =>
+            {
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                float centerX = copyPath.ClientSize.Width / 2F;
+                float centerY = copyPath.ClientSize.Height / 2F;
+                using Pen pen = new(copyPath.ForeColor, 1.5F);
+                e.Graphics.DrawRectangle(pen, centerX - 3, centerY - 7, 9, 10);
+                e.Graphics.DrawRectangle(pen, centerX - 6, centerY - 4, 9, 10);
+            };
             copyPath.Click += (_, _) => CopyFullPath();
             toolTip.SetToolTip(copyPath, copyPath.AccessibleName);
         }

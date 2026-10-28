@@ -215,7 +215,8 @@ The allowed windows do not have to stay on the presentation screen; they may sti
   <data name="Sets_PreviewReady" xml:space="preserve"><value>Ready</value></data>
   <data name="Sets_CopyPath" xml:space="preserve"><value>Copy full path</value></data>
   <data name="Sets_OpeningInProgress" xml:space="preserve"><value>Opening saved windows…</value></data>
-  <data name="Sets_ExcelFallback" xml:space="preserve"><value>Could not connect to Excel automation. Workbooks were opened through Windows file associations and may use separate Excel instances.</value></data>
+  <data name="Sets_ExcelFallback" xml:space="preserve"><value>Could not connect to Excel automation. Falling back to Windows file associations; workbooks may open in separate Excel instances.</value></data>
+  <data name="Sets_ExcelOpenFailed" xml:space="preserve"><value>Excel could not open the workbook.</value></data>
   <data name="Sets_AlreadySaved" xml:space="preserve"><value>Already saved in this set</value></data>
   <data name="Sets_AlreadySavedHelp" xml:space="preserve"><value>Floppy-disk icon: this entry already belongs to the set, even if the window is currently closed. It stays selected; uncheck it to remove it when saving changes.</value></data>
 </root>

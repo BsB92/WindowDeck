@@ -215,7 +215,8 @@ Dozwolone okna nie muszą pozostawać na ekranie prezentacji — nadal możesz u
   <data name="Sets_PreviewReady" xml:space="preserve"><value>Gotowe</value></data>
   <data name="Sets_CopyPath" xml:space="preserve"><value>Kopiuj pełną ścieżkę</value></data>
   <data name="Sets_OpeningInProgress" xml:space="preserve"><value>Otwieranie zapisanych okien…</value></data>
-  <data name="Sets_ExcelFallback" xml:space="preserve"><value>Nie udało się połączyć z automatyzacją Excela. Skoroszyty otwarto przez skojarzenia plików Windows i mogą działać w osobnych instancjach Excela.</value></data>
+  <data name="Sets_ExcelFallback" xml:space="preserve"><value>Nie udało się połączyć z automatyzacją Excela. Próba otwarcia przez skojarzenia plików Windows; skoroszyty mogą trafić do osobnych instancji Excela.</value></data>
+  <data name="Sets_ExcelOpenFailed" xml:space="preserve"><value>Excel nie mógł otworzyć skoroszytu.</value></data>
   <data name="Sets_AlreadySaved" xml:space="preserve"><value>Już zapisane w zestawie</value></data>
   <data name="Sets_AlreadySavedHelp" xml:space="preserve"><value>Ikona dyskietki: ta pozycja należy już do zestawu, nawet jeśli jej okno jest teraz zamknięte. Pozostaje zaznaczona; odznaczenie oznacza usunięcie podczas zapisu zmian.</value></data>
 </root>
