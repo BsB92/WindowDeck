@@ -219,26 +219,27 @@ internal sealed class SavedSetGroupedView : UserControl
 
         if (!string.IsNullOrWhiteSpace(resource))
         {
-            copyPath = new Button
+            Button copyButton = new()
             {
                 AccessibleName = LocalizationService.Get("Sets_CopyPath"),
                 Text = string.Empty,
                 Padding = Padding.Empty,
                 TabStop = true
             };
-            ThemeManager.StyleButton(copyPath, palette);
+            ThemeManager.StyleButton(copyButton, palette);
             // Draw the overlapping pages directly, independent of font/DPI.
-            copyPath.Paint += (_, e) =>
+            copyButton.Paint += (_, e) =>
             {
                 e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                float centerX = copyPath.ClientSize.Width / 2F;
-                float centerY = copyPath.ClientSize.Height / 2F;
-                using Pen pen = new(copyPath.ForeColor, 1.5F);
+                float centerX = copyButton.ClientSize.Width / 2F;
+                float centerY = copyButton.ClientSize.Height / 2F;
+                using Pen pen = new(copyButton.ForeColor, 1.5F);
                 e.Graphics.DrawRectangle(pen, centerX - 3, centerY - 7, 9, 10);
                 e.Graphics.DrawRectangle(pen, centerX - 6, centerY - 4, 9, 10);
             };
-            copyPath.Click += (_, _) => CopyFullPath();
-            toolTip.SetToolTip(copyPath, copyPath.AccessibleName);
+            copyButton.Click += (_, _) => CopyFullPath();
+            toolTip.SetToolTip(copyButton, copyButton.AccessibleName);
+            copyPath = copyButton;
         }
 
         string fullPathHint = string.IsNullOrWhiteSpace(resource)
