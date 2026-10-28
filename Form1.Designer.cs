@@ -4,6 +4,7 @@ namespace WindowDeck
     {
         private System.ComponentModel.IContainer components = null!;
         private TextBox searchTextBox = null!;
+        private Button refreshButton = null!;
         private TableLayoutPanel topBar = null!;
         private BufferedFlowLayoutPanel windowListPanel = null!;
         private Panel bottomBar = null!;
@@ -31,6 +32,7 @@ namespace WindowDeck
             components = new System.ComponentModel.Container();
             topBar = new TableLayoutPanel();
             searchTextBox = new TextBox();
+            refreshButton = new Button();
             windowListPanel = new BufferedFlowLayoutPanel();
             bottomBar = new Panel();
             presentationModeButton = new Button();
@@ -53,6 +55,18 @@ namespace WindowDeck
             searchTextBox.TabIndex = 0;
             searchTextBox.TextChanged += SearchTextBox_TextChanged;
             //
+            // refreshButton
+            //
+            refreshButton.Anchor = AnchorStyles.None;
+            refreshButton.FlatStyle = FlatStyle.Flat;
+            refreshButton.Font = new Font("Segoe MDL2 Assets", 12F, FontStyle.Regular);
+            refreshButton.Margin = new Padding(3);
+            refreshButton.Name = "refreshButton";
+            refreshButton.Size = new Size(38, 36);
+            refreshButton.TabIndex = 1;
+            refreshButton.Text = "\uE72C";
+            refreshButton.TextAlign = ContentAlignment.MiddleCenter;
+            //
             // topBar
             //
             topBar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
@@ -63,13 +77,14 @@ namespace WindowDeck
             topBar.Controls.Add(helpButton, 1, 0);
             topBar.Controls.Add(settingsButton, 2, 0);
             topBar.Controls.Add(searchTextBox, 0, 1);
-            topBar.SetColumnSpan(searchTextBox, 3);
+            topBar.SetColumnSpan(searchTextBox, 2);
+            topBar.Controls.Add(refreshButton, 2, 1);
             topBar.Location = new Point(16, 8);
             topBar.Name = "topBar";
             topBar.RowCount = 2;
             topBar.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
             topBar.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            topBar.Size = new Size(648, 76);
+            topBar.Size = new Size(648, 82);
             topBar.TabIndex = 0;
             //
             // windowListPanel
@@ -78,9 +93,9 @@ namespace WindowDeck
             windowListPanel.AutoScroll = true;
             windowListPanel.BorderStyle = BorderStyle.None;
             windowListPanel.FlowDirection = FlowDirection.TopDown;
-            windowListPanel.Location = new Point(16, 92);
+            windowListPanel.Location = new Point(16, 98);
             windowListPanel.Name = "windowListPanel";
-            windowListPanel.Size = new Size(648, 596);
+            windowListPanel.Size = new Size(648, 590);
             windowListPanel.TabIndex = 1;
             windowListPanel.WrapContents = false;
             //

@@ -50,6 +50,8 @@ internal static class WindowListPresentation
         return filtered
             .GroupBy(window => groupByApplication ? window.ApplicationId : string.Empty,
                 StringComparer.OrdinalIgnoreCase)
+            .OrderBy(group => group.First().ApplicationName, DisplayComparer)
+            .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 }

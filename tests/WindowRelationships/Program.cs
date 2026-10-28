@@ -47,4 +47,29 @@ Check(WindowListPresentation.Create(result, "needle", false, true).SelectMany(g 
 result = Resolve(first with { IsMinimized = true }, dialog);
 Check(WindowListPresentation.Create(result, "needle", true, false).SelectMany(g => g).Single().Handle == 3, "filtered owner does not hide matching child");
 Check(WindowListPresentation.Create(result, "", true, true).SelectMany(g => g).Count() == 2, "unfiltered snapshot has no duplicates");
+WindowInfo excelZ = Window(10, title: "Z report.xlsx") with
+{
+    ApplicationId = "process:EXCEL", ApplicationName = "Excel"
+};
+WindowInfo excelA = Window(11, title: "A report.xlsx") with
+{
+    ApplicationId = "process:EXCEL", ApplicationName = "Excel"
+};
+WindowInfo chat = Window(12, title: "Chat") with
+{
+    ApplicationId = "process:ChatGPT", ApplicationName = "ChatGPT"
+};
+IReadOnlyList<IGrouping<string, WindowInfo>> sortedGroups =
+    WindowListPresentation.Create([excelZ, chat, excelA], "", true, true);
+Check(sortedGroups.Count == 2
+    && sortedGroups[0].First().ApplicationName == "ChatGPT"
+    && sortedGroups[1].First().ApplicationName == "Excel",
+    "group headers stay alphabetically sorted on shuffled refresh");
+Check(sortedGroups[1].Select(w => w.DisplayTitle)
+    .SequenceEqual(["A report.xlsx", "Z report.xlsx"]),
+    "Excel documents stay alphabetically sorted inside one group");
+Check(WindowListPresentation.Create([excelZ, chat, excelA], "", false, true)
+    .Single().Select(w => w.DisplayTitle)
+    .SequenceEqual(["A report.xlsx", "Chat", "Z report.xlsx"]),
+    "ungrouped window list stays alphabetically sorted");
 Console.WriteLine("All window relationship checks passed.");

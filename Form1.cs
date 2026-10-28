@@ -77,6 +77,7 @@ internal partial class Form1 : Form
         Icon = WindowDeckIcon.Load();
         searchTextBox.Enter += (_, _) => searchTextBox.BackColor = palette.RaisedSurface;
         searchTextBox.Leave += (_, _) => searchTextBox.BackColor = palette.Surface;
+        refreshButton.Click += RefreshButton_Click;
         settingsButton.Click += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
         helpButton.Click += (_, _) => HelpRequested?.Invoke(this, EventArgs.Empty);
         presentationModeButton.Click += PresentationModeButton_Click;
@@ -143,6 +144,31 @@ internal partial class Form1 : Form
         }
     }
 
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        base.OnDpiChanged(e);
+
+        if (!Visible || !IsHandleCreated || isClosing)
+        {
+            return;
+        }
+
+        // Let WinForms finish its per-monitor scaling before restoring the
+        // right-edge anchor in the target monitor's physical work area.
+        BeginInvoke((Action)(() =>
+        {
+            if (Visible && !IsDisposed && !isClosing)
+            {
+                nint monitorHandle = NativeMethods.MonitorFromWindow(
+                    Handle, NativeMethods.MonitorDefaultToNearest);
+                if (PositionOnMonitor(monitorHandle, Width))
+                {
+                    RenderWindowList();
+                }
+            }
+        }));
+    }
+
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
@@ -206,7 +232,8 @@ internal partial class Form1 : Form
 
     private void ShowPositionedFlyout()
     {
-        RefreshWindowList();
+        // Rebuild after monitor/DPI changes even if the HWND snapshot is identical.
+        RefreshWindowList(force: true);
         Show();
         Activate();
         EnsureTopmostZOrder();
@@ -346,6 +373,14 @@ internal partial class Form1 : Form
     private void SearchTextBox_TextChanged(object sender, EventArgs e)
     {
         RenderWindowList();
+    }
+
+    private void RefreshButton_Click(object? sender, EventArgs e)
+    {
+        // Recover from stale application metadata as well as stale layout rows.
+        windowEnumerator.ResetApplicationMetadataCache();
+        ClearWindowRowCache();
+        RefreshWindowList(force: true);
     }
 
     private void ActivateWindow(WindowInfo window)
@@ -574,6 +609,16 @@ internal partial class Form1 : Form
 
             windowListPanel.Controls.Clear();
             windowListPanel.Controls.AddRange(orderedControls.ToArray());
+
+            // Reused row controls must follow the freshly computed group order.
+            // Enforce the child indices before the suspended layout resumes.
+            for (int index = 0; index < orderedControls.Count; index++)
+            {
+                if (windowListPanel.Controls.GetChildIndex(orderedControls[index]) != index)
+                {
+                    windowListPanel.Controls.SetChildIndex(orderedControls[index], index);
+                }
+            }
         }
         finally
         {
@@ -1481,6 +1526,7 @@ internal partial class Form1 : Form
         ForeColor = palette.Foreground;
         searchTextBox.BackColor = palette.Surface;
         searchTextBox.ForeColor = palette.Foreground;
+        ThemeManager.StyleButton(refreshButton, palette);
         windowListPanel.BackColor = palette.Background;
         windowListPanel.ForeColor = palette.Foreground;
         bottomBar.BackColor = palette.RaisedSurface;
@@ -1506,6 +1552,8 @@ internal partial class Form1 : Form
     {
         Text = LocalizationService.Get("App_Title");
         searchTextBox.PlaceholderText = LocalizationService.Get("Flyout_Search");
+        refreshButton.AccessibleName = LocalizationService.Get("Flyout_RefreshWindows");
+        toolTip.SetToolTip(refreshButton, refreshButton.AccessibleName);
         presentationModeButton.Text = LocalizationService.Get("Flyout_PresentationMode");
         savedSetsButton.Text = LocalizationService.Get("Sets_Button");
         helpButton.Text = "?";
@@ -1813,9 +1861,17 @@ internal partial class Form1 : Form
         int width = Math.Max(
             120,
             windowListPanel.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 10);
-        foreach (Control control in windowListPanel.Controls)
+        windowListPanel.SuspendLayout();
+        try
         {
-            control.Width = width;
+            foreach (Control control in windowListPanel.Controls)
+            {
+                control.Width = width;
+            }
+        }
+        finally
+        {
+            windowListPanel.ResumeLayout(performLayout: true);
         }
     }
 }

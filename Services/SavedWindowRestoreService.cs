@@ -71,58 +71,67 @@ internal sealed class SavedWindowRestoreService
         }
 
         RecentDocumentResolver recentDocuments = new();
-        foreach (SavedWindowEntry window in set.Windows)
+        ExcelWorkbookSession? excel = null;
+        bool excelUnavailable = false;
+        try
         {
-            try
+            foreach (SavedWindowEntry window in set.Windows)
             {
-                string processName = !string.IsNullOrWhiteSpace(window.ExecutablePath)
-                    ? Path.GetFileNameWithoutExtension(window.ExecutablePath)
-                    : window.ApplicationName;
-
-                // Older sets can contain Foxit/Notepad as a program-only entry.
-                // Recover the document if possible; otherwise NEVER treat
-                // opening a blank reader/editor as a successful restore.
-                bool documentWindow =
-                    (window.Kind is SavedWindowKind.Application or SavedWindowKind.Unsupported)
-                    && RecentDocumentResolver.LooksLikeDocumentWindow(
-                        window.WindowTitle, processName);
-                if (documentWindow)
+                try
                 {
-                    string? resolved = recentDocuments.Resolve(window.WindowTitle, processName);
-                    if (SavedWindowCaptureService.IsSupportedDocument(
-                        SavedWindowKind.DocumentFile, resolved))
+                    string processName = !string.IsNullOrWhiteSpace(window.ExecutablePath)
+                        ? Path.GetFileNameWithoutExtension(window.ExecutablePath)
+                        : window.ApplicationName;
+
+                    // Older sets can contain Foxit/Notepad as a program-only entry.
+                    // Recover the document if possible; otherwise NEVER treat
+                    // opening a blank reader/editor as a successful restore.
+                    bool documentWindow =
+                        (window.Kind is SavedWindowKind.Application or SavedWindowKind.Unsupported)
+                        && RecentDocumentResolver.LooksLikeDocumentWindow(
+                            window.WindowTitle, processName);
+                    if (documentWindow)
                     {
-                        OpenDocument(new SavedWindowEntry
+                        string? resolved = recentDocuments.Resolve(window.WindowTitle, processName);
+                        if (SavedWindowCaptureService.IsSupportedDocument(
+                            SavedWindowKind.DocumentFile, resolved))
                         {
-                            ApplicationName = window.ApplicationName,
-                            WindowTitle = window.WindowTitle,
-                            ExecutablePath = window.ExecutablePath,
-                            Kind = SavedWindowKind.DocumentFile,
-                            ResourcePath = resolved
-                        }, openResources, result);
+                            OpenDocument(new SavedWindowEntry
+                            {
+                                ApplicationName = window.ApplicationName,
+                                WindowTitle = window.WindowTitle,
+                                ExecutablePath = window.ExecutablePath,
+                                Kind = SavedWindowKind.DocumentFile,
+                                ResourcePath = resolved
+                            }, openResources, result, ref excel, ref excelUnavailable);
+                        }
+                        else
+                        {
+                            result.Unsupported++;
+                            result.Notes.Add(LocalizationService.Format(
+                                "Sets_RestoreNeedsDocumentPath", window.WindowTitle));
+                        }
+                    }
+                    else if (window.Kind == SavedWindowKind.Application)
+                    {
+                        OpenApplication(window, openPrograms, result);
                     }
                     else
                     {
-                        result.Unsupported++;
-                        result.Notes.Add(LocalizationService.Format(
-                            "Sets_RestoreNeedsDocumentPath", window.WindowTitle));
+                        OpenDocument(window, openResources, result, ref excel, ref excelUnavailable);
                     }
                 }
-                else if (window.Kind == SavedWindowKind.Application)
+                catch (Exception error) when (error is not OutOfMemoryException)
                 {
-                    OpenApplication(window, openPrograms, result);
-                }
-                else
-                {
-                    OpenDocument(window, openResources, result);
+                    result.Failed++;
+                    result.Notes.Add(LocalizationService.Format(
+                        "Sets_OpenFailed", window.WindowTitle, error.Message));
                 }
             }
-            catch (Exception error) when (error is not OutOfMemoryException)
-            {
-                result.Failed++;
-                result.Notes.Add(LocalizationService.Format(
-                    "Sets_OpenFailed", window.WindowTitle, error.Message));
-            }
+        }
+        finally
+        {
+            excel?.Dispose();
         }
 
         return result;
@@ -163,7 +172,11 @@ internal sealed class SavedWindowRestoreService
     }
 
     private static void OpenDocument(
-        SavedWindowEntry window, HashSet<string> openResources, SavedWindowRestoreResult result)
+        SavedWindowEntry window,
+        HashSet<string> openResources,
+        SavedWindowRestoreResult result,
+        ref ExcelWorkbookSession? excel,
+        ref bool excelUnavailable)
     {
         if (!SavedWindowCaptureService.IsSupportedDocument(window.Kind, window.ResourcePath))
         {
@@ -193,8 +206,47 @@ internal sealed class SavedWindowRestoreService
             return;
         }
 
+        bool excelWorkbook = window.Kind == SavedWindowKind.ExcelWorkbook
+            || (window.Kind == SavedWindowKind.DocumentFile
+                && SavedWindowCaptureService.IsSupportedDocument(
+                    SavedWindowKind.ExcelWorkbook, window.ResourcePath)
+                && (string.Equals(Path.GetFileName(window.ExecutablePath),
+                        "EXCEL.exe", StringComparison.OrdinalIgnoreCase)
+                    || window.ApplicationName.Contains(
+                        "Excel", StringComparison.OrdinalIgnoreCase)));
+
+        if (excelWorkbook)
+        {
+            if (excel is null && !excelUnavailable)
+            {
+                excel = ExcelWorkbookSession.TryCreate();
+                if (excel is null)
+                {
+                    excelUnavailable = true;
+                    result.Notes.Add(LocalizationService.Get("Sets_ExcelFallback"));
+                }
+            }
+
+            if (excel is not null)
+            {
+                if (!excel.TryOpen(file, out string? error))
+                {
+                    result.Failed++;
+                    result.Notes.Add(LocalizationService.Format(
+                        "Sets_OpenFailed", window.WindowTitle, error ?? LocalizationService.Get("Sets_ExcelOpenFailed")));
+                    return;
+                }
+
+                recentlyRequested[key] = DateTime.UtcNow;
+                openResources.Add(key);
+                result.Requested++;
+                return;
+            }
+        }
+
         ProcessStartInfo start;
         if (window.Kind == SavedWindowKind.DocumentFile
+            && !excelWorkbook
             && SavedWindowCaptureService.IsSupportedExecutable(window.ExecutablePath)
             && File.Exists(window.ExecutablePath))
         {

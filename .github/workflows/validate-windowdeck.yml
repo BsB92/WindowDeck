@@ -19,3 +19,5 @@ jobs:
         run: dotnet restore WindowDeck.csproj
       - name: Build
         run: dotnet build WindowDeck.csproj --configuration Release --no-restore
+      - name: Window grouping regression checks
+        run: dotnet run --project tests/WindowRelationships/WindowRelationships.csproj --configuration Release
