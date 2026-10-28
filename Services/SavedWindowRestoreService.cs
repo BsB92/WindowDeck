@@ -210,8 +210,10 @@ internal sealed class SavedWindowRestoreService
             || (window.Kind == SavedWindowKind.DocumentFile
                 && SavedWindowCaptureService.IsSupportedDocument(
                     SavedWindowKind.ExcelWorkbook, window.ResourcePath)
-                && string.Equals(Path.GetFileName(window.ExecutablePath),
-                    "EXCEL.exe", StringComparison.OrdinalIgnoreCase));
+                && (string.Equals(Path.GetFileName(window.ExecutablePath),
+                        "EXCEL.exe", StringComparison.OrdinalIgnoreCase)
+                    || window.ApplicationName.Contains(
+                        "Excel", StringComparison.OrdinalIgnoreCase)));
 
         if (excelWorkbook)
         {
