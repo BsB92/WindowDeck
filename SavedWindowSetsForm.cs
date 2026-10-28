@@ -20,6 +20,8 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly Label detailsHeader;
     private readonly TextBox restoreReport;
     private readonly TableLayoutPanel detailsLayout;
+    private readonly Button openButton;
+    private bool restoreInProgress;
     private List<SavedWindowSet> savedSets;
 
     public SavedWindowSetsForm(AppSettings settings, Rectangle windowDeckBounds, Rectangle workingArea)
@@ -140,18 +142,18 @@ internal sealed class SavedWindowSetsForm : Form
             Margin = new Padding(0, 14, 0, 0)
         };
         Button saveCurrent = MakeButton("Sets_SaveCurrent", palette);
-        Button open = MakeButton("Sets_Open", palette);
+        openButton = MakeButton("Sets_Open", palette);
         Button closeSet = MakeButton("Sets_CloseSet", palette);
         Button update = MakeButton("Sets_Update", palette);
         Button delete = MakeButton("Sets_Delete", palette);
         Button close = MakeButton("Sets_Close", palette);
         saveCurrent.Click += (_, _) => SaveCurrent();
-        open.Click += (_, _) => OpenSelected();
+        openButton.Click += (_, _) => OpenSelected();
         closeSet.Click += (_, _) => CloseSelectedSet();
         update.Click += (_, _) => UpdateSelected();
         delete.Click += (_, _) => DeleteSelected();
         close.Click += (_, _) => Close();
-        actions.Controls.AddRange([saveCurrent, open, closeSet, update, delete, close]);
+        actions.Controls.AddRange([saveCurrent, openButton, closeSet, update, delete, close]);
         layout.Controls.Add(actions, 0, 2);
         Controls.Add(layout);
         CancelButton = close;
@@ -356,18 +358,29 @@ internal sealed class SavedWindowSetsForm : Form
         }
     }
 
-    private void OpenSelected()
+    private async void OpenSelected()
     {
         SavedWindowSet? current = SelectedSet;
-        if (current is null) return;
+        if (current is null || restoreInProgress)
+        {
+            return;
+        }
 
+        restoreInProgress = true;
+        openButton.Enabled = false;
         try
         {
-            // Stop covering the very documents we are about to open. This also
-            // lowers the owning WindowDeck flyout; it does not change any
-            // other application's window flags or close an existing window.
+            // Office automation can take time for large workbooks, so run it
+            // off the WinForms thread without losing its required STA context.
             Form1.YieldTopmostForExternalWindows();
-            SavedWindowRestoreResult result = restore.Open(current, settings);
+            ShowInlineReport(LocalizationService.Get("Sets_OpeningInProgress"));
+            SavedWindowRestoreResult result = await RestoreOnStaThreadAsync(current, settings.Copy());
+
+            if (IsDisposed || Disposing)
+            {
+                return;
+            }
+
             string summary = LocalizationService.Format("Sets_RestoreSummary",
                 result.Requested, result.AlreadyOpen, result.Unsupported, result.Missing, result.Failed);
             if (result.Notes.Count > 0)
@@ -376,15 +389,48 @@ internal sealed class SavedWindowSetsForm : Form
                     + string.Join(Environment.NewLine, result.Notes.Take(20));
             }
 
-            // A modal MessageBox here would jump ABOVE the just-opened files.
-            // Keep the complete result visible in the manager for when the user
-            // switches back, without stealing focus from the document windows.
             ShowInlineReport(summary);
         }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
-            Failure(error);
+            if (!IsDisposed && !Disposing)
+            {
+                ShowInlineReport(LocalizationService.Format("Sets_Error", error.Message));
+            }
         }
+        finally
+        {
+            restoreInProgress = false;
+            if (!IsDisposed && !Disposing)
+            {
+                openButton.Enabled = true;
+            }
+        }
+    }
+
+    private Task<SavedWindowRestoreResult> RestoreOnStaThreadAsync(
+        SavedWindowSet set, AppSettings restoreSettings)
+    {
+        TaskCompletionSource<SavedWindowRestoreResult> completion =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Thread worker = new(() =>
+        {
+            try
+            {
+                completion.SetResult(restore.Open(set, restoreSettings));
+            }
+            catch (Exception error)
+            {
+                completion.SetException(error);
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "WindowDeck saved set restore"
+        };
+        worker.SetApartmentState(ApartmentState.STA);
+        worker.Start();
+        return completion.Task;
     }
 
     private void CloseSelectedSet()

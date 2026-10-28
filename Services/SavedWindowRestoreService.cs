@@ -71,6 +71,10 @@ internal sealed class SavedWindowRestoreService
         }
 
         RecentDocumentResolver recentDocuments = new();
+        ExcelWorkbookSession? excel = null;
+        bool excelUnavailable = false;
+        try
+        {
         foreach (SavedWindowEntry window in set.Windows)
         {
             try
@@ -99,7 +103,7 @@ internal sealed class SavedWindowRestoreService
                             ExecutablePath = window.ExecutablePath,
                             Kind = SavedWindowKind.DocumentFile,
                             ResourcePath = resolved
-                        }, openResources, result);
+                        }, openResources, result, ref excel, ref excelUnavailable);
                     }
                     else
                     {
@@ -114,7 +118,7 @@ internal sealed class SavedWindowRestoreService
                 }
                 else
                 {
-                    OpenDocument(window, openResources, result);
+                    OpenDocument(window, openResources, result, ref excel, ref excelUnavailable);
                 }
             }
             catch (Exception error) when (error is not OutOfMemoryException)
@@ -123,6 +127,12 @@ internal sealed class SavedWindowRestoreService
                 result.Notes.Add(LocalizationService.Format(
                     "Sets_OpenFailed", window.WindowTitle, error.Message));
             }
+        }
+
+        }
+        finally
+        {
+            excel?.Dispose();
         }
 
         return result;
@@ -163,7 +173,11 @@ internal sealed class SavedWindowRestoreService
     }
 
     private static void OpenDocument(
-        SavedWindowEntry window, HashSet<string> openResources, SavedWindowRestoreResult result)
+        SavedWindowEntry window,
+        HashSet<string> openResources,
+        SavedWindowRestoreResult result,
+        ref ExcelWorkbookSession? excel,
+        ref bool excelUnavailable)
     {
         if (!SavedWindowCaptureService.IsSupportedDocument(window.Kind, window.ResourcePath))
         {
@@ -191,6 +205,35 @@ internal sealed class SavedWindowRestoreService
             result.Missing++;
             result.Notes.Add(LocalizationService.Format("Sets_MissingFile", file));
             return;
+        }
+
+        if (window.Kind == SavedWindowKind.ExcelWorkbook)
+        {
+            if (excel is null && !excelUnavailable)
+            {
+                excel = ExcelWorkbookSession.TryCreate();
+                if (excel is null)
+                {
+                    excelUnavailable = true;
+                    result.Notes.Add(LocalizationService.Get("Sets_ExcelFallback"));
+                }
+            }
+
+            if (excel is not null)
+            {
+                if (!excel.TryOpen(file, out string? error))
+                {
+                    result.Failed++;
+                    result.Notes.Add(LocalizationService.Format(
+                        "Sets_OpenFailed", window.WindowTitle, error ?? "Excel could not open the workbook."));
+                    return;
+                }
+
+                recentlyRequested[key] = DateTime.UtcNow;
+                openResources.Add(key);
+                result.Requested++;
+                return;
+            }
         }
 
         ProcessStartInfo start;

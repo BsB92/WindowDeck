@@ -14,11 +14,13 @@ internal sealed class SavedSetGroupedView : UserControl
     private const int GroupGap = 13;
     private const int ItemGap = 3;
     private const int StatusWidth = 132;
+    private const int CopyButtonSize = 24;
 
     private sealed record DocumentRow(
         Panel Container,
         Label Title,
         Label Path,
+        Button? CopyPath,
         SavedWindowStatusIcon StatusIcon,
         Label StatusText,
         Panel Divider);
@@ -196,6 +198,41 @@ internal sealed class SavedSetGroupedView : UserControl
             TextAlign = ContentAlignment.MiddleLeft
         };
 
+        Button? copyPath = null;
+        void CopyFullPath()
+        {
+            if (string.IsNullOrWhiteSpace(resource))
+            {
+                return;
+            }
+
+            try
+            {
+                Clipboard.SetText(resource);
+            }
+            catch (Exception error) when (error is ExternalException
+                or System.Threading.ThreadStateException)
+            {
+                // Clipboard access may temporarily be unavailable.
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(resource))
+        {
+            copyPath = new Button
+            {
+                AccessibleName = LocalizationService.Get("Sets_CopyPath"),
+                Text = "\uE8C8",
+                Font = new Font("Segoe MDL2 Assets", 10F),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Padding = Padding.Empty,
+                TabStop = true
+            };
+            ThemeManager.StyleButton(copyPath, palette);
+            copyPath.Click += (_, _) => CopyFullPath();
+            toolTip.SetToolTip(copyPath, copyPath.AccessibleName);
+        }
+
         string fullPathHint = string.IsNullOrWhiteSpace(resource)
             ? LocalizationService.Get("Sets_PreviewNoPath")
             : resource;
@@ -214,6 +251,10 @@ internal sealed class SavedSetGroupedView : UserControl
         };
         row.Controls.Add(title);
         row.Controls.Add(path);
+        if (copyPath is not null)
+        {
+            row.Controls.Add(copyPath);
+        }
         row.Controls.Add(statusIcon);
         row.Controls.Add(state);
         row.Controls.Add(divider);
@@ -222,25 +263,14 @@ internal sealed class SavedSetGroupedView : UserControl
         {
             ContextMenuStrip menu = new();
             menu.Items.Add(LocalizationService.Get("Sets_CopyPath"),
-                null, (_, _) =>
-                {
-                    try
-                    {
-                        Clipboard.SetText(resource);
-                    }
-                    catch (Exception error) when (error is ExternalException
-                        or System.Threading.ThreadStateException)
-                    {
-                        // A temporarily locked clipboard does not affect set data.
-                    }
-                });
+                null, (_, _) => CopyFullPath());
             row.ContextMenuStrip = menu;
             title.ContextMenuStrip = menu;
             path.ContextMenuStrip = menu;
             row.Disposed += (_, _) => menu.Dispose();
         }
 
-        return new DocumentRow(row, title, path, statusIcon, state, divider);
+        return new DocumentRow(row, title, path, copyPath, statusIcon, state, divider);
     }
 
     private void LayoutGroups()
@@ -283,7 +313,12 @@ internal sealed class SavedSetGroupedView : UserControl
                         row.Container.SetBounds(0, y, width, DocumentRowHeight);
                         int contentWidth = Math.Max(60, width - StatusWidth - 24);
                         row.Title.SetBounds(12, 6, contentWidth, 26);
-                        row.Path.SetBounds(12, 34, contentWidth, 20);
+                        int pathWidth = contentWidth
+                            - (row.CopyPath is null ? 0 : CopyButtonSize + 6);
+                        row.Path.SetBounds(12, 34, Math.Max(1, pathWidth), 20);
+                        row.CopyPath?.SetBounds(
+                            12 + contentWidth - CopyButtonSize, 31,
+                            CopyButtonSize, CopyButtonSize);
                         row.StatusIcon.SetBounds(width - StatusWidth + 2, 17, 24, 28);
                         row.StatusText.SetBounds(width - StatusWidth + 29, 16,
                             StatusWidth - 35, 31);
