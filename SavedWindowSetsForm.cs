@@ -21,6 +21,7 @@ internal sealed class SavedWindowSetsForm : Form
     private readonly TextBox restoreReport;
     private readonly TableLayoutPanel detailsLayout;
     private readonly Button openButton;
+    private readonly List<Button> restoreActionButtons = [];
     private bool restoreInProgress;
     private List<SavedWindowSet> savedSets;
 
@@ -153,6 +154,7 @@ internal sealed class SavedWindowSetsForm : Form
         update.Click += (_, _) => UpdateSelected();
         delete.Click += (_, _) => DeleteSelected();
         close.Click += (_, _) => Close();
+        restoreActionButtons.AddRange([saveCurrent, openButton, closeSet, update, delete]);
         actions.Controls.AddRange([saveCurrent, openButton, closeSet, update, delete, close]);
         layout.Controls.Add(actions, 0, 2);
         Controls.Add(layout);
@@ -367,7 +369,11 @@ internal sealed class SavedWindowSetsForm : Form
         }
 
         restoreInProgress = true;
-        openButton.Enabled = false;
+        setList.Enabled = false;
+        foreach (Button button in restoreActionButtons)
+        {
+            button.Enabled = false;
+        }
         try
         {
             // Office automation can take time for large workbooks, so run it
@@ -403,7 +409,11 @@ internal sealed class SavedWindowSetsForm : Form
             restoreInProgress = false;
             if (!IsDisposed && !Disposing)
             {
-                openButton.Enabled = true;
+                setList.Enabled = true;
+                foreach (Button button in restoreActionButtons)
+                {
+                    button.Enabled = true;
+                }
             }
         }
     }
